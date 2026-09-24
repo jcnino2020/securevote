@@ -87,8 +87,7 @@ The file creates the `secure_voting` database, all eight tables and the demonstr
 one step. If your hosting already gave you an empty database, open the SQL file, delete the
 `CREATE DATABASE` and `USE` lines, then import into that database instead.
 
-Check that it worked: you should see `users` (13 rows), `elections` (3), `positions` (8),
-`candidates` (22) and `voter_eligibility` (30 rows).
+Check that it worked: you should see the database tables created, with default elections, positions, candidates, and the administrator account ready.
 
 ### 3.4 Database configuration
 
@@ -97,9 +96,9 @@ Credentials live in `config/config.php` (section 3) and default to a stock XAMPP
 ```php
 define('DB_HOST',   '127.0.0.1');
 define('DB_PORT',   '3306');
-define('DB_NAME',   'secure_voting');
-define('DB_USER',   'root');
-define('DB_PASS',   '');
+define('DB_NAME',   'u184230832_securevote');
+define('DB_USER',   'u184230832_ibmn');
+define('DB_PASS',   'Bsit4b2026');
 ```
 
 Every value can be overridden with an environment variable instead of editing the file, which
@@ -131,38 +130,38 @@ then open `http://localhost:8000/`. Both routes land on the sign-in page.
 
 ---
 
-## 4. Demonstration accounts
+## 4. Accounts & Voter Registration
 
-Seeded by `database/secure_voting.sql`. Every name in the dataset is fictional.
+Seeded by `database/secure_voting.sql`. Anyone can register their own voter account directly on the website.
 
-| Role | Username | Password | What it is for |
+| Role | Username / Link | Password | What it is for |
 | --- | --- | --- | --- |
 | Administrator | `admin` | `Admin@12345` | Full access to the admin module |
-| Voter, still able to vote | `voter009` | `Voter@12345` | The account to use for a live vote during the presentation |
-| Voter, already voted | `voter001` | `Voter@12345` | Demonstrates that the server refuses a second ballot |
-| Voter, blocked | `voter020` | `Voter@12345` | Demonstrates that a blocked account cannot sign in |
+| Voter Self-Registration | `auth/register.php` | User chosen | Anyone can register with their own name, username, email & password |
 
-`voter001` through `voter020` all use `Voter@12345`. Voters `voter001` to `voter008` have
-already voted in the open election; `voter009` to `voter020` have not, so there is always an
-account available to submit a ballot.
+> **Administrator password:** Change it in Settings after first login.
 
-> **These passwords exist only for the presentation.** Change them before the system is used
-> for anything real, and delete the demonstration hint block in `auth/login.php`.
+### 4.1 How Voter Registration Works
 
-### 4.1 What the sample dataset contains
+1. Visitors navigate to the **Register to vote** page (`auth/register.php`).
+2. They provide their first name, last name, unique username, email address, and a secure password.
+3. The server validates all input, hashes the password using bcrypt (`password_hash`), and creates an active voter account.
+4. The system automatically registers the voter for open elections, logs the registration in the audit trail, and immediately signs them in to start voting.
 
-Nothing in the database is left empty, so every screen has something to show.
+### 4.2 Seeded Database Contents
 
-| Table | Rows | What it demonstrates |
-| --- | ---: | --- |
-| `users` | 21 | 1 administrator and 20 voters, one of them blocked |
-| `elections` | 3 | One open, one scheduled, one closed |
-| `positions` | 11 | 7 in the open election; Representative allows 2 selections |
-| `candidates` | 33 | 3 per position in the open election (4 for Representative), 2 to 3 for the other two, across three fictional organizations |
-| `voter_eligibility` | 60 | All 20 voters registered for all three elections |
-| `ballots` | 11 | 8 in the open election, 3 in the closed one |
-| `votes` | 67 | Every selection, each one consistent with its ballot and position |
-| `audit_logs` | 57 | One continuous history, from account creation to this morning |
+The database contains default active and scheduled elections, positions, and candidates:
+
+| Table | What it contains |
+| --- | --- |
+| `users` | Administrator account (`admin`) |
+| `elections` | 3 elections (1 open, 1 scheduled, 1 closed) |
+| `positions` | 11 positions with selection limits |
+| `candidates` | 33 candidates with profiles and platforms |
+| `voter_eligibility` | Dynamically populated as voters register |
+| `ballots` | Populated as voters cast ballots |
+| `votes` | Recorded anonymously with cryptographic ballot linkage |
+| `audit_logs` | Security and audit trail events |
 
 The three elections are deliberately in three different states, each with a different results
 policy, so the whole state machine can be demonstrated without editing anything:
@@ -173,11 +172,7 @@ policy, so the whole state machine can be demonstrated without editing anything:
 | College Department Election 2026 | Scheduled | `hidden` | The server refuses a ballot before the start date |
 | Student Organization Election 2026 | Closed | `after_close` | The server refuses a ballot after the end date, and results are published |
 
-Expected figures on the administrator dashboard straight after a fresh import: **3 elections
-(1 open, 1 scheduled, 1 closed)**, **20 registered voters**, **8 votes cast of 20 eligible
-(40% turnout)**, **33 candidates**, **11 ballots submitted** and **3 failed sign-ins in the
-last 24 hours**. Every one of those numbers is counted from the tables on each request, so
-they move as soon as the data moves.
+Expected figures on the administrator dashboard straight after a fresh import: **3 elections (1 open, 1 scheduled, 1 closed)**, **33 candidates**, **0 ballots submitted**, with figures updating dynamically as real voters register and cast their ballots. Every number is counted live from the database tables on each request.
 
 Because every timestamp is written relative to the moment of import, the open election always
 has two days behind it and five ahead, and the audit trail always looks recent. The
@@ -239,19 +234,19 @@ Every test below can be run against the sample data with no preparation at all.
 
 | Test | How | Expected result |
 | --- | --- | --- |
-| Voter opens an admin page | Sign in as `voter009`, then visit `admin/dashboard.php` | 403 "Not authorized", `unauthorized_access` in the audit log |
+| Voter opens an admin page | Sign in as a registered voter, then visit `admin/dashboard.php` | 403 "Not authorized", `unauthorized_access` in the audit log |
 | Admin opens a voter page | Sign in as `admin`, visit `voter/ballot.php?election_id=1` | 403, logged |
-| Ballot before the start date | Sign in as `voter009` and open the scheduled election (`election_id=2`) | 403 "This election has not started yet", `ballot_closed_attempt` in the audit log. This case is seeded. |
-| Ballot after the end date | Sign in as `voter009` and open the closed election (`election_id=3`) | 403 "This election is closed", logged. This case is seeded. |
+| Ballot before the start date | Sign in as a voter and open the scheduled election (`election_id=2`) | 403 "This election has not started yet", `ballot_closed_attempt` in the audit log |
+| Ballot after the end date | Sign in as a voter and open the closed election (`election_id=3`) | 403 "This election is closed", logged |
 | Voter not on the voter list | As the administrator, untick that voter on *Voters → Elections*, then try to open the ballot | 403 "Not registered for this election", `unauthorized_election_access` in the audit log |
 
 ### 6.3 Integrity
 
 | Test | How | Expected result |
 | --- | --- | --- |
-| Successful vote | Sign in as `voter009` and vote once | Confirmation page with a reference such as `SV-2026-9A31F4` |
-| Duplicate vote | Sign in as `voter001`, who has already voted, and open the same ballot | Blocked before the ballot renders, with `ballot_duplicate_attempt` in the audit log. This case is seeded. |
-| Duplicate vote at the database level | See the demonstration queries at the bottom of `database/secure_voting.sql` | The database itself rejects the insert |
+| Successful vote | Register/sign in as a voter and submit a ballot | Confirmation page with a reference such as `SV-2026-9A31F4` |
+| Duplicate vote | Try to open the ballot again after voting | Blocked before the ballot renders, with `ballot_duplicate_attempt` in the audit log |
+| Duplicate vote at the database level | Attempt to insert duplicate eligibility or ballot | The database unique constraints reject the insert |
 | Invalid candidate | With the ballot form open, use the browser inspector to add a `votes[…]` value for a candidate from another position and submit | "A selected candidate for … is not standing in this election" and nothing is written |
 | Too many selections | On the Representative position, select three candidates where only two are allowed | Rejected on the server with a clear message |
 | Voting outside the window | Close the open election, then submit a prepared ballot | 403 before the ballot renders; if a stale review screen is submitted, the transaction refuses it |

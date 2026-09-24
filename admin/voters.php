@@ -171,10 +171,15 @@ if (is_post()) {
                 ]);
                 $newId = (int) $pdo->lastInsertId();
 
+                $autoEnroll = $pdo->prepare(
+                    "INSERT IGNORE INTO voter_eligibility (election_id, user_id, has_voted, created_at)
+                     SELECT id, ?, 0, NOW() FROM elections WHERE status IN ('open', 'scheduled', 'draft')"
+                );
+                $autoEnroll->execute([$newId]);
+
                 audit_log('voter_created', 'Created voter #' . $newId . ' "' . $username . '".');
 
-                flash_success('Voter account "' . $username . '" was created. '
-                    . 'Register them for an election so they can vote.');
+                flash_success('Voter account "' . $username . '" was created and registered for active elections.');
             }
 
             redirect('admin/voters.php');

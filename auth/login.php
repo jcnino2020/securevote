@@ -75,7 +75,7 @@ require __DIR__ . '/../includes/header.php';
       </span>
       <h1 class="auth-card__title">Sign in to vote</h1>
       <p class="auth-card__text">
-        Use the account issued to you by the election administrator.
+        Sign in to your account, or register a new voter account.
       </p>
     </div>
 
@@ -150,31 +150,35 @@ require __DIR__ . '/../includes/header.php';
       </div>
     </form>
 
+    <div class="divider" role="presentation"></div>
+
+    <div class="text-center stack-xs">
+      <p class="text-sm text-muted">Don't have a voter account yet?</p>
+      <a class="btn btn--secondary btn--block" href="<?= e(url('auth/register.php')) ?>">
+        <?= sv_icon('user-plus', 16, 'btn__icon') ?>
+        <span>Register to vote</span>
+      </a>
+    </div>
+
     <?php if ($showDemoHints): ?>
       <div class="auth-demo">
-        <strong>Demonstration accounts</strong>
+        <strong>Quick Access & Demonstration</strong>
         <p class="text-xs">
-          Seeded with the sample dataset. Remove this block before real use.
+          Default administrative credentials or self-register as a voter:
         </p>
         <dl>
           <dt>Administrator</dt>
           <dd><span class="mono">admin</span> / <span class="mono">Admin@12345</span></dd>
-          <dt>Voter, not voted yet</dt>
-          <dd><span class="mono">voter009</span> / <span class="mono">Voter@12345</span></dd>
-          <dt>Voter, already voted</dt>
-          <dd><span class="mono">voter001</span> / <span class="mono">Voter@12345</span></dd>
-          <dt>Blocked voter</dt>
-          <dd><span class="mono">voter020</span> / <span class="mono">Voter@12345</span></dd>
+          <dt>Voter Registration</dt>
+          <dd><a class="link" href="<?= e(url('auth/register.php')) ?>">Click here to register</a> with your own name</dd>
         </dl>
-        <p class="text-xs">Voters run from <span class="mono">voter001</span> to
-          <span class="mono">voter020</span>, all with the same password.</p>
       </div>
     <?php endif; ?>
 
     <p class="auth-card__foot">
       <?= sv_icon('info', 14) ?>
-      Forgot your password? Accounts are created and reset by the election
-      administrator, so please contact them. SecureVote does not send email.
+      Forgot your password? Accounts can be reset by the election
+      administrator. SecureVote does not send email.
     </p>
   </div>
 

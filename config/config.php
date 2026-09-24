@@ -54,9 +54,9 @@ date_default_timezone_set(APP_TIMEZONE);
  * ------------------------------------------------------------------- */
 define('DB_HOST',   getenv('SV_DB_HOST') ?: '127.0.0.1');
 define('DB_PORT',   getenv('SV_DB_PORT') ?: '3306');
-define('DB_NAME',   getenv('SV_DB_NAME') ?: 'secure_voting');
-define('DB_USER',   getenv('SV_DB_USER') ?: 'root');
-define('DB_PASS',   (string) (getenv('SV_DB_PASS') ?: ''));
+define('DB_NAME',   getenv('SV_DB_NAME') ?: 'u184230832_securevote');
+define('DB_USER',   getenv('SV_DB_USER') ?: 'u184230832_ibmn');
+define('DB_PASS',   (string) (getenv('SV_DB_PASS') ?: 'Bsit4b2026'));
 define('DB_SOCKET', (string) (getenv('SV_DB_SOCKET') ?: ''));
 define('DB_CHARSET', 'utf8mb4');
 

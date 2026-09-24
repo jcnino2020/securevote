@@ -261,6 +261,14 @@ if (is_post()) {
         $update = $pdo->prepare('UPDATE elections SET status = ? WHERE id = ?');
         $update->execute([$target, $id]);
 
+        if ($target === 'open') {
+            $autoEnroll = $pdo->prepare(
+                "INSERT IGNORE INTO voter_eligibility (election_id, user_id, has_voted, created_at)
+                 SELECT ?, u.id, 0, NOW() FROM users u WHERE u.role = 'voter' AND u.status = 'active'"
+            );
+            $autoEnroll->execute([$id]);
+        }
+
         $actionName = match ($target) {
             'open'     => 'election_activated',
             'closed'   => 'election_closed',
