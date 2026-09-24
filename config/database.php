@@ -51,16 +51,19 @@ function db(): PDO
         PDO::ATTR_EMULATE_PREPARES   => false,
         PDO::ATTR_STRINGIFY_FETCHES  => false,
         PDO::ATTR_PERSISTENT         => false,
+        PDO::MYSQL_ATTR_INIT_COMMAND => "SET time_zone = '+08:00', NAMES utf8mb4",
     ];
 
     try {
         $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+        $pdo->exec("SET time_zone = '+08:00'");
     } catch (PDOException $e) {
         // If TCP/host connection failed on shared hosting (e.g. Hostinger), try alternate host
         $fallbackHost = (DB_HOST === 'localhost') ? '127.0.0.1' : 'localhost';
         try {
             $fallbackDsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=%s', $fallbackHost, DB_PORT, DB_NAME, DB_CHARSET);
             $pdo = new PDO($fallbackDsn, DB_USER, DB_PASS, $options);
+            $pdo->exec("SET time_zone = '+08:00'");
         } catch (PDOException $e2) {
             error_log('DB connection failed: ' . $e->getMessage() . ' | Fallback error: ' . $e2->getMessage());
             sv_render_database_error();

@@ -17,7 +17,7 @@ $transport    = $isHttps
     ? ['icon' => 'lock',          'label' => 'Encrypted connection (HTTPS)']
     : ['icon' => 'alert-triangle','label' => 'Local development mode (HTTP) — enable HTTPS before real use'];
 ?>
-<?php if (($layout ?? 'app') === 'app'): ?>
+<?php if (($layout ?? 'app') !== 'auth'): ?>
   </main>
 
   <footer class="app-footer">

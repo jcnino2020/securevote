@@ -23,6 +23,7 @@ $pdo   = db();
 
 $search    = trim((string) input('q', ''));
 $action    = trim((string) input('log_action', ''));
+$severity  = trim((string) input('severity', ''));
 $userId    = int_input('user_id', 0);
 $dateFrom  = trim((string) input('date_from', ''));
 $dateTo    = trim((string) input('date_to', ''));
@@ -41,6 +42,24 @@ if ($search !== '') {
 if ($action !== '') {
     $where[]             = 'a.action = :action';
     $params[':action']   = $action;
+}
+if ($severity !== '') {
+    $severityActions = match (strtolower($severity)) {
+        'high', 'critical' => ['session_hijack_attempt', 'csrf_failure', 'unauthorized_access'],
+        'medium'           => ['login_throttled', 'login_blocked', 'ballot_rejected', 'ballot_validation_failed', 'voter_status_changed', 'voter_deleted', 'candidate_deleted', 'position_deleted'],
+        'low'              => ['login_failure', 'password_change_failed', 'results_exported', 'audit_log_exported', 'password_rehash', 'session_idle_timeout'],
+        'informational'    => ['login_success', 'google_login_success', 'logout', 'ballot_submitted', 'direct_ballot_submitted', 'election_created', 'election_updated', 'election_opened', 'candidate_created', 'candidate_updated', 'position_created', 'position_updated', 'voter_created', 'system_initialized', 'eligibility_added', 'eligibility_bulk_added', 'voter_updated'],
+        default            => [],
+    };
+    if ($severityActions !== []) {
+        $inPlaceholders = [];
+        foreach ($severityActions as $i => $sevAct) {
+            $k = ':sev_' . $i;
+            $inPlaceholders[] = $k;
+            $params[$k] = $sevAct;
+        }
+        $where[] = 'a.action IN (' . implode(',', $inPlaceholders) . ')';
+    }
 }
 if ($userId > 0) {
     $where[]             = 'a.user_id = :user_id';
@@ -163,7 +182,7 @@ if ((string) input('export', '') === 'csv') {
  | Header
  * =================================================================== */
 
-$hasFilters = $search !== '' || $action !== '' || $userId > 0 || $from !== null || $to !== null;
+$hasFilters = $search !== '' || $action !== '' || $severity !== '' || $userId > 0 || $from !== null || $to !== null;
 
 $pageTitle    = 'Audit logs';
 $pageSubtitle = 'Every security and administrative event, newest first. Entries cannot be edited.';
@@ -196,6 +215,15 @@ require __DIR__ . '/../includes/header.php';
     </div>
 
     <div class="row">
+      <label class="visually-hidden" for="severity">Filter by severity</label>
+      <select class="select" id="severity" name="severity" data-auto-submit>
+        <option value="">All severities</option>
+        <option value="high" <?= in_array($severity, ['high', 'critical'], true) ? 'selected' : '' ?>>Critical & High</option>
+        <option value="medium" <?= $severity === 'medium' ? 'selected' : '' ?>>Medium</option>
+        <option value="low" <?= $severity === 'low' ? 'selected' : '' ?>>Low</option>
+        <option value="informational" <?= $severity === 'informational' ? 'selected' : '' ?>>Informational</option>
+      </select>
+
       <label class="visually-hidden" for="log_action">Filter by action</label>
       <select class="select" id="log_action" name="log_action" data-auto-submit>
         <option value="">All actions</option>
@@ -249,10 +277,11 @@ require __DIR__ . '/../includes/header.php';
   <?php else: ?>
     <div class="table-wrap">
       <table class="table">
-        <caption class="visually-hidden">Audit entries with time, actor, action, description and source address</caption>
+        <caption class="visually-hidden">Audit entries with time, severity, actor, action, description and source address</caption>
         <thead>
           <tr>
             <th scope="col">When</th>
+            <th scope="col">Severity</th>
             <th scope="col">Actor</th>
             <th scope="col">Action</th>
             <th scope="col">Description</th>
@@ -265,6 +294,9 @@ require __DIR__ . '/../includes/header.php';
               <td>
                 <span class="nowrap"><?= e(fmt_datetime($log['created_at'])) ?></span>
                 <span class="table__cell-sub"><?= e(relative_time($log['created_at'])) ?></span>
+              </td>
+              <td>
+                <?= security_severity_badge(audit_action_severity((string) $log['action'], (string) $log['description'])) ?>
               </td>
               <td>
                 <?php if ($log['username'] !== null): ?>

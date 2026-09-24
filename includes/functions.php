@@ -42,10 +42,14 @@ function url(string $path = ''): string
     return BASE_URL . ($path === '' ? '/' : '/' . $path);
 }
 
-/** Build a URL inside assets/. */
+/** Build a URL inside assets/ with automatic cache-busting. */
 function asset(string $path): string
 {
-    return url('assets/' . ltrim($path, '/'));
+    $cleanPath = ltrim($path, '/');
+    $filePath  = __DIR__ . '/../assets/' . $cleanPath;
+    $version   = file_exists($filePath) ? (string) filemtime($filePath) : (defined('APP_VERSION') ? (string) APP_VERSION : '2026');
+
+    return url('assets/' . $cleanPath . '?v=' . $version);
 }
 
 /** Send a Location header and stop. Only ever used with a hard-coded path. */
@@ -377,6 +381,43 @@ function candidate_badge(string $status): string
     return badge($label, $variant);
 }
 
+/** Security event severity -> [label, badge variant] */
+function security_severity_meta(string $severity): array
+{
+    return match (strtolower(trim($severity))) {
+        'critical'      => ['Critical', 'danger'],
+        'high'          => ['High', 'danger'],
+        'medium'        => ['Medium', 'warning'],
+        'low'           => ['Low', 'info'],
+        'informational' => ['Informational', 'neutral'],
+        default         => [ucfirst($severity), 'neutral'],
+    };
+}
+
+function security_severity_badge(string $severity): string
+{
+    [$label, $variant] = security_severity_meta($severity);
+
+    return badge($label, $variant);
+}
+
+/** Classify audit log action into consistent security severity level */
+function audit_action_severity(string $action, string $description = ''): string
+{
+    return match ($action) {
+        'session_hijack_attempt', 'csrf_failure'      => 'High',
+        'unauthorized_access'                         => 'High',
+        'login_throttled', 'login_blocked'            => 'Medium',
+        'ballot_rejected', 'ballot_validation_failed' => 'Medium',
+        'voter_status_changed', 'voter_deleted'       => 'Medium',
+        'candidate_deleted', 'position_deleted'       => 'Medium',
+        'login_failure', 'password_change_failed'     => 'Low',
+        'password_rehash', 'session_idle_timeout'     => 'Low',
+        'audit_log_exported', 'results_exported'      => 'Low',
+        default                                       => 'Informational',
+    };
+}
+
 /** Options for a <select> of election statuses. */
 function election_status_options(): array
 {
@@ -598,8 +639,8 @@ function audit_log(string $action, string $description, ?int $userId = null): vo
 
     try {
         $stmt = db()->prepare(
-            'INSERT INTO audit_logs (user_id, action, description, ip_address, user_agent)
-             VALUES (:user_id, :action, :description, :ip, :ua)'
+            'INSERT INTO audit_logs (user_id, action, description, ip_address, user_agent, created_at)
+             VALUES (:user_id, :action, :description, :ip, :ua, :created_at)'
         );
         $stmt->execute([
             ':user_id'     => $userId,
@@ -607,6 +648,7 @@ function audit_log(string $action, string $description, ?int $userId = null): vo
             ':description' => mb_substr($description, 0, 255),
             ':ip'          => client_ip(),
             ':ua'          => client_user_agent(),
+            ':created_at'  => now(),
         ]);
     } catch (Throwable $e) {
         error_log('audit_log() failed for action ' . $action . ': ' . $e->getMessage());

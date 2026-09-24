@@ -142,40 +142,13 @@ $bodyClass = 'page-register';
 require __DIR__ . '/../includes/header.php';
 ?>
 
-<section class="auth-aside" aria-labelledby="auth-aside-heading">
-  <div class="auth-aside__top">
-    <span class="brand brand--lg">
-      <?= sv_logo_mark(40) ?>
-      <span class="brand__word">Secure<span>Vote</span></span>
-    </span>
-
-    <h2 class="auth-aside__heading" id="auth-aside-heading">
-      Register to participate in verified university elections.
-    </h2>
-    <p class="auth-aside__text">
-      Create your personal voter account or sign in with Google to cast your ballot securely in active campus elections.
-    </p>
-
-    <ul class="auth-facts">
-      <li><?= sv_icon('google', 18) ?><span>Instant 1-click Google OAuth verification available.</span></li>
-      <li><?= sv_icon('key', 18) ?><span>Receive a unique personal Voter Passcode for instant access.</span></li>
-      <li><?= sv_icon('shield-check', 18) ?><span>Strict 1-person-1-vote database constraint.</span></li>
-      <li><?= sv_icon('lock', 18) ?><span>Passwords are securely hashed with modern bcrypt.</span></li>
-    </ul>
-  </div>
-
-  <p class="auth-aside__foot">
-    <?= e(APP_NAME) ?> <?= e(APP_VERSION) ?> &middot; Academic Endterm Project 2026.
-  </p>
-</section>
-
 <div class="auth-main">
-  <div class="auth-card">
+  <div class="auth-card" style="max-width: 540px;">
     <div class="auth-card__head">
-      <span class="brand">
-        <?= sv_logo_mark(32) ?>
+      <a class="brand" href="<?= e(url('index.php')) ?>" style="margin-bottom: var(--sp-2);">
+        <?= sv_logo_mark(36) ?>
         <span class="brand__word">Secure<span>Vote</span></span>
-      </span>
+      </a>
       <h1 class="auth-card__title">Create voter account</h1>
       <p class="auth-card__text">
         Register with Google in 1-click or fill in your student details.
@@ -372,6 +345,11 @@ require __DIR__ . '/../includes/header.php';
       </a>
     </div>
   </div>
+
+  <p class="text-muted text-xs text-center" style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: var(--sp-4);">
+    <?= sv_icon('shield', 14) ?>
+    <span>Protected by bcrypt password hashing and TLS/HTTPS session binding.</span>
+  </p>
 </div>
 
 <?php require __DIR__ . '/../includes/footer.php'; ?>

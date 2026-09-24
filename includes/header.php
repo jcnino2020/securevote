@@ -36,9 +36,14 @@ $activeNav    = $activeNav    ?? '';
 $pageActions  = $pageActions  ?? '';
 $bodyClass    = $bodyClass    ?? '';
 $breadcrumb   = $breadcrumb   ?? [];
-$shellClass   = 'app-shell app-shell--' . ($layout === 'auth' ? 'auth' : 'app');
-
 $user = current_user();
+
+if ($user === null && $layout === 'app') {
+    $layout = 'portal';
+}
+
+$hasSidebar   = ($layout === 'app' && $user !== null);
+$shellClass   = 'app-shell app-shell--' . ($layout === 'auth' ? 'auth' : ($hasSidebar ? 'app' : 'portal'));
 
 /* ---------------------------------------------------------------------
  | Sidebar navigation. One definition, so admin and voter never drift
@@ -121,7 +126,7 @@ $flashHtml = ob_get_clean();
 <link rel="icon" href="<?= e(asset('images/favicon.svg')) ?>" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap">
 <link rel="stylesheet" href="<?= e(asset('css/style.css')) ?>">
 <!-- Loaded in the head, without defer, so the saved theme is applied before
      the first paint and the page never flashes the wrong colour. -->
@@ -131,7 +136,9 @@ $flashHtml = ob_get_clean();
 
 <a class="skip-link" href="#main-content">Skip to main content</a>
 
-<?php if ($layout === 'app'): ?>
+<?php if ($layout !== 'auth'): ?>
+
+<?php if ($hasSidebar): ?>
 <div class="sidebar-backdrop" data-sidebar-close hidden></div>
 
 <aside class="sidebar" id="sidebar" aria-label="Main navigation">
@@ -182,16 +189,24 @@ $flashHtml = ob_get_clean();
     </form>
   </div>
 </aside>
+<?php endif; ?>
 
 <div class="shell">
   <header class="topbar">
-    <button class="icon-btn topbar__menu" type="button" data-sidebar-toggle
-            aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation">
-      <?= sv_icon('menu', 20) ?>
-    </button>
+    <?php if ($hasSidebar): ?>
+      <button class="icon-btn topbar__menu" type="button" data-sidebar-toggle
+              aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation">
+        <?= sv_icon('menu', 20) ?>
+      </button>
+    <?php else: ?>
+      <a class="brand topbar__brand" href="<?= e(url('index.php')) ?>">
+        <?= sv_logo_mark(30) ?>
+        <span class="brand__word">Secure<span>Vote</span></span>
+      </a>
+    <?php endif; ?>
 
     <div class="topbar__titles">
-      <?php if ($breadcrumb !== []): ?>
+      <?php if (count($breadcrumb) > 1): ?>
         <nav class="breadcrumb" aria-label="Breadcrumb">
           <ol>
             <?php foreach ($breadcrumb as $index => $crumb): ?>

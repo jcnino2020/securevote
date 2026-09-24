@@ -114,12 +114,10 @@ function sv_icon(string $name, int $size = 20, string $class = ''): string
     }
 
     $size  = max(12, min(64, $size));
-    $attrs = 'width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none"'
+    $classes = 'sv-icon' . ($class !== '' ? ' ' . $class : '');
+    $attrs = 'class="' . e($classes) . '" width="' . $size . '" height="' . $size . '" viewBox="0 0 24 24" fill="none"'
         . ' stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"'
         . ' aria-hidden="true" focusable="false"';
-    if ($class !== '') {
-        $attrs .= ' class="' . e($class) . '"';
-    }
 
     return '<svg ' . $attrs . '>' . $icons[$name] . '</svg>';
 }

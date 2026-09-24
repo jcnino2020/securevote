@@ -55,40 +55,40 @@ $breadcrumb   = [['label' => 'Dashboard', 'href' => 'voter/dashboard.php']];
 require __DIR__ . '/../includes/header.php';
 ?>
 
-<!-- Voter Identity Card (2026 Glassmorphic Card) -->
-<section class="card" style="border-left: 4px solid var(--clr-primary, #3b82f6); margin-bottom: var(--sp-6);">
+<!-- Voter Identity Card (2026 Refined Surface) -->
+<section class="card" style="margin-bottom: var(--sp-6);">
   <div class="card__body" style="padding: var(--sp-5);">
     <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:var(--sp-4);">
       <div style="display:flex; align-items:center; gap:var(--sp-4);">
-        <span class="avatar avatar--lg" aria-hidden="true" style="font-size:1.4rem; font-weight:700;">
+        <span class="avatar avatar--lg" aria-hidden="true">
           <?= initials($voter['first_name'], $voter['last_name']) ?>
         </span>
         <div>
           <div style="display:flex; align-items:center; gap:8px;">
-            <h2 style="font-size:1.3rem; font-weight:700; margin:0;"><?= e(user_full_name($voter)) ?></h2>
-            <span class="badge badge--success" style="font-size:0.75rem;">Verified Voter</span>
+            <h2 style="font-size:1.25rem; font-weight:700; margin:0; letter-spacing:-0.015em;"><?= e(user_full_name($voter)) ?></h2>
+            <span class="badge badge--success">Verified Voter</span>
             <?php if (!empty($voter['google_id'])): ?>
-              <span class="badge badge--primary" style="font-size:0.75rem; display:inline-flex; align-items:center; gap:4px;">
+              <span class="badge badge--primary" style="display:inline-flex; align-items:center; gap:4px;">
                 <?= sv_icon('google', 12) ?> Google Linked
               </span>
             <?php endif; ?>
           </div>
-          <p class="text-sm text-muted" style="margin:2px 0 0 0;">
+          <p class="text-sm text-muted" style="margin:3px 0 0 0;">
             <span class="mono">@<?= e($voter['username']) ?></span> &middot; <?= e($voter['email']) ?>
           </p>
         </div>
       </div>
 
       <!-- Voter Code Display -->
-      <div style="background:var(--bg-card-sub, #f1f5f9); border:1px solid var(--border-color, #e2e8f0); border-radius:10px; padding:var(--sp-3) var(--sp-4); text-align:right;">
-        <div style="font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">
+      <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:var(--sp-2) var(--sp-4); text-align:right;">
+        <div style="font-size:0.725rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">
           Your Personal Voter Code
         </div>
         <div style="display:flex; align-items:center; gap:8px; margin-top:2px;">
-          <span class="mono" id="my-voter-code" style="font-size:1.1rem; font-weight:700; color:var(--clr-primary, #2563eb); letter-spacing:1px;">
+          <span class="mono" id="my-voter-code" style="font-size:1.05rem; font-weight:700; color:var(--blue); letter-spacing:0.04em;">
             <?= e((string) ($voter['voter_code'] ?? 'VC-2026-0000')) ?>
           </span>
-          <button class="btn btn--ghost btn--sm" type="button" data-copy="#my-voter-code" style="padding:4px 8px;">
+          <button class="btn btn--ghost btn--sm" type="button" data-copy="#my-voter-code" style="padding:2px 6px;">
             <?= sv_icon('copy', 14) ?>
           </button>
         </div>

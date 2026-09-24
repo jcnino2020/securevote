@@ -150,6 +150,16 @@
       button.addEventListener('click', close);
     });
 
+    // Close drawer when a nav link is tapped on small screens
+    var navLinks = sidebar.querySelectorAll('.nav__item');
+    Array.prototype.forEach.call(navLinks, function (link) {
+      link.addEventListener('click', function () {
+        if (window.innerWidth <= 1024 && sidebar.classList.contains('is-open')) {
+          close();
+        }
+      });
+    });
+
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Escape' && sidebar.classList.contains('is-open')) {
         close();

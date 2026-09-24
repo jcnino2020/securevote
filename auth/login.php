@@ -14,8 +14,6 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 
 require_guest();
 
-$showDemoHints = true;
-
 // Messages left by authenticate.php (cleared as soon as they are read).
 $loginError      = $_SESSION['_login_error'] ?? null;
 $loginIdentifier = (string) ($_SESSION['_login_identifier'] ?? '');
@@ -29,40 +27,13 @@ $bodyClass    = 'page-login';
 require __DIR__ . '/../includes/header.php';
 ?>
 
-<section class="auth-aside" aria-labelledby="auth-aside-heading">
-  <div class="auth-aside__top">
-    <span class="brand brand--lg">
-      <?= sv_logo_mark(40) ?>
-      <span class="brand__word">Secure<span>Vote</span></span>
-    </span>
-
-    <h2 class="auth-aside__heading" id="auth-aside-heading">
-      Secure online voting for authorized university participants.
-    </h2>
-    <p class="auth-aside__text">
-      SecureVote authenticates participants via Google OAuth, Database Email, or Personal Voter Codes with verified 1-person-1-vote integrity.
-    </p>
-
-    <ul class="auth-facts">
-      <li><?= sv_icon('google', 18) ?><span><strong>Google OAuth 2.0:</strong> One-click verified institutional sign-in.</span></li>
-      <li><?= sv_icon('key', 18) ?><span><strong>Voter Code:</strong> Personal access token issued to every registered voter.</span></li>
-      <li><?= sv_icon('shield-check', 18) ?><span><strong>1 Ballot Per Voter:</strong> Database unique constraint prevents duplicate voting.</span></li>
-      <li><?= sv_icon('audit', 18) ?><span><strong>Audit Logging:</strong> Every authentication and administrative action is recorded.</span></li>
-    </ul>
-  </div>
-
-  <p class="auth-aside__foot">
-    <?= e(APP_NAME) ?> <?= e(APP_VERSION) ?> &middot; Academic Endterm Project 2026.
-  </p>
-</section>
-
 <div class="auth-main">
   <div class="auth-card">
     <div class="auth-card__head">
-      <span class="brand">
-        <?= sv_logo_mark(32) ?>
+      <a class="brand" href="<?= e(url('index.php')) ?>" style="margin-bottom: var(--sp-2);">
+        <?= sv_logo_mark(36) ?>
         <span class="brand__word">Secure<span>Vote</span></span>
-      </span>
+      </a>
       <h1 class="auth-card__title">Sign in to vote</h1>
       <p class="auth-card__text">
         Use your Google Account, Voter Code, or Email/Password.
@@ -169,25 +140,11 @@ require __DIR__ . '/../includes/header.php';
         <span>Register New Voter Account</span>
       </a>
     </div>
-
-    <?php if ($showDemoHints): ?>
-      <div class="auth-demo">
-        <strong>Demo Credentials & Quick Sign-In</strong>
-        <dl>
-          <dt>Google Sign-In</dt>
-          <dd><a class="link" href="<?= e(url('auth/google-login.php')) ?>">Click "Continue with Google"</a> for 1-click test profiles</dd>
-          <dt>Administrator</dt>
-          <dd><span class="mono">admin</span> / <span class="mono">Admin@12345</span></dd>
-          <dt>Voter Code</dt>
-          <dd>Enter your personal <span class="mono">VC-2026-XXXX</span> code above</dd>
-        </dl>
-      </div>
-    <?php endif; ?>
   </div>
 
-  <p class="text-muted text-xs text-center" style="margin-top: var(--sp-4);">
-    <?= sv_icon('shield', 13) ?>
-    Protected by bcrypt password hashing and TLS/HTTPS session binding.
+  <p class="text-muted text-xs text-center" style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: var(--sp-4);">
+    <?= sv_icon('shield', 14) ?>
+    <span>Protected by bcrypt password hashing and TLS/HTTPS session binding.</span>
   </p>
 </div>
 
