@@ -1,0 +1,12 @@
+# Local configuration overrides
+config/config.local.php
+
+# Runtime
+storage/
+*.log
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
