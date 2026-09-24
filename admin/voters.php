@@ -156,14 +156,27 @@ if (is_post()) {
 
                 flash_success('Voter account "' . $username . '" was updated.');
             } else {
-                $hash   = password_hash($password, PASSWORD_DEFAULT);
+                $hash      = password_hash($password, PASSWORD_DEFAULT);
+                $voterCode = sv_generate_voter_code();
+
+                // Ensure voter code uniqueness
+                for ($attempt = 0; $attempt < 10; $attempt++) {
+                    $chk = $pdo->prepare('SELECT id FROM users WHERE voter_code = ? LIMIT 1');
+                    $chk->execute([$voterCode]);
+                    if (!$chk->fetch()) {
+                        break;
+                    }
+                    $voterCode = sv_generate_voter_code();
+                }
+
                 $insert = $pdo->prepare(
-                    "INSERT INTO users (username, email, password_hash, first_name, last_name, role, status)
-                     VALUES (:username, :email, :hash, :first_name, :last_name, 'voter', :status)"
+                    "INSERT INTO users (username, email, voter_code, password_hash, first_name, last_name, role, status)
+                     VALUES (:username, :email, :voter_code, :hash, :first_name, :last_name, 'voter', :status)"
                 );
                 $insert->execute([
                     ':username'   => $username,
                     ':email'      => $email,
+                    ':voter_code' => $voterCode,
                     ':hash'       => $hash,
                     ':first_name' => trim($form['first_name']),
                     ':last_name'  => trim($form['last_name']),
@@ -177,9 +190,9 @@ if (is_post()) {
                 );
                 $autoEnroll->execute([$newId]);
 
-                audit_log('voter_created', 'Created voter #' . $newId . ' "' . $username . '".');
+                audit_log('voter_created', 'Created voter #' . $newId . ' "' . $username . '" (Voter Code: ' . $voterCode . ').');
 
-                flash_success('Voter account "' . $username . '" was created and registered for active elections.');
+                flash_success('Voter account "' . $username . '" was created (Voter Code: ' . $voterCode . ') and registered for active elections.');
             }
 
             redirect('admin/voters.php');
@@ -229,16 +242,16 @@ if (is_post()) {
             redirect('admin/voters.php');
         }
 
-        // ballots.voter_id is ON DELETE CASCADE, so this check protects a
-        // recorded ballot from being destroyed along with the account.
-        $ballots = $pdo->prepare('SELECT COUNT(*) FROM ballots WHERE voter_id = ?');
-        $ballots->execute([(int) $target['id']]);
-        $ballotCount = (int) $ballots->fetchColumn();
+        // In a secret ballot system, voter accounts that have already voted
+        // are kept to preserve election integrity and turnout verification.
+        $votedStmt = $pdo->prepare('SELECT COUNT(*) FROM voter_eligibility WHERE user_id = ? AND has_voted = 1');
+        $votedStmt->execute([(int) $target['id']]);
+        $votedCount = (int) $votedStmt->fetchColumn();
 
-        if ($ballotCount > 0) {
-            flash_error('"' . $target['username'] . '" has already submitted ' . $ballotCount
-                . ' ballot(s). Those votes must be preserved, so the account cannot be deleted. '
-                . 'Set the status to "blocked" instead.');
+        if ($votedCount > 0) {
+            flash_error('"' . $target['username'] . '" has already participated in ' . $votedCount
+                . ' election(s). Their participation record is preserved for election integrity. '
+                . 'Set the account status to "blocked" instead.');
             redirect('admin/voters.php');
         }
 
@@ -246,7 +259,7 @@ if (is_post()) {
         $delete->execute([(int) $target['id']]);
 
         audit_log('voter_deleted', 'Deleted voter #' . (int) $target['id'] . ' "'
-            . $target['username'] . '" (no ballots existed).');
+            . $target['username'] . '" (had not submitted ballots).');
 
         flash_success('Voter account "' . $target['username'] . '" was deleted.');
         redirect('admin/voters.php');
@@ -669,11 +682,23 @@ if ($isForm) {
             </div>
 
             <div class="form-field">
-              <span class="label">Role</span>
-              <div class="panel">
-                <span class="badge badge--neutral"><?= sv_icon('user', 14) ?>Voter</span>
+              <span class="label">Role & Voter Passcode</span>
+              <div class="panel" style="display:flex; flex-direction:column; gap:6px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span class="badge badge--neutral"><?= sv_icon('user', 14) ?> Voter</span>
+                  <?php if (!$isNew): ?>
+                    <span class="voter-code-badge"><?= e((string) ($editing['voter_code'] ?? '—')) ?></span>
+                    <?php if (!empty($editing['google_id'])): ?>
+                      <span class="badge badge--primary"><?= sv_icon('google', 12) ?> Google Linked</span>
+                    <?php endif; ?>
+                  <?php else: ?>
+                    <span class="badge badge--primary">Auto-generated Voter Code</span>
+                  <?php endif; ?>
+                </div>
                 <span class="help">
-                  This page only manages voter accounts. Administrator privileges are never granted here.
+                  <?= $isNew
+                      ? 'A unique personal Voter Code (e.g. VC-2026-XXXX) will be automatically generated upon creation.'
+                      : 'Personal Voter Code used by this student to sign in and cast ballots.' ?>
                 </span>
               </div>
             </div>
@@ -803,7 +828,7 @@ $pageInfo = paginate($total, 15);
 $listStmt = $pdo->prepare(
     'SELECT u.*,
             (SELECT COUNT(*) FROM voter_eligibility ve WHERE ve.user_id = u.id) AS eligible_count,
-            (SELECT COUNT(*) FROM ballots b WHERE b.voter_id = u.id) AS ballot_count
+            (SELECT COUNT(*) FROM voter_eligibility ve WHERE ve.user_id = u.id AND ve.has_voted = 1) AS ballot_count
        FROM users u'
     . $whereSql
     . ' ORDER BY u.last_name ASC, u.first_name ASC'
@@ -875,7 +900,8 @@ require __DIR__ . '/../includes/header.php';
         <thead>
           <tr>
             <th scope="col">Voter</th>
-            <th scope="col">Email</th>
+            <th scope="col">Voter Code</th>
+            <th scope="col">Email & Sign-In</th>
             <th scope="col">Status</th>
             <th scope="col">Elections</th>
             <th scope="col">Last sign-in</th>
@@ -892,11 +918,21 @@ require __DIR__ . '/../includes/header.php';
                   </span>
                   <span>
                     <span class="table__cell-strong"><?= e(user_full_name($voter)) ?></span>
-                    <span class="table__cell-sub mono"><?= e($voter['username']) ?></span>
+                    <span class="table__cell-sub mono">@<?= e($voter['username']) ?></span>
                   </span>
                 </div>
               </td>
-              <td><?= e($voter['email']) ?></td>
+              <td>
+                <span class="voter-code-badge"><?= e((string) ($voter['voter_code'] ?? '—')) ?></span>
+              </td>
+              <td>
+                <span><?= e($voter['email']) ?></span>
+                <?php if (!empty($voter['google_id'])): ?>
+                  <span class="badge badge--primary" style="margin-top:2px; display:inline-flex; font-size:0.7rem; padding:2px 6px;">
+                    <?= sv_icon('google', 10) ?> Google Linked
+                  </span>
+                <?php endif; ?>
+              </td>
               <td><?= account_badge((string) $voter['status']) ?></td>
               <td>
                 <?= e((string) $voter['eligible_count']) ?> registered

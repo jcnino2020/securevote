@@ -68,13 +68,12 @@ if (is_post()) {
  * =================================================================== */
 
 $stmt = $pdo->prepare(
-    'SELECT b.ballot_reference, b.submitted_at, b.status,
-            e.title AS election_title, e.id AS election_id, e.end_datetime, e.results_visibility,
-            (SELECT COUNT(*) FROM votes v WHERE v.ballot_id = b.id) AS selection_count
-       FROM ballots b
-       JOIN elections e ON e.id = b.election_id
-      WHERE b.voter_id = :user_id
-      ORDER BY b.submitted_at DESC, b.id DESC'
+    "SELECT ve.ballot_reference, ve.voted_at AS submitted_at, 'submitted' AS status,
+            e.title AS election_title, e.id AS election_id, e.end_datetime, e.results_visibility
+       FROM voter_eligibility ve
+       JOIN elections e ON e.id = ve.election_id
+      WHERE ve.user_id = :user_id AND ve.has_voted = 1
+      ORDER BY ve.voted_at DESC, ve.id DESC"
 );
 $stmt->execute([':user_id' => $userId]);
 $history = $stmt->fetchAll();
@@ -126,8 +125,35 @@ require __DIR__ . '/../includes/header.php';
 
       <dl class="kv">
         <div class="kv__row">
+          <dt class="kv__key">Personal Voter Code</dt>
+          <dd class="kv__value">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="voter-code-badge" id="profile-voter-code"><?= e((string) ($voter['voter_code'] ?? 'VC-2026-0000')) ?></span>
+              <button class="btn btn--secondary btn--sm" type="button" data-copy="#profile-voter-code" style="padding:4px 8px;">
+                <?= sv_icon('copy', 14) ?> <span data-copy-label>Copy</span>
+              </button>
+            </div>
+          </dd>
+        </div>
+        <div class="kv__row">
+          <dt class="kv__key">Sign-In Methods</dt>
+          <dd class="kv__value">
+            <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center;">
+              <span class="badge badge--neutral"><?= sv_icon('key', 12) ?> Voter Code</span>
+              <span class="badge badge--neutral"><?= sv_icon('lock', 12) ?> Password</span>
+              <?php if (!empty($voter['google_id'])): ?>
+                <span class="badge badge--primary"><?= sv_icon('google', 12) ?> Google Linked</span>
+              <?php else: ?>
+                <a href="<?= e(url('auth/google-login.php')) ?>" class="badge badge--neutral" style="text-decoration:none;">
+                  <?= sv_icon('google', 12) ?> Link Google
+                </a>
+              <?php endif; ?>
+            </div>
+          </dd>
+        </div>
+        <div class="kv__row">
           <dt class="kv__key">Username</dt>
-          <dd class="kv__value mono"><?= e((string) $voter['username']) ?></dd>
+          <dd class="kv__value mono">@<?= e((string) $voter['username']) ?></dd>
         </div>
         <div class="kv__row">
           <dt class="kv__key">Email address</dt>
@@ -261,9 +287,9 @@ require __DIR__ . '/../includes/header.php';
         <thead>
           <tr>
             <th scope="col">Election</th>
-            <th scope="col">Reference</th>
+            <th scope="col">Receipt code</th>
             <th scope="col">Submitted</th>
-            <th scope="col">Selections</th>
+            <th scope="col">Ballot secrecy</th>
             <th scope="col">Status</th>
             <th scope="col" class="table__actions-col">Receipt</th>
           </tr>
@@ -278,7 +304,7 @@ require __DIR__ . '/../includes/header.php';
                 <?= e(fmt_datetime((string) $row['submitted_at'])) ?>
                 <span class="table__cell-sub"><?= e(relative_time((string) $row['submitted_at'])) ?></span>
               </td>
-              <td><?= e((string) $row['selection_count']) ?> recorded</td>
+              <td><span class="badge badge--navy"><?= sv_icon('shield-check', 13) ?>Secret ballot</span></td>
               <td><?= badge($label, $variant) ?></td>
               <td class="table__actions-col">
                 <div class="table__actions">

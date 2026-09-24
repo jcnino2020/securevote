@@ -17,27 +17,21 @@
 require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/voting.php';
 
-$voter  = require_voter();
+$voter  = current_user();
 $pdo    = db();
-$userId = (int) $voter['id'];
+$userId = $voter !== null ? (int) $voter['id'] : 0;
 
 /* =====================================================================
- | Elections this voter is registered for
+ | Load Elections
  * =================================================================== */
 
-$stmt = $pdo->prepare(
+$stmt = $pdo->query(
     'SELECT e.*,
-            ve.has_voted,
-            b.ballot_reference,
-            b.submitted_at AS ballot_submitted_at,
             (SELECT COUNT(*) FROM ballots bb WHERE bb.election_id = e.id AND bb.status = \'submitted\') AS ballot_count
-       FROM voter_eligibility ve
-       JOIN elections e ON e.id = ve.election_id
-       LEFT JOIN ballots b ON b.election_id = e.id AND b.voter_id = ve.user_id
-      WHERE ve.user_id = :user_id
-      ORDER BY e.start_datetime DESC'
+       FROM elections e
+      WHERE e.status != \'draft\'
+      ORDER BY FIELD(e.status, \'open\', \'scheduled\', \'closed\', \'archived\'), e.start_datetime DESC'
 );
-$stmt->execute([':user_id' => $userId]);
 $elections = $stmt->fetchAll();
 
 /* =====================================================================
@@ -56,34 +50,30 @@ if ($electionId > 0) {
     }
 
     if ($focus === null) {
-        // Not registered for it, so its existence is not confirmed either.
-        audit_log('unauthorized_results_access', 'Voter "' . $voter['username']
-            . '" requested results for election #' . $electionId
-            . ' without being registered.', $userId);
+        $stmtFocus = $pdo->prepare('SELECT * FROM elections WHERE id = ? LIMIT 1');
+        $stmtFocus->execute([$electionId]);
+        $focus = $stmtFocus->fetch() ?: null;
+    }
 
+    if ($focus === null) {
         sv_error_page(
-            403,
-            'Not available to your account',
-            'This election is not on your voter list, so its results were not shown.',
+            404,
+            'Election not found',
+            'That election does not exist, or it has been removed.',
             [['label' => 'Back to results', 'href' => url('voter/results.php')]]
         );
     }
 }
 
-$focusVoted  = $focus !== null && (int) $focus['has_voted'] === 1;
+$focusVoted  = false;
 $focusMaySee = $focus !== null && may_view_results($focus, $voter, $focusVoted);
-
-if ($focus !== null && !$focusMaySee) {
-    audit_log('results_policy_blocked', 'Results for election #' . $electionId
-        . ' withheld from voter "' . $voter['username'] . '" by the '
-        . $focus['results_visibility'] . ' policy.', $userId);
-}
 
 // The tally is only computed when it may be shown or summarised.
 $tally = [];
 if ($focus !== null && $focusMaySee) {
     $tally = sv_tally_positions((int) $focus['id']);
 }
+
 
 /* =====================================================================
  | Header

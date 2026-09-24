@@ -92,6 +92,19 @@ if ($svDocRoot !== '' && str_starts_with($svAppRoot, $svDocRoot)) {
 define('BASE_URL', rtrim($svBase, '/'));
 unset($svDocRoot, $svAppRoot, $svBase);
 
+
+/* ---------------------------------------------------------------------
+ | 6. Google OAuth 2.0 Credentials
+ |
+ | Provide GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable Google
+ | sign-in. If left empty in development, SecureVote provides an instant
+ | verified OAuth sign-in flow for testing.
+ * ------------------------------------------------------------------- */
+define('GOOGLE_CLIENT_ID',     (string) (getenv('GOOGLE_CLIENT_ID') ?: ''));
+define('GOOGLE_CLIENT_SECRET', (string) (getenv('GOOGLE_CLIENT_SECRET') ?: ''));
+define('GOOGLE_OAUTH_ENABLED', true);
+
+
 /* ---------------------------------------------------------------------
  | 6. Helpers that must exist before anything else runs
  * ------------------------------------------------------------------- */

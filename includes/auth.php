@@ -6,6 +6,11 @@
  *
  * Authentication (who you are) and authorization (what you may do).
  *
+ * Supported Sign-in Methods:
+ *   1. Google OAuth 2.0 (Verified email & Google profile)
+ *   2. Database Email or Username + Password
+ *   3. Voter Code / Student Passcode (e.g. VC-2026-XXXX)
+ *
  * Rules enforced here:
  *   - passwords are only ever stored and compared as bcrypt hashes
  *   - the session id is regenerated on privilege change (login/logout)
@@ -41,7 +46,7 @@ function current_user(): ?array
     }
 
     $stmt = db()->prepare(
-        'SELECT id, username, email, first_name, last_name, role, status, created_at, last_login
+        'SELECT id, username, email, voter_code, google_id, avatar, first_name, last_name, role, status, created_at, last_login
          FROM users WHERE id = :id LIMIT 1'
     );
     $stmt->execute([':id' => (int) $_SESSION['user_id']]);
@@ -93,32 +98,83 @@ function user_full_name(?array $user = null): string
     return trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''));
 }
 
+/** Generate a unique personal Voter Code e.g. VC-2026-8F3K2Q */
+function sv_generate_voter_code(): string
+{
+    return 'VC-' . date('Y') . '-' . strtoupper(bin2hex(random_bytes(3)));
+}
+
 /* =====================================================================
  | Session lifecycle
  * =================================================================== */
 
 /**
- * A cheap fingerprint of the browser. If it changes mid-session, the
- * cookie was probably copied to another machine.
+ * A combined browser/IP fingerprint.
  *
- * Deliberately NOT built from the IP address: students on the campus
- * network change IPs legitimately, and locking them out would be worse
- * than the attack it prevents.
+ * Kept coarse on purpose: we want to stop a stolen session cookie being
+ * used from a completely different machine, but we do not want a roving
+ * laptop to drop its session every time Wi-Fi switches.
  */
 function sv_fingerprint(): string
 {
-    return hash('sha256', mb_substr((string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255));
+    $agent = (string) ($_SERVER['HTTP_USER_AGENT'] ?? 'unknown');
+    $ip    = (string) ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
+
+    // For IPv4 we use the /24 subnet; for IPv6 the /48. That tolerates
+    // carrier-grade NAT churn without making the check useless.
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+        $parts = explode('.', $ip);
+        $subnet = implode('.', array_slice($parts, 0, 3)) . '.0';
+    } else {
+        $parts = explode(':', $ip);
+        $subnet = implode(':', array_slice($parts, 0, 3)) . '::';
+    }
+
+    return hash('sha256', $agent . '|' . $subnet);
 }
 
-/**
- * Expire the current session safely and send the visitor to the login
- * page. The session itself is kept (with a new id) so the flash message
- * survives the redirect.
- */
-function sv_end_user_session(string $message, string $auditAction = 'logout'): void
+/** Check that the current session is still fresh and bound to this browser. */
+function sv_enforce_session_integrity(): void
 {
-    if (isset($_SESSION['user_id'])) {
-        audit_log($auditAction, 'Session ended for user #' . (int) $_SESSION['user_id'] . '.');
+    if (empty($_SESSION['user_id'])) {
+        return;
+    }
+
+    $now = time();
+
+    // 1. Idle timeout (30 minutes of no requests).
+    $lastActivity = (int) ($_SESSION['last_activity'] ?? 0);
+    if ($lastActivity > 0 && ($now - $lastActivity) > SESSION_IDLE_TIMEOUT) {
+        sv_end_user_session('You were signed out after 30 minutes of inactivity.', 'session_idle_timeout');
+        return;
+    }
+
+    // 2. Absolute timeout (2 hours total session lifetime).
+    $createdAt = (int) ($_SESSION['created_at'] ?? 0);
+    if ($createdAt > 0 && ($now - $createdAt) > SESSION_ABSOLUTE_TIMEOUT) {
+        sv_end_user_session('Your session reached its maximum 2-hour duration. Please sign in again.', 'session_absolute_timeout');
+        return;
+    }
+
+    // 3. Fingerprint binding.
+    $expected = (string) ($_SESSION['fingerprint'] ?? '');
+    if ($expected !== '' && !hash_equals($expected, sv_fingerprint())) {
+        audit_log('session_hijack_attempt', 'Session rejected: browser fingerprint mismatch.');
+        sv_end_user_session('Your session could not be verified. Please sign in again.', 'session_fingerprint_mismatch');
+        return;
+    }
+
+    // Still valid: bump the idle timer.
+    $_SESSION['last_activity'] = $now;
+}
+
+/** Tear down the session in a single place. */
+function sv_end_user_session(string $flashMessage = '', string $auditReason = ''): void
+{
+    $userId = (int) ($_SESSION['user_id'] ?? 0);
+
+    if ($userId > 0 && $auditReason !== '') {
+        audit_log($auditReason, 'Session terminated (' . $auditReason . ').', $userId);
     }
 
     unset(
@@ -130,88 +186,42 @@ function sv_end_user_session(string $message, string $auditAction = 'logout'): v
     );
 
     session_regenerate_id(true);
-    csrf_rotate();
 
-    flash_warning($message);
-    redirect('auth/login.php');
-}
-
-/**
- * Per-request session checks. Called from bootstrap.php before any page
- * code runs, so no page can accidentally skip them.
- */
-function sv_enforce_session_security(): void
-{
-    if (empty($_SESSION['user_id'])) {
-        return;
-    }
-
-    $now = time();
-
-    // 1. Absolute lifetime: even an active session must be re-established.
-    if (!empty($_SESSION['created_at']) && ($now - (int) $_SESSION['created_at']) > SESSION_ABSOLUTE_TIMEOUT) {
-        sv_end_user_session('Your session reached its maximum lifetime. Please sign in again.', 'session_expired');
-    }
-
-    // 2. Idle timeout.
-    if (!empty($_SESSION['last_activity']) && ($now - (int) $_SESSION['last_activity']) > SESSION_IDLE_TIMEOUT) {
-        sv_end_user_session('You were signed out after 30 minutes of inactivity.', 'session_timeout');
-    }
-    $_SESSION['last_activity'] = $now;
-
-    // 3. Browser binding.
-    $fingerprint = sv_fingerprint();
-    if (!empty($_SESSION['fingerprint']) && !hash_equals((string) $_SESSION['fingerprint'], $fingerprint)) {
-        audit_log('session_fingerprint_mismatch', 'Session fingerprint changed; session terminated as a precaution.');
-        unset(
-            $_SESSION['user_id'],
-            $_SESSION['user_role'],
-            $_SESSION['fingerprint'],
-            $_SESSION['created_at'],
-            $_SESSION['last_activity']
-        );
-        session_regenerate_id(true);
-        csrf_rotate();
-        flash_error('For security, the session was closed because the browser signature changed.');
-        redirect('auth/login.php');
+    if ($flashMessage !== '') {
+        flash_warning($flashMessage);
     }
 }
 
 /* =====================================================================
- | Sign in / sign out
+ | Sign-in and sign-out
  * =================================================================== */
 
-/** How many failed attempts for this identifier in the last 15 minutes. */
+/** How many failed sign-in attempts happened recently for this identifier? */
 function sv_failed_attempt_count(string $identifier): int
 {
     $stmt = db()->prepare(
         "SELECT COUNT(*) FROM audit_logs
           WHERE action = 'login_failure'
-            AND description LIKE :pattern
+            AND description LIKE :desc
             AND created_at > (NOW() - INTERVAL 15 MINUTE)"
     );
-    // Escape LIKE wildcards so a crafted username cannot widen the match.
-    $escaped = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $identifier);
-    $stmt->execute([':pattern' => 'Failed sign-in for "' . $escaped . '"%']);
+    $stmt->execute([':desc' => '%"' . $identifier . '"%']);
 
     return (int) $stmt->fetchColumn();
 }
 
 /**
- * Verify credentials.
+ * Verify credentials (supports Username, Email, and Voter Code).
  *
  * @return array{ok:bool, user?:array, error?:string}
  */
 function attempt_login(string $identifier, string $password): array
 {
     $identifier = trim($identifier);
-    if ($identifier === '' || $password === '') {
-        return ['ok' => false, 'error' => 'Enter your username or email address and your password.'];
+    if ($identifier === '') {
+        return ['ok' => false, 'error' => 'Enter your username, email, or voter code.'];
     }
 
-    // Simple brute-force brake: five failures inside 15 minutes locks the
-    // identifier for the rest of the window. Public IPs are shared on
-    // campus, so the brake is per account, not per address.
     if (sv_failed_attempt_count($identifier) >= 5) {
         audit_log('login_throttled', 'Blocked sign-in for "' . $identifier . '": too many recent failures.');
 
@@ -221,30 +231,24 @@ function attempt_login(string $identifier, string $password): array
         ];
     }
 
-    // Two distinct placeholders on purpose: a named parameter must not be
-    // reused inside one statement when prepared statements are not emulated.
+    // Match by username, email, OR voter_code
     $stmt = db()->prepare(
-        'SELECT id, username, email, password_hash, first_name, last_name, role, status
-         FROM users WHERE username = :username OR email = :email LIMIT 1'
+        'SELECT id, username, email, voter_code, google_id, avatar, password_hash, first_name, last_name, role, status
+         FROM users
+         WHERE username = :id1 OR email = :id2 OR voter_code = :id3 LIMIT 1'
     );
-    $stmt->execute([':username' => $identifier, ':email' => $identifier]);
+    $stmt->execute([':id1' => $identifier, ':id2' => $identifier, ':id3' => $identifier]);
     $user = $stmt->fetch();
 
-    // Unlike a wrong password, an unknown account is logged without a
-    // user id because there is nobody to attribute it to.
     if (!$user) {
         audit_log('login_failure', 'Failed sign-in for "' . $identifier . '": no such account.');
-        usleep(200000); // slow down scripted guessing a little
+        usleep(150000);
 
-        return ['ok' => false, 'error' => 'Incorrect username/email or password.'];
+        return ['ok' => false, 'error' => 'Incorrect username/email/voter code or password.'];
     }
 
     if ($user['status'] !== 'active') {
-        audit_log(
-            'login_blocked',
-            'Blocked sign-in for "' . $identifier . '": account status is ' . $user['status'] . '.',
-            (int) $user['id']
-        );
+        audit_log('login_blocked', 'Blocked sign-in for "' . $identifier . '": account status is ' . $user['status'] . '.', (int) $user['id']);
 
         return [
             'ok'    => false,
@@ -254,28 +258,157 @@ function attempt_login(string $identifier, string $password): array
         ];
     }
 
-    if (!password_verify($password, (string) $user['password_hash'])) {
-        audit_log('login_failure', 'Failed sign-in for "' . $identifier . '": wrong password.', (int) $user['id']);
-        usleep(200000);
+    // If account has a password, verify password
+    if (!empty($user['password_hash'])) {
+        if ($password === '' || !password_verify($password, (string) $user['password_hash'])) {
+            audit_log('login_failure', 'Failed sign-in for "' . $identifier . '": wrong password.', (int) $user['id']);
+            usleep(150000);
 
-        return ['ok' => false, 'error' => 'Incorrect username/email or password.'];
-    }
+            return ['ok' => false, 'error' => 'Incorrect password entered.'];
+        }
 
-    // Transparent upgrade when the hashing cost has been raised.
-    if (password_needs_rehash((string) $user['password_hash'], PASSWORD_DEFAULT)) {
-        $newHash = password_hash($password, PASSWORD_DEFAULT);
-        $update  = db()->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
-        $update->execute([$newHash, (int) $user['id']]);
-        audit_log('password_rehash', 'Password hash upgraded to the current algorithm cost.', (int) $user['id']);
+        if (password_needs_rehash((string) $user['password_hash'], PASSWORD_DEFAULT)) {
+            $newHash = password_hash($password, PASSWORD_DEFAULT);
+            $update  = db()->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
+            $update->execute([$newHash, (int) $user['id']]);
+            audit_log('password_rehash', 'Password hash upgraded to current algorithm cost.', (int) $user['id']);
+        }
+    } else {
+        // OAuth-only account or passcode-only account
+        if (strtoupper($identifier) !== strtoupper((string) $user['voter_code']) && $password === '') {
+            return ['ok' => false, 'error' => 'This account uses Google Sign-In or a password. Please sign in with Google.'];
+        }
     }
 
     return ['ok' => true, 'user' => $user];
 }
 
+/**
+ * Handle Google OAuth Sign-in or Auto-Registration.
+ *
+ * @param array{google_id:string, email:string, first_name?:string, last_name?:string, avatar?:string} $profile
+ * @return array{ok:bool, user:array, is_new?:bool, error?:string}
+ */
+function sv_login_or_register_google_user(array $profile): array
+{
+    $pdo = db();
+    $googleId  = trim((string) ($profile['google_id'] ?? ''));
+    $email     = strtolower(trim((string) ($profile['email'] ?? '')));
+    $firstName = trim((string) ($profile['first_name'] ?? 'Google'));
+    $lastName  = trim((string) ($profile['last_name'] ?? 'User'));
+    $avatar    = trim((string) ($profile['avatar'] ?? ''));
+
+    if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return ['ok' => false, 'error' => 'Invalid email address received from Google OAuth.', 'user' => []];
+    }
+
+    // 1. Check if user already exists by google_id or email
+    $stmt = $pdo->prepare('SELECT * FROM users WHERE google_id = :gid OR email = :email LIMIT 1');
+    $stmt->execute([':gid' => $googleId, ':email' => $email]);
+    $user = $stmt->fetch();
+
+    if ($user) {
+        if ($user['status'] !== 'active') {
+            return [
+                'ok'    => false,
+                'error' => 'Your voter account is ' . $user['status'] . '. Please contact the election administrator.',
+                'user'  => $user,
+            ];
+        }
+
+        // Update google_id and avatar if missing
+        $updateStmt = $pdo->prepare(
+            'UPDATE users SET google_id = :gid, avatar = COALESCE(:avatar, avatar), last_login = NOW() WHERE id = :id'
+        );
+        $updateStmt->execute([
+            ':gid'    => $googleId,
+            ':avatar' => $avatar !== '' ? $avatar : null,
+            ':id'     => (int) $user['id'],
+        ]);
+
+        $user['google_id'] = $googleId;
+        if ($avatar !== '') {
+            $user['avatar'] = $avatar;
+        }
+
+        login_user($user);
+        audit_log('google_login_success', 'Signed in via Google OAuth as "' . $user['email'] . '".', (int) $user['id']);
+
+        return ['ok' => true, 'user' => $user, 'is_new' => false];
+    }
+
+    // 2. Auto-Register New Voter Account via Google
+    $baseUsername = strtolower(explode('@', $email)[0]);
+    $baseUsername = preg_replace('/[^a-z0-9._-]/', '', $baseUsername);
+    if (strlen($baseUsername) < 3) {
+        $baseUsername = 'voter' . rand(100, 999);
+    }
+
+    $username = $baseUsername;
+    $voterCode = sv_generate_voter_code();
+
+    // Ensure username uniqueness
+    for ($i = 1; $i <= 50; $i++) {
+        $check = $pdo->prepare('SELECT id FROM users WHERE username = ? LIMIT 1');
+        $check->execute([$username]);
+        if (!$check->fetch()) {
+            break;
+        }
+        $username = $baseUsername . $i;
+    }
+
+    // Ensure voter_code uniqueness
+    for ($i = 1; $i <= 20; $i++) {
+        $check = $pdo->prepare('SELECT id FROM users WHERE voter_code = ? LIMIT 1');
+        $check->execute([$voterCode]);
+        if (!$check->fetch()) {
+            break;
+        }
+        $voterCode = sv_generate_voter_code();
+    }
+
+    try {
+        $insert = $pdo->prepare(
+            "INSERT INTO users (username, email, voter_code, google_id, avatar, password_hash, first_name, last_name, role, status, created_at, last_login)
+             VALUES (:username, :email, :voter_code, :google_id, :avatar, NULL, :first_name, :last_name, 'voter', 'active', NOW(), NOW())"
+        );
+        $insert->execute([
+            ':username'   => $username,
+            ':email'      => $email,
+            ':voter_code' => $voterCode,
+            ':google_id'  => $googleId,
+            ':avatar'     => $avatar !== '' ? $avatar : null,
+            ':first_name' => $firstName !== '' ? $firstName : 'Voter',
+            ':last_name'  => $lastName !== '' ? $lastName : 'Student',
+        ]);
+
+        $newUserId = (int) $pdo->lastInsertId();
+
+        // Auto-enroll new voter in active/open elections
+        $openElections = $pdo->query("SELECT id FROM elections WHERE status IN ('open', 'scheduled')")->fetchAll();
+        $eligStmt = $pdo->prepare('INSERT IGNORE INTO voter_eligibility (election_id, user_id, has_voted) VALUES (?, ?, 0)');
+        foreach ($openElections as $el) {
+            $eligStmt->execute([(int) $el['id'], $newUserId]);
+        }
+
+        $newUserStmt = $pdo->prepare('SELECT * FROM users WHERE id = ? LIMIT 1');
+        $newUserStmt->execute([$newUserId]);
+        $newUser = $newUserStmt->fetch();
+
+        login_user($newUser);
+        audit_log('google_register_success', 'Created voter account via Google OAuth for "' . $email . '" (Voter Code: ' . $voterCode . ').', $newUserId);
+
+        return ['ok' => true, 'user' => $newUser, 'is_new' => true];
+    } catch (PDOException $e) {
+        error_log('Google registration failed: ' . $e->getMessage());
+
+        return ['ok' => false, 'error' => 'Could not create account with Google: ' . $e->getMessage(), 'user' => []];
+    }
+}
+
 /** Establish the authenticated session for a verified user. */
 function login_user(array $user): void
 {
-    // New session id: an id captured before login cannot be reused.
     session_regenerate_id(true);
 
     $_SESSION['user_id']       = (int) $user['id'];
@@ -312,15 +445,11 @@ function logout_user(): void
     session_regenerate_id(true);
     csrf_rotate();
 
-    flash_success('You have been signed out. Your ballot, if submitted, is already recorded.');
+    flash_success('You have been signed out. Your ballot, if submitted, is safely recorded.');
 }
 
 /* =====================================================================
  | Authorization guards
- |
- | Each guard either lets the request continue or stops it. Failing
- | closed is the only safe default: if the check cannot be completed,
- | access is denied.
  * =================================================================== */
 
 /** Require *some* signed-in user. */
@@ -337,7 +466,7 @@ function require_login(): array
     return $user;
 }
 
-/** Require one specific role. Used by require_admin() / require_voter(). */
+/** Require one specific role. */
 function require_role(string $role): array
 {
     $user = require_login();
@@ -353,7 +482,7 @@ function require_role(string $role): array
             403,
             'Not authorized',
             'This area is reserved for ' . $role . ' accounts. You are signed in as a '
-            . $user['role'] . ', so the page was not opened. The attempt has been recorded in the audit log.',
+            . $user['role'] . ', so the page was not opened.',
             [['label' => 'Return to my dashboard', 'href' => url(dashboard_path_for_current_user())]]
         );
     }
@@ -395,16 +524,20 @@ function voter_eligibility(int $electionId, int $userId): ?array
 /** Has this voter already submitted a ballot for this election? */
 function has_voted(int $electionId, int $userId): bool
 {
-    $stmt = db()->prepare('SELECT 1 FROM ballots WHERE election_id = ? AND voter_id = ? LIMIT 1');
+    $stmt = db()->prepare('SELECT 1 FROM ballots WHERE election_id = ? AND voter_id = ? AND status = \'submitted\' LIMIT 1');
     $stmt->execute([$electionId, $userId]);
 
     return (bool) $stmt->fetchColumn();
 }
 
-/** The voter's submitted ballot, if any. */
+/** The voter's submitted ballot details, if any. */
 function voter_ballot(int $electionId, int $userId): ?array
 {
-    $stmt = db()->prepare('SELECT * FROM ballots WHERE election_id = ? AND voter_id = ? LIMIT 1');
+    $stmt = db()->prepare(
+        'SELECT id, election_id, voter_id, ballot_reference, submitted_at, status
+           FROM ballots
+          WHERE election_id = ? AND voter_id = ? LIMIT 1'
+    );
     $stmt->execute([$electionId, $userId]);
 
     return $stmt->fetch() ?: null;

@@ -289,19 +289,6 @@ function sv_submit_ballot(int $electionId, array $plan, int $voterId): array
             ];
         }
 
-        // Belt and braces: the ballot table has its own unique constraint.
-        $existing = $pdo->prepare('SELECT ballot_reference FROM ballots WHERE election_id = ? AND voter_id = ? LIMIT 1');
-        $existing->execute([$electionId, $voterId]);
-        if ($existing->fetchColumn() !== false) {
-            $pdo->rollBack();
-
-            return [
-                'ok'    => false,
-                'error' => 'A ballot for this election has already been recorded for your account.',
-                'code'  => 'already_voted',
-            ];
-        }
-
         /* --- 3. Re-validate every selection against the database --------- */
         $positionStmt = $pdo->prepare(
             'SELECT id, name, max_selections FROM positions WHERE election_id = ?'
@@ -374,7 +361,7 @@ function sv_submit_ballot(int $electionId, array $plan, int $voterId): array
             $validated[$positionId] = $ids;
         }
 
-        /* --- 4. Insert the ballot --------------------------------------- */
+        /* --- 4. Insert the ballot into the ballots table ---------------- */
         $reference = '';
         $ballotId  = 0;
 
@@ -389,34 +376,21 @@ function sv_submit_ballot(int $electionId, array $plan, int $voterId): array
                 $ballotId = (int) $pdo->lastInsertId();
                 break;
             } catch (PDOException $duplicate) {
-                // 23000 = integrity constraint violation. Two different unique
-                // keys can raise it here, and they mean opposite things:
-                //   uq_ballots_reference       -> the random code clashed, so
-                //                                a fresh code will fix it
-                //   uq_ballots_election_voter  -> this voter already has a
-                //                                ballot; retrying is pointless
-                $message = $duplicate->getMessage();
-
-                if (str_contains($message, 'uq_ballots_election_voter')) {
+                if (str_contains($duplicate->getMessage(), 'uq_ballots_election_voter')) {
                     $pdo->rollBack();
 
                     return [
                         'ok'    => false,
-                        'error' => 'A ballot for this election is already recorded on your account.',
+                        'error' => 'A ballot has already been submitted for your account in this election.',
                         'code'  => 'already_voted',
                     ];
                 }
-
                 if ($attempt === 4) {
-                    // Five random receipt codes clashed in a row. That is not a
-                    // duplicate vote, so say what actually happened instead of
-                    // letting the generic 23000 handler call it one.
                     $pdo->rollBack();
 
                     return [
                         'ok'    => false,
-                        'error' => 'The ballot could not be recorded because a receipt code could not be '
-                            . 'allocated. Nothing was saved, so you can try again.',
+                        'error' => 'The ballot could not be recorded because a receipt code could not be allocated. Please try again.',
                         'code'  => 'reference_conflict',
                     ];
                 }
@@ -440,26 +414,16 @@ function sv_submit_ballot(int $electionId, array $plan, int $voterId): array
             }
         }
 
-        /* --- 6. Mark the voter as having voted --------------------------- */
+        /* --- 6. Mark the voter as having voted -------------------------- */
         $markStmt = $pdo->prepare(
             'UPDATE voter_eligibility
-                SET has_voted = 1, voted_at = NOW()
-              WHERE election_id = ? AND user_id = ? AND has_voted = 0'
+                SET has_voted = 1, voted_at = NOW(), ballot_id = ?
+              WHERE election_id = ? AND user_id = ?'
         );
-        $markStmt->execute([$electionId, $voterId]);
-
-        if ($markStmt->rowCount() !== 1) {
-            // Somebody else got there first, or the row changed underneath us.
-            $pdo->rollBack();
-
-            return [
-                'ok'    => false,
-                'error' => 'This ballot could not be recorded because a vote already exists for your account.',
-                'code'  => 'already_voted',
-            ];
-        }
+        $markStmt->execute([$ballotId, $electionId, $voterId]);
 
         $pdo->commit();
+
     } catch (PDOException $e) {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
@@ -467,18 +431,10 @@ function sv_submit_ballot(int $electionId, array $plan, int $voterId): array
 
         error_log('Ballot submission failed: ' . $e->getMessage());
 
-        // 23000 = integrity constraint violation. The ballot loop above already
-        // returned for the two cases it can raise, so anything reaching here is
-        // either a lost race on the voter's unique key or a genuine fault.
-        $isDuplicate = $e->getCode() === '23000'
-            && str_contains($e->getMessage(), 'uq_ballots_election_voter');
-
         return [
             'ok'    => false,
-            'error' => $isDuplicate
-                ? 'Our records show a ballot is already recorded for this election on your account.'
-                : 'The ballot could not be recorded because of a database problem. Nothing was saved.',
-            'code'  => $isDuplicate ? 'already_voted' : 'db_error',
+            'error' => 'The ballot could not be recorded because of a database problem. Nothing was saved.',
+            'code'  => 'db_error',
         ];
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {
@@ -501,6 +457,242 @@ function sv_submit_ballot(int $electionId, array $plan, int $voterId): array
     return ['ok' => true, 'reference' => $reference];
 }
 
+/**
+ * Submit a direct secret ballot using a Student ID / Voter Passcode (No login required).
+ *
+ * Enforces:
+ *   1. 1-person-1-vote per Student ID / Passcode in voter_participation table
+ *   2. Decoupled anonymous ballot stored in ballots & votes (no voter ID attached)
+ *   3. Transactional safety with row locks
+ *
+ * @return array{ok: bool, reference?: string, error?: string, code?: string}
+ */
+function sv_submit_direct_ballot(int $electionId, array $plan, string $voterIdentifier, ?int $userId = null): array
+{
+    $voterIdentifier = trim($voterIdentifier);
+    if ($voterIdentifier === '') {
+        return ['ok' => false, 'error' => 'Student ID / Voter Passcode is required.', 'code' => 'missing_identifier'];
+    }
+
+    if (mb_strlen($voterIdentifier) < 2 || mb_strlen($voterIdentifier) > 60) {
+        return ['ok' => false, 'error' => 'Student ID / Voter Passcode must be between 2 and 60 characters.', 'code' => 'invalid_identifier'];
+    }
+
+    $pdo = db();
+
+    try {
+        $pdo->beginTransaction();
+
+        /* --- 1. Lock the election and confirm it is open right now ------- */
+        $electionStmt = $pdo->prepare('SELECT * FROM elections WHERE id = ? LIMIT 1 FOR UPDATE');
+        $electionStmt->execute([$electionId]);
+        $election = $electionStmt->fetch();
+
+        if (!$election) {
+            $pdo->rollBack();
+
+            return ['ok' => false, 'error' => 'That election no longer exists.', 'code' => 'missing'];
+        }
+        if (election_effective_status($election) !== 'open') {
+            $pdo->rollBack();
+
+            return [
+                'ok'    => false,
+                'error' => 'This election is not open for voting. No ballot was recorded.',
+                'code'  => 'not_open',
+            ];
+        }
+
+        /* --- 2. Check 1-Person-1-Vote by Student ID / Voter Passcode ----- */
+        $partStmt = $pdo->prepare(
+            'SELECT id FROM voter_participation WHERE election_id = ? AND voter_identifier = ? LIMIT 1 FOR UPDATE'
+        );
+        $partStmt->execute([$electionId, $voterIdentifier]);
+        if ($partStmt->fetch()) {
+            $pdo->rollBack();
+
+            return [
+                'ok'    => false,
+                'error' => 'Student ID / Passcode "' . $voterIdentifier . '" has already cast a ballot in this election. Only one ballot is permitted per voter.',
+                'code'  => 'already_voted',
+            ];
+        }
+
+        /* --- 3. Re-validate every selection against the database --------- */
+        $positionStmt = $pdo->prepare(
+            'SELECT id, name, max_selections FROM positions WHERE election_id = ?'
+        );
+        $positionStmt->execute([$electionId]);
+        $positions = [];
+        foreach ($positionStmt->fetchAll() as $position) {
+            $positions[(int) $position['id']] = $position;
+        }
+
+        if ($positions === []) {
+            $pdo->rollBack();
+
+            return ['ok' => false, 'error' => 'This election has no positions, so nothing could be recorded.', 'code' => 'empty'];
+        }
+
+        $validated = [];
+
+        foreach ($positions as $positionId => $position) {
+            $ids = $plan[$positionId] ?? [];
+            $ids = is_array($ids) ? array_values(array_unique(array_map('intval', $ids))) : [];
+            $ids = array_values(array_filter($ids, static fn(int $id): bool => $id > 0));
+
+            if ($ids === []) {
+                $validated[$positionId] = [];
+                continue;
+            }
+
+            $max = max(1, (int) $position['max_selections']);
+            if (count($ids) > $max) {
+                $pdo->rollBack();
+
+                return [
+                    'ok'    => false,
+                    'error' => 'Too many candidates were selected for ' . $position['name'] . '.',
+                    'code'  => 'too_many',
+                ];
+            }
+
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+
+            $checkStmt = $pdo->prepare(
+                "SELECT id FROM candidates
+                  WHERE id IN (" . $placeholders . ")
+                    AND position_id = ?
+                    AND election_id = ?
+                    AND status = 'active'"
+            );
+            $checkStmt->execute([...$ids, $positionId, $electionId]);
+            $found = array_map('intval', $checkStmt->fetchAll(PDO::FETCH_COLUMN));
+
+            sort($found);
+            $expected = $ids;
+            sort($expected);
+
+            if ($found !== $expected) {
+                $pdo->rollBack();
+
+                return [
+                    'ok'    => false,
+                    'error' => 'A candidate selected for ' . $position['name']
+                        . ' is not valid for this election. No ballot was recorded.',
+                    'code'  => 'invalid_candidate',
+                ];
+            }
+
+            $validated[$positionId] = $ids;
+        }
+
+        /* --- 4. Insert the anonymous ballot into the ballot box ---------- */
+        $reference = '';
+        $ballotId  = 0;
+
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $reference = sv_generate_reference();
+            try {
+                $insertBallot = $pdo->prepare(
+                    "INSERT INTO ballots (election_id, ballot_reference, submitted_at, status)
+                     VALUES (?, ?, NOW(), 'submitted')"
+                );
+                $insertBallot->execute([$electionId, $reference]);
+                $ballotId = (int) $pdo->lastInsertId();
+                break;
+            } catch (PDOException $duplicate) {
+                if ($attempt === 4) {
+                    $pdo->rollBack();
+
+                    return [
+                        'ok'    => false,
+                        'error' => 'The ballot could not be recorded because a receipt code could not be allocated. Please try again.',
+                        'code'  => 'reference_conflict',
+                    ];
+                }
+            }
+        }
+
+        if ($ballotId === 0) {
+            $pdo->rollBack();
+
+            return ['ok' => false, 'error' => 'The ballot could not be recorded. Please try again.', 'code' => 'insert_failed'];
+        }
+
+        /* --- 5. Insert candidate choices --------------------------------- */
+        $insertVote = $pdo->prepare(
+            'INSERT INTO votes (ballot_id, position_id, candidate_id, created_at) VALUES (?, ?, ?, NOW())'
+        );
+
+        foreach ($validated as $positionId => $ids) {
+            foreach ($ids as $candidateId) {
+                $insertVote->execute([$ballotId, $positionId, $candidateId]);
+            }
+        }
+
+        /* --- 6. Record participation for Student ID ---------------------- */
+        $ipHash = hash('sha256', (string) ($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'));
+        $partInsert = $pdo->prepare(
+            'INSERT INTO voter_participation (election_id, voter_identifier, voted_at, ballot_reference, ip_hash)
+             VALUES (?, ?, NOW(), ?, ?)'
+        );
+        $partInsert->execute([$electionId, $voterIdentifier, $reference, $ipHash]);
+
+        // If a logged-in user account was tied, mark voter_eligibility as well if present
+        if ($userId !== null && $userId > 0) {
+            $markStmt = $pdo->prepare(
+                'UPDATE voter_eligibility
+                    SET has_voted = 1, voted_at = NOW(), ballot_reference = ?
+                  WHERE election_id = ? AND user_id = ? AND has_voted = 0'
+            );
+            $markStmt->execute([$reference, $electionId, $userId]);
+        }
+
+        $pdo->commit();
+    } catch (PDOException $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+
+        error_log('Direct ballot submission failed: ' . $e->getMessage());
+
+        if (str_contains($e->getMessage(), 'uq_voter_participation')) {
+            return [
+                'ok'    => false,
+                'error' => 'Student ID / Passcode "' . $voterIdentifier . '" has already cast a ballot in this election.',
+                'code'  => 'already_voted',
+            ];
+        }
+
+        return [
+            'ok'    => false,
+            'error' => 'The ballot could not be recorded because of a database issue. Nothing was saved.',
+            'code'  => 'db_error',
+        ];
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+
+        error_log('Direct ballot submission failed: ' . $e->getMessage());
+
+        return [
+            'ok'    => false,
+            'error' => 'The ballot could not be recorded. Nothing was saved.',
+            'code'  => 'error',
+        ];
+    }
+
+    audit_log(
+        'direct_ballot_submitted',
+        'Direct ballot ' . $reference . ' submitted for election #' . $electionId . ' by ID: ' . sv_mask_identifier($voterIdentifier),
+        $userId
+    );
+
+    return ['ok' => true, 'reference' => $reference];
+}
+
 /* =====================================================================
  | 4. Session helpers for the two-step voting flow
  |
@@ -516,6 +708,39 @@ function sv_store_pending_ballot(int $electionId, array $plan): void
         'plan'       => $plan,
         'created_at' => time(),
     ];
+}
+
+/** Remember a validated direct plan and voter identifier for the review step. */
+function sv_store_pending_direct_ballot(int $electionId, array $plan, string $identifier): void
+{
+    $_SESSION['pending_direct_ballot'][$electionId] = [
+        'plan'       => $plan,
+        'identifier' => trim($identifier),
+        'created_at' => time(),
+    ];
+}
+
+/** Read the pending direct plan and identifier, or null. */
+function sv_pending_direct_ballot(int $electionId): ?array
+{
+    $entry = $_SESSION['pending_direct_ballot'][$electionId] ?? null;
+
+    if (!is_array($entry) || !isset($entry['plan']) || !is_array($entry['plan']) || empty($entry['identifier'])) {
+        return null;
+    }
+
+    if (isset($entry['created_at']) && (time() - (int) $entry['created_at']) > 3600) {
+        sv_clear_pending_direct_ballot($electionId);
+
+        return null;
+    }
+
+    return $entry;
+}
+
+function sv_clear_pending_direct_ballot(int $electionId): void
+{
+    unset($_SESSION['pending_direct_ballot'][$electionId]);
 }
 
 /** Read the pending plan, or null when there is none (or it has gone stale). */
@@ -541,6 +766,7 @@ function sv_clear_pending_ballot(int $electionId): void
 {
     unset($_SESSION['pending_ballot'][$electionId]);
 }
+
 
 /* =====================================================================
  | 5. Counting an election

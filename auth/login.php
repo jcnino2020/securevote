@@ -4,24 +4,16 @@
  * =====================================================================
  * auth/login.php
  *
- * The sign-in form. This page only renders; the credentials are checked
- * by auth/authenticate.php, which then redirects back here on failure.
- * That redirect (the Post/Redirect/Get pattern) is what stops a browser
- * refresh from re-posting a login.
+ * Multi-Method Sign-In Portal (2026 Edition):
+ *   - Google OAuth 2.0 (1-Click Instant Sign In)
+ *   - Database Email / Username + Password
+ *   - Personal Voter Code (e.g. VC-2026-XXXX)
  */
 
 require_once __DIR__ . '/../includes/bootstrap.php';
 
-// Already signed in? Go straight to the right dashboard.
 require_guest();
 
-/* ---------------------------------------------------------------------
- | Demo hints
- |
- | These two lines exist so the system can be demonstrated from a fresh
- | install. Set $showDemoHints to false, or delete the block that uses
- | it, before this is ever used for a real election.
- * ------------------------------------------------------------------- */
 $showDemoHints = true;
 
 // Messages left by authenticate.php (cleared as soon as they are read).
@@ -45,24 +37,22 @@ require __DIR__ . '/../includes/header.php';
     </span>
 
     <h2 class="auth-aside__heading" id="auth-aside-heading">
-      Secure online voting for authorized participants.
+      Secure online voting for authorized university participants.
     </h2>
     <p class="auth-aside__text">
-      SecureVote records one ballot per registered voter, keeps every vote
-      confidential, and writes every administrative action to an audit trail.
+      SecureVote authenticates participants via Google OAuth, Database Email, or Personal Voter Codes with verified 1-person-1-vote integrity.
     </p>
 
     <ul class="auth-facts">
-      <li><?= sv_icon('shield-check', 18) ?><span>One ballot per voter, guaranteed by a unique database constraint.</span></li>
-      <li><?= sv_icon('lock', 18) ?><span>Passwords are stored only as bcrypt hashes, never as plain text.</span></li>
-      <li><?= sv_icon('database', 18) ?><span>Every query uses a prepared statement, so input can never become SQL.</span></li>
-      <li><?= sv_icon('audit', 18) ?><span>Sign-ins, failed attempts and result changes are all recorded.</span></li>
+      <li><?= sv_icon('google', 18) ?><span><strong>Google OAuth 2.0:</strong> One-click verified institutional sign-in.</span></li>
+      <li><?= sv_icon('key', 18) ?><span><strong>Voter Code:</strong> Personal access token issued to every registered voter.</span></li>
+      <li><?= sv_icon('shield-check', 18) ?><span><strong>1 Ballot Per Voter:</strong> Database unique constraint prevents duplicate voting.</span></li>
+      <li><?= sv_icon('audit', 18) ?><span><strong>Audit Logging:</strong> Every authentication and administrative action is recorded.</span></li>
     </ul>
   </div>
 
   <p class="auth-aside__foot">
-    <?= e(APP_NAME) ?> <?= e(APP_VERSION) ?> &middot; Academic endterm project.
-    Not affiliated with any government body.
+    <?= e(APP_NAME) ?> <?= e(APP_VERSION) ?> &middot; Academic Endterm Project 2026.
   </p>
 </section>
 
@@ -75,7 +65,7 @@ require __DIR__ . '/../includes/header.php';
       </span>
       <h1 class="auth-card__title">Sign in to vote</h1>
       <p class="auth-card__text">
-        Sign in to your account, or register a new voter account.
+        Use your Google Account, Voter Code, or Email/Password.
       </p>
     </div>
 
@@ -87,28 +77,45 @@ require __DIR__ . '/../includes/header.php';
       <div class="divider" role="presentation"></div>
     <?php endif; ?>
 
+    <!-- Google OAuth 2.0 Sign In Button -->
+    <div class="stack-sm" style="margin-bottom: var(--sp-4);">
+      <a href="<?= e(url('auth/google-login.php')) ?>" class="btn btn--google btn--lg btn--block" id="btn-google-login">
+        <?= sv_icon('google', 20, 'btn__icon') ?>
+        <span>Continue with Google</span>
+      </a>
+    </div>
+
+    <!-- Divider -->
+    <div class="auth-separator">
+      <span>or sign in with credentials</span>
+    </div>
+
+    <!-- Credentials Form -->
     <form class="form" method="post" action="<?= e(url('auth/authenticate.php')) ?>" novalidate>
       <?= csrf_field() ?>
 
       <div class="form-field">
         <label class="label" for="identifier">
-          Username or email
+          Email, Username, or Voter Code
           <span class="label__required" aria-hidden="true">*</span>
         </label>
-        <input
-          class="input<?= isset($formFields['identifier']) ? ' is-invalid' : '' ?>"
-          type="text"
-          id="identifier"
-          name="identifier"
-          value="<?= e($loginIdentifier) ?>"
-          autocomplete="username"
-          spellcheck="false"
-          autocapitalize="none"
-          required
-          aria-required="true"
-          <?= isset($formFields['identifier'])
-              ? 'aria-describedby="identifier-error" aria-invalid="true"'
-              : '' ?>>
+        <div class="input-with-icon">
+          <input
+            class="input<?= isset($formFields['identifier']) ? ' is-invalid' : '' ?>"
+            type="text"
+            id="identifier"
+            name="identifier"
+            value="<?= e($loginIdentifier) ?>"
+            placeholder="e.g. user@univ.edu, username, or VC-2026-XXXX"
+            autocomplete="username"
+            spellcheck="false"
+            autocapitalize="none"
+            required
+            aria-required="true"
+            <?= isset($formFields['identifier'])
+                ? 'aria-describedby="identifier-error" aria-invalid="true"'
+                : '' ?>>
+        </div>
         <?php if (isset($formFields['identifier'])): ?>
           <p class="field-error" id="identifier-error">
             <?= sv_icon('alert-triangle', 14) ?>
@@ -118,15 +125,18 @@ require __DIR__ . '/../includes/header.php';
       </div>
 
       <div class="form-field">
-        <label class="label" for="password">
-          Password
-          <span class="label__required" aria-hidden="true">*</span>
-        </label>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <label class="label" for="password">
+            Password
+            <span class="label__required" aria-hidden="true">*</span>
+          </label>
+        </div>
         <input
           class="input<?= isset($formFields['password']) ? ' is-invalid' : '' ?>"
           type="password"
           id="password"
           name="password"
+          placeholder="••••••••"
           autocomplete="current-password"
           required
           aria-required="true"
@@ -141,11 +151,11 @@ require __DIR__ . '/../includes/header.php';
         <?php endif; ?>
       </div>
 
-      <div class="form-actions">
+      <div class="form-actions" style="margin-top: var(--sp-4);">
         <button class="btn btn--primary btn--lg btn--block" type="submit" data-submit-once
                 data-submitting-label="Signing in…">
           <?= sv_icon('lock', 18, 'btn__icon') ?>
-          <span>Sign in securely</span>
+          <span>Sign In</span>
         </button>
       </div>
     </form>
@@ -156,35 +166,28 @@ require __DIR__ . '/../includes/header.php';
       <p class="text-sm text-muted">Don't have a voter account yet?</p>
       <a class="btn btn--secondary btn--block" href="<?= e(url('auth/register.php')) ?>">
         <?= sv_icon('user-plus', 16, 'btn__icon') ?>
-        <span>Register to vote</span>
+        <span>Register New Voter Account</span>
       </a>
     </div>
 
     <?php if ($showDemoHints): ?>
       <div class="auth-demo">
-        <strong>Quick Access & Demonstration</strong>
-        <p class="text-xs">
-          Default administrative credentials or self-register as a voter:
-        </p>
+        <strong>Demo Credentials & Quick Sign-In</strong>
         <dl>
+          <dt>Google Sign-In</dt>
+          <dd><a class="link" href="<?= e(url('auth/google-login.php')) ?>">Click "Continue with Google"</a> for 1-click test profiles</dd>
           <dt>Administrator</dt>
           <dd><span class="mono">admin</span> / <span class="mono">Admin@12345</span></dd>
-          <dt>Voter Registration</dt>
-          <dd><a class="link" href="<?= e(url('auth/register.php')) ?>">Click here to register</a> with your own name</dd>
+          <dt>Voter Code</dt>
+          <dd>Enter your personal <span class="mono">VC-2026-XXXX</span> code above</dd>
         </dl>
       </div>
     <?php endif; ?>
-
-    <p class="auth-card__foot">
-      <?= sv_icon('info', 14) ?>
-      Forgot your password? Accounts can be reset by the election
-      administrator. SecureVote does not send email.
-    </p>
   </div>
 
-  <p class="text-muted text-xs text-center">
+  <p class="text-muted text-xs text-center" style="margin-top: var(--sp-4);">
     <?= sv_icon('shield', 13) ?>
-    Sign-in attempts, successful or not, are recorded in the audit log.
+    Protected by bcrypt password hashing and TLS/HTTPS session binding.
   </p>
 </div>
 

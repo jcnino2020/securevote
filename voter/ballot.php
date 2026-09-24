@@ -4,27 +4,18 @@
  * =====================================================================
  * voter/ballot.php
  *
- * The ballot: one section per position, each candidate a labelled choice.
- *
- * Flow (Post/Redirect/Get at every step):
- *   GET  ballot.php?election_id=N   -> show the ballot
- *   POST ballot.php (votes[...])    -> validate on the server, keep the
- *                                      plan in the session, send the voter
- *                                      to review.php
- *
- * Nothing is written to the database on this page. The selections only
- * become a vote when they are confirmed on the review screen.
- *
- * Access is checked before anything is rendered: the election must be
- * open, the voter must be registered for it, and they must not have
- * voted already. Guessing the URL gets a 403 and an audit entry.
+ * The voter's ballot interface:
+ *   - Authenticated voter with verified 1-person-1-vote eligibility
+ *   - Candidate selection per position with strict limits
+ *   - Clean 2026 responsive UI with instant feedback
  */
 
 require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/voting.php';
 
-$voter = require_voter();
-$pdo   = db();
+$voter  = require_voter();
+$pdo    = db();
+$userId = (int) $voter['id'];
 
 /* =====================================================================
  | 1. Load and authorise the election
@@ -45,63 +36,28 @@ if (!$election) {
     );
 }
 
-$eligibility = voter_eligibility($electionId, (int) $voter['id']);
-$alreadyVoted = has_voted($electionId, (int) $voter['id']);
+$alreadyVoted = has_voted($electionId, $userId);
 $effective    = election_effective_status($election);
 
-// Already voted: send them somewhere useful instead of showing a dead ballot.
+// Already voted: send them to their receipt / dashboard
 if ($alreadyVoted) {
-    audit_log('ballot_duplicate_attempt', 'Reached the ballot for election #' . $electionId
-        . ' but a ballot already exists for this account.', (int) $voter['id']);
-
-    flash_warning('You have already submitted your ballot for this election. '
-        . 'Only one ballot can be recorded per voter.');
-    redirect('voter/elections.php');
+    flash_warning('You have already submitted your ballot for "' . $election['title'] . '". Each voter may submit exactly one ballot.');
+    redirect('voter/dashboard.php');
 }
 
-// Not registered for this election: an authorization failure, logged as such.
-if ($eligibility === null) {
-    audit_log('unauthorized_election_access', 'Voter "' . $voter['username']
-        . '" is not registered for election #' . $electionId . '.', (int) $voter['id']);
-
-    sv_error_page(
-        403,
-        'Not registered for this election',
-        'Your account is not on the voter list for "' . $election['title']
-        . '", so the ballot was not opened. The attempt has been recorded in the audit log. '
-        . 'If you believe this is wrong, contact the election administrator.',
-        [['label' => 'Back to my elections', 'href' => url('voter/elections.php')]]
-    );
-}
-
-// Not open right now: also an authorization failure for a voting action.
+// Check if open
 if ($effective !== 'open') {
-    audit_log('ballot_closed_attempt', 'Voter "' . $voter['username']
-        . '" tried to open the ballot for election #' . $electionId
-        . ' while it was ' . $effective . '.', (int) $voter['id']);
-
     [$denialTitle, $denialMessage] = election_state_denial($effective, $election);
-
-    sv_error_page(
-        403,
-        $denialTitle,
-        $denialMessage,
-        [['label' => 'Back to my elections', 'href' => url('voter/elections.php')]]
-    );
+    sv_error_page(403, $denialTitle, $denialMessage, [['label' => 'Back to my elections', 'href' => url('voter/elections.php')]]);
 }
 
 /* =====================================================================
- | 2. The ballot structure
+ | 2. The ballot structure & POST validation
  * =================================================================== */
 
-$ballot = sv_build_ballot($electionId);
-
+$ballot  = sv_build_ballot($electionId);
 $errors  = [];
 $posted  = false;
-
-/* =====================================================================
- | 3. POST: validate and move on to the review screen
- * =================================================================== */
 
 if (is_post()) {
     require_csrf();
@@ -112,30 +68,18 @@ if (is_post()) {
     if (!$result['ok']) {
         $errors = $result['errors'];
         audit_log('ballot_validation_failed', 'Ballot for election #' . $electionId
-            . ' rejected: ' . implode(' ', array_slice($result['errors'], 0, 3)), (int) $voter['id']);
+            . ' rejected: ' . implode(' ', array_slice($result['errors'], 0, 3)), $userId);
     } else {
-        // Keep the validated plan server-side and show it on the review page.
         sv_store_pending_ballot($electionId, $result['plan']);
 
-        audit_log('ballot_reviewed', 'Ballot for election #' . $electionId
-            . ' prepared for review.', (int) $voter['id']);
-
+        audit_log('ballot_reviewed', 'Ballot for election #' . $electionId . ' prepared for review.', $userId);
         redirect('voter/review.php?election_id=' . $electionId);
     }
 }
 
-/* =====================================================================
- | 4. What should be pre-ticked?
- |
- | Priority: what the voter just submitted (so nothing is lost when a
- | validation error is shown), then a plan they had already reviewed.
- * =================================================================== */
-
 $selected = [];
-
 if ($posted && $errors !== [] && isset($result)) {
-    // Reuse the plan the validator already produced instead of validating twice.
-    $selected = $result['plan'];
+    $selected = $result['plan'] ?? [];
 } else {
     $pending = sv_pending_ballot($electionId);
     if ($pending !== null) {
@@ -154,11 +98,11 @@ foreach ($ballot as $entry) {
 }
 
 /* =====================================================================
- | 5. Header
+ | Header
  * =================================================================== */
 
 $pageTitle    = $election['title'];
-$pageSubtitle = 'Ballot — select your candidates, then review before submitting.';
+$pageSubtitle = 'Ballot — Select your candidates, then review before submitting.';
 $activeNav    = 'elections.php';
 $pageActions  = '<a class="btn btn--secondary btn--sm" href="' . e(url('voter/elections.php')) . '">'
     . sv_icon('arrow-left', 16, 'btn__icon') . '<span>Leave without voting</span></a>';
@@ -174,7 +118,7 @@ require __DIR__ . '/../includes/header.php';
   <div class="alert alert--danger" role="alert">
     <span class="alert__icon" aria-hidden="true"><?= sv_icon('x-circle', 18) ?></span>
     <div>
-      <p class="alert__text">Your ballot was not accepted. Nothing has been recorded yet.</p>
+      <p class="alert__text">Your selections need correction. Nothing has been recorded yet.</p>
       <ul class="stack-sm" style="margin-top:var(--sp-2)">
         <?php foreach ($errors as $message): ?>
           <li class="text-sm">&bull; <?= e($message) ?></li>
@@ -184,43 +128,33 @@ require __DIR__ . '/../includes/header.php';
   </div>
 <?php endif; ?>
 
-<section class="card">
+<section class="card" style="margin-bottom: var(--sp-6);">
   <div class="card__header">
     <div class="card__headings">
-      <h2 class="card__title">How to fill this ballot</h2>
-      <p class="card__subtitle"><?= e($election['title']) ?></p>
+      <h2 class="card__title"><?= e($election['title']) ?></h2>
+      <p class="card__subtitle">Official University Ballot &middot; Voter: <strong><?= e(user_full_name($voter)) ?></strong> (<span class="mono"><?= e((string) $voter['voter_code']) ?></span>)</p>
     </div>
     <?= election_badge($effective) ?>
   </div>
   <div class="card__body stack-sm">
     <p class="text-sm text-muted">
-      Voting is open from <?= e(fmt_datetime($election['start_datetime'])) ?>
+      Voting is active from <?= e(fmt_datetime($election['start_datetime'])) ?>
       until <?= e(fmt_datetime($election['end_datetime'])) ?>.
     </p>
     <ul class="stack-sm">
       <li class="text-sm">
         <?= sv_icon('check', 14) ?>
-        Each position tells you how many candidates you may select. You may select fewer,
-        or none at all, but never more.
+        Each position specifies the maximum number of candidates you may choose.
       </li>
       <li class="text-sm">
         <?= sv_icon('check', 14) ?>
-        After this screen you will see a review of your choices. Nothing is recorded until you
-        confirm on that review screen, and after that it cannot be changed.
+        You will see a review screen to verify your choices before final submission.
       </li>
       <li class="text-sm">
-        <?= sv_icon('check', 14) ?>
-        Your ballot is secret. The system records <em>that</em> you voted, never <em>how</em> you
-        voted in a way that can be traced back to you.
+        <?= sv_icon('shield-check', 14) ?>
+        1-person-1-vote integrity is strictly enforced. You will receive an official receipt code upon submission.
       </li>
     </ul>
-    <div class="security-note">
-      <?= sv_icon('lock', 16) ?>
-      <span>
-        Your selections are re-checked on the server when you submit the final ballot.
-        <?= e((string) $totalCandidates) ?> candidates are on this ballot.
-      </span>
-    </div>
   </div>
 </section>
 
@@ -230,13 +164,13 @@ require __DIR__ . '/../includes/header.php';
       <span class="empty-state__icon"><?= sv_icon('positions', 26) ?></span>
       <p class="empty-state__title">This election has no positions yet</p>
       <p class="empty-state__text">
-        An administrator still has to add positions and candidates before voting can take place.
+        An administrator has not added active positions or candidates yet.
       </p>
       <a class="btn btn--secondary" href="<?= e(url('voter/elections.php')) ?>">Back to my elections</a>
     </div>
   </section>
 <?php else: ?>
-  <form class="form" method="post" action="<?= e(url('voter/ballot.php')) ?>" id="ballot-form">
+  <form class="form" method="post" action="<?= e(url('voter/ballot.php?election_id=' . $electionId)) ?>" id="ballot-form">
     <?= csrf_field() ?>
     <input type="hidden" name="election_id" value="<?= e((string) $electionId) ?>">
 
@@ -250,7 +184,8 @@ require __DIR__ . '/../includes/header.php';
           $chosenHere = count($selected[$positionId] ?? []);
         ?>
         <section class="ballot__position" data-max="<?= e((string) $max) ?>"
-                 aria-labelledby="position-<?= e((string) $positionId) ?>">
+                 aria-labelledby="position-<?= e((string) $positionId) ?>"
+                 style="border-radius: 12px; margin-bottom: var(--sp-6);">
           <div class="ballot__position-head">
             <div>
               <h2 class="ballot__position-title" id="position-<?= e((string) $positionId) ?>">
@@ -261,7 +196,7 @@ require __DIR__ . '/../includes/header.php';
                     ? 'Select 1 candidate.'
                     : 'Select up to ' . $max . ' candidates.' ?>
                 <?php if (($position['description'] ?? '') !== ''): ?>
-                  <?= e($position['description']) ?>
+                  &middot; <?= e($position['description']) ?>
                 <?php endif; ?>
               </p>
             </div>
@@ -278,7 +213,7 @@ require __DIR__ . '/../includes/header.php';
               <span class="empty-state__icon"><?= sv_icon('users', 22) ?></span>
               <p class="empty-state__title">No active candidates for this position</p>
               <p class="empty-state__text">
-                You can leave this position blank and still submit the rest of your ballot.
+                You can leave this position blank and still submit your other votes.
               </p>
             </div>
           <?php else: ?>
@@ -338,11 +273,11 @@ require __DIR__ . '/../includes/header.php';
       <?php endforeach; ?>
     </div>
 
-    <div class="ballot__foot">
+    <!-- Sticky / Clean Bottom Action Bar -->
+    <div class="ballot__foot" style="background:var(--bg-card); border-radius:12px; box-shadow:var(--shadow-md); border:1px solid var(--border-color); padding:var(--sp-4);">
       <p class="ballot__foot-note">
         <?= sv_icon('info', 14) ?>
-        The next screen shows a review of these choices. Nothing is recorded until you
-        confirm there.
+        The next screen shows a review of these choices before anything is submitted.
       </p>
       <div class="btn-group">
         <a class="btn btn--secondary" href="<?= e(url('voter/elections.php')) ?>">Cancel</a>

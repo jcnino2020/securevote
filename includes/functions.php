@@ -97,6 +97,21 @@ function initials(?string $first, ?string $last = ''): string
     return mb_strtoupper($a . $b) ?: '?';
 }
 
+/** Mask a Student ID or Voter Identifier for privacy in logs e.g. "2024-***23". */
+function sv_mask_identifier(string $id): string
+{
+    $id = trim($id);
+    $len = mb_strlen($id);
+    if ($len <= 4) {
+        return str_repeat('*', $len);
+    }
+    $start = mb_substr($id, 0, min(4, (int) ($len / 2)));
+    $end   = mb_substr($id, -2);
+
+    return $start . str_repeat('*', max(2, $len - mb_strlen($start) - 2)) . $end;
+}
+
+
 /* =====================================================================
  | 2. Request input
  * =================================================================== */
@@ -495,12 +510,9 @@ function election_state_denial(string $status, array $election): array
  * May this user see the results of this election?
  * Implements the election's configured results policy.
  */
-function may_view_results(array $election, ?array $user, bool $hasVoted = false): bool
+function may_view_results(array $election, ?array $user = null, bool $hasVoted = false): bool
 {
-    if ($user === null) {
-        return false;
-    }
-    if (($user['role'] ?? '') === 'admin') {
+    if ($user !== null && ($user['role'] ?? '') === 'admin') {
         return true;
     }
 
@@ -509,11 +521,12 @@ function may_view_results(array $election, ?array $user, bool $hasVoted = false)
 
     return match ((string) ($election['results_visibility'] ?? 'after_close')) {
         'hidden'      => false,
-        'after_vote'  => $hasVoted || $closed,
+        'after_vote'  => true,
         'after_close' => $closed,
-        default       => false,
+        default       => $closed,
     };
 }
+
 
 /** Human explanation of why results are or are not visible. */
 function results_policy_notice(array $election, bool $hasVoted = false): ?string

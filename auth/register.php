@@ -4,21 +4,15 @@
  * =====================================================================
  * auth/register.php
  *
- * Public voter registration form and processing.
+ * Public voter registration form and processing (2026 Edition).
  *
- * Allows any voter to register for an account. Upon registration:
- *   1. Input is validated (first name, last name, username, email, password)
- *   2. Uniqueness of username and email is enforced
- *   3. Password is hashed securely with bcrypt (password_hash)
- *   4. Account is created with role='voter' and status='active'
- *   5. The voter is automatically made eligible for all active/upcoming elections
- *   6. Security audit trail records the registration event
- *   7. The voter is automatically signed in and redirected to their dashboard
+ * Supports:
+ *   1. Google OAuth 2.0 1-Click Registration
+ *   2. Standard registration with auto-generated personal Voter Code
  */
 
 require_once __DIR__ . '/../includes/bootstrap.php';
 
-// Already signed in? Go straight to the appropriate dashboard.
 require_guest();
 
 $pdo = db();
@@ -90,14 +84,26 @@ if (is_post()) {
 
     if ($errors === []) {
         $hash = password_hash($password, PASSWORD_DEFAULT);
+        $voterCode = sv_generate_voter_code();
+
+        // Ensure voter_code uniqueness
+        for ($i = 1; $i <= 20; $i++) {
+            $check = $pdo->prepare('SELECT id FROM users WHERE voter_code = ? LIMIT 1');
+            $check->execute([$voterCode]);
+            if (!$check->fetch()) {
+                break;
+            }
+            $voterCode = sv_generate_voter_code();
+        }
 
         $insert = $pdo->prepare(
-            "INSERT INTO users (username, email, password_hash, first_name, last_name, role, status, created_at)
-             VALUES (:username, :email, :hash, :first_name, :last_name, 'voter', 'active', NOW())"
+            "INSERT INTO users (username, email, voter_code, password_hash, first_name, last_name, role, status, created_at)
+             VALUES (:username, :email, :voter_code, :hash, :first_name, :last_name, 'voter', 'active', NOW())"
         );
         $insert->execute([
             ':username'   => $form['username'],
             ':email'      => $form['email'],
+            ':voter_code' => $voterCode,
             ':hash'       => $hash,
             ':first_name' => $form['first_name'],
             ':last_name'  => $form['last_name'],
@@ -112,7 +118,7 @@ if (is_post()) {
         );
         $autoEnroll->execute([$newUserId]);
 
-        audit_log('voter_registered', 'New voter account self-registered: "' . $form['username'] . '".', $newUserId);
+        audit_log('voter_registered', 'New voter account self-registered: "' . $form['username'] . '" (Voter Code: ' . $voterCode . ').', $newUserId);
 
         // Fetch user data and log in
         $userStmt = $pdo->prepare('SELECT * FROM users WHERE id = ? LIMIT 1');
@@ -121,7 +127,7 @@ if (is_post()) {
 
         if ($newUser) {
             login_user($newUser);
-            flash_success('Welcome to SecureVote, ' . $form['first_name'] . '! Your voter account is active and you can now vote.');
+            flash_success('Welcome to SecureVote, ' . $form['first_name'] . '! Your voter account is active. Your personal Voter Code is: ' . $voterCode);
             redirect('voter/dashboard.php');
         } else {
             flash_success('Registration successful! Please sign in to your new voter account.');
@@ -144,24 +150,22 @@ require __DIR__ . '/../includes/header.php';
     </span>
 
     <h2 class="auth-aside__heading" id="auth-aside-heading">
-      Register to participate in verified online elections.
+      Register to participate in verified university elections.
     </h2>
     <p class="auth-aside__text">
-      Create your personal voter account to cast your ballot securely in active elections.
-      Your vote is completely confidential and protected by cryptographic integrity.
+      Create your personal voter account or sign in with Google to cast your ballot securely in active campus elections.
     </p>
 
     <ul class="auth-facts">
-      <li><?= sv_icon('user-check', 18) ?><span>Instant voter registration with verified unique credentials.</span></li>
-      <li><?= sv_icon('shield-check', 18) ?><span>Secret ballot: your vote selections are never linked to your personal name.</span></li>
-      <li><?= sv_icon('lock', 18) ?><span>Passwords are securely hashed with bcrypt and never stored in plain text.</span></li>
-      <li><?= sv_icon('audit', 18) ?><span>All voting activities and administrative actions are logged in the audit trail.</span></li>
+      <li><?= sv_icon('google', 18) ?><span>Instant 1-click Google OAuth verification available.</span></li>
+      <li><?= sv_icon('key', 18) ?><span>Receive a unique personal Voter Passcode for instant access.</span></li>
+      <li><?= sv_icon('shield-check', 18) ?><span>Strict 1-person-1-vote database constraint.</span></li>
+      <li><?= sv_icon('lock', 18) ?><span>Passwords are securely hashed with modern bcrypt.</span></li>
     </ul>
   </div>
 
   <p class="auth-aside__foot">
-    <?= e(APP_NAME) ?> <?= e(APP_VERSION) ?> &middot; Academic endterm project.
-    Not affiliated with any government body.
+    <?= e(APP_NAME) ?> <?= e(APP_VERSION) ?> &middot; Academic Endterm Project 2026.
   </p>
 </section>
 
@@ -172,9 +176,9 @@ require __DIR__ . '/../includes/header.php';
         <?= sv_logo_mark(32) ?>
         <span class="brand__word">Secure<span>Vote</span></span>
       </span>
-      <h1 class="auth-card__title">Create your voter account</h1>
+      <h1 class="auth-card__title">Create voter account</h1>
       <p class="auth-card__text">
-        Fill out the form below to register and start voting.
+        Register with Google in 1-click or fill in your student details.
       </p>
     </div>
 
@@ -185,6 +189,19 @@ require __DIR__ . '/../includes/header.php';
       </div>
       <div class="divider" role="presentation"></div>
     <?php endif; ?>
+
+    <!-- Google OAuth 2.0 Sign Up Button -->
+    <div class="stack-sm" style="margin-bottom: var(--sp-4);">
+      <a href="<?= e(url('auth/google-login.php')) ?>" class="btn btn--google btn--lg btn--block" id="btn-google-signup">
+        <?= sv_icon('google', 20, 'btn__icon') ?>
+        <span>Sign up with Google</span>
+      </a>
+    </div>
+
+    <!-- Divider -->
+    <div class="auth-separator">
+      <span>or register with email</span>
+    </div>
 
     <form class="form" method="post" action="<?= e(url('auth/register.php')) ?>" novalidate>
       <?= csrf_field() ?>
@@ -204,6 +221,7 @@ require __DIR__ . '/../includes/header.php';
             required
             aria-required="true"
             autocomplete="given-name"
+            placeholder="Juan"
             <?= isset($errors['first_name']) ? 'aria-describedby="first_name-error" aria-invalid="true"' : '' ?>>
           <?php if (isset($errors['first_name'])): ?>
             <p class="field-error" id="first_name-error">
@@ -227,6 +245,7 @@ require __DIR__ . '/../includes/header.php';
             required
             aria-required="true"
             autocomplete="family-name"
+            placeholder="Dela Cruz"
             <?= isset($errors['last_name']) ? 'aria-describedby="last_name-error" aria-invalid="true"' : '' ?>>
           <?php if (isset($errors['last_name'])): ?>
             <p class="field-error" id="last_name-error">
@@ -261,7 +280,6 @@ require __DIR__ . '/../includes/header.php';
             <span><?= e($errors['username']) ?></span>
           </p>
         <?php endif; ?>
-        <p class="help">3–50 characters: letters, numbers, dot, underscore, or hyphen.</p>
       </div>
 
       <div class="form-field">
@@ -279,7 +297,7 @@ require __DIR__ . '/../includes/header.php';
           spellcheck="false"
           required
           aria-required="true"
-          placeholder="e.g. juan@example.com"
+          placeholder="e.g. juan@university.edu.ph"
           <?= isset($errors['email']) ? 'aria-describedby="email-error" aria-invalid="true"' : '' ?>>
         <?php if (isset($errors['email'])): ?>
           <p class="field-error" id="email-error">
@@ -289,70 +307,71 @@ require __DIR__ . '/../includes/header.php';
         <?php endif; ?>
       </div>
 
-      <div class="form-field">
-        <label class="label" for="password">
-          Password <span class="label__required" aria-hidden="true">*</span>
-        </label>
-        <input
-          class="input<?= isset($errors['password']) ? ' is-invalid' : '' ?>"
-          type="password"
-          id="password"
-          name="password"
-          autocomplete="new-password"
-          required
-          aria-required="true"
-          <?= isset($errors['password']) ? 'aria-describedby="password-error" aria-invalid="true"' : '' ?>>
-        <?php if (isset($errors['password'])): ?>
-          <p class="field-error" id="password-error">
-            <?= sv_icon('alert-triangle', 14) ?>
-            <span><?= e($errors['password']) ?></span>
-          </p>
-        <?php endif; ?>
-        <p class="help">Use at least 8 characters with at least one letter and one number.</p>
+      <div class="form-grid">
+        <div class="form-field">
+          <label class="label" for="password">
+            Password <span class="label__required" aria-hidden="true">*</span>
+          </label>
+          <input
+            class="input<?= isset($errors['password']) ? ' is-invalid' : '' ?>"
+            type="password"
+            id="password"
+            name="password"
+            autocomplete="new-password"
+            required
+            aria-required="true"
+            placeholder="Min. 8 characters"
+            <?= isset($errors['password']) ? 'aria-describedby="password-error" aria-invalid="true"' : '' ?>>
+          <?php if (isset($errors['password'])): ?>
+            <p class="field-error" id="password-error">
+              <?= sv_icon('alert-triangle', 14) ?>
+              <span><?= e($errors['password']) ?></span>
+            </p>
+          <?php endif; ?>
+        </div>
+
+        <div class="form-field">
+          <label class="label" for="password_confirm">
+            Confirm password <span class="label__required" aria-hidden="true">*</span>
+          </label>
+          <input
+            class="input<?= isset($errors['password_confirm']) ? ' is-invalid' : '' ?>"
+            type="password"
+            id="password_confirm"
+            name="password_confirm"
+            autocomplete="new-password"
+            required
+            aria-required="true"
+            placeholder="Repeat password"
+            <?= isset($errors['password_confirm']) ? 'aria-describedby="password_confirm-error" aria-invalid="true"' : '' ?>>
+          <?php if (isset($errors['password_confirm'])): ?>
+            <p class="field-error" id="password_confirm-error">
+              <?= sv_icon('alert-triangle', 14) ?>
+              <span><?= e($errors['password_confirm']) ?></span>
+            </p>
+          <?php endif; ?>
+        </div>
       </div>
 
-      <div class="form-field">
-        <label class="label" for="password_confirm">
-          Confirm password <span class="label__required" aria-hidden="true">*</span>
-        </label>
-        <input
-          class="input<?= isset($errors['password_confirm']) ? ' is-invalid' : '' ?>"
-          type="password"
-          id="password_confirm"
-          name="password_confirm"
-          autocomplete="new-password"
-          required
-          aria-required="true"
-          <?= isset($errors['password_confirm']) ? 'aria-describedby="password_confirm-error" aria-invalid="true"' : '' ?>>
-        <?php if (isset($errors['password_confirm'])): ?>
-          <p class="field-error" id="password_confirm-error">
-            <?= sv_icon('alert-triangle', 14) ?>
-            <span><?= e($errors['password_confirm']) ?></span>
-          </p>
-        <?php endif; ?>
-      </div>
-
-      <div class="form-actions">
+      <div class="form-actions" style="margin-top: var(--sp-4);">
         <button class="btn btn--primary btn--lg btn--block" type="submit" data-submit-once
-                data-submitting-label="Registering account…">
+                data-submitting-label="Creating account…">
           <?= sv_icon('user-plus', 18, 'btn__icon') ?>
-          <span>Register to vote</span>
+          <span>Create Voter Account</span>
         </button>
       </div>
     </form>
 
     <div class="divider" role="presentation"></div>
 
-    <p class="text-sm text-center text-muted">
-      Already have an account?
-      <a class="link" href="<?= e(url('auth/login.php')) ?>"><strong>Sign in here</strong></a>
-    </p>
+    <div class="text-center stack-xs">
+      <p class="text-sm text-muted">Already registered?</p>
+      <a class="btn btn--secondary btn--block" href="<?= e(url('auth/login.php')) ?>">
+        <?= sv_icon('lock', 16, 'btn__icon') ?>
+        <span>Sign in to your account</span>
+      </a>
+    </div>
   </div>
-
-  <p class="text-muted text-xs text-center">
-    <?= sv_icon('shield', 13) ?>
-    All voter registrations and sign-ins are recorded securely in the audit log.
-  </p>
 </div>
 
 <?php require __DIR__ . '/../includes/footer.php'; ?>

@@ -37,13 +37,14 @@ $totals = [
  * ------------------------------------------------------------------- */
 $elections = $pdo->query(
     "SELECT e.*,
-            (SELECT COUNT(*) FROM voter_eligibility ve WHERE ve.election_id = e.id) AS eligible_count,
-            (SELECT COUNT(*) FROM voter_eligibility ve WHERE ve.election_id = e.id AND ve.has_voted = 1) AS voted_count,
+            (SELECT COUNT(*) FROM voter_participation vp WHERE vp.election_id = e.id) AS participation_count,
+            (SELECT COUNT(*) FROM ballots b WHERE b.election_id = e.id AND b.status = 'submitted') AS voted_count,
             (SELECT COUNT(*) FROM positions p WHERE p.election_id = e.id) AS position_count,
             (SELECT COUNT(*) FROM candidates c WHERE c.election_id = e.id) AS candidate_count
        FROM elections e
       ORDER BY FIELD(e.status, 'open', 'scheduled', 'draft', 'closed', 'archived'), e.start_datetime DESC"
 )->fetchAll();
+
 
 /* ---------------------------------------------------------------------
  | Recent audit activity

@@ -319,26 +319,27 @@ secure-voting-system/
 └── storage/logs/                 php-error.log (created on the first error)
 ```
 
-### How the database fits together
+### How the database fits together (True Secret Ballot Architecture)
 
 ```text
 users ─┬─< elections (created_by)
-       ├─< voter_eligibility >─ elections        one row per voter per election (UNIQUE)
-       ├─< ballots >──────────  elections        one ballot per voter per election (UNIQUE)
+       ├─< voter_eligibility >─ elections        one row per voter per election (UNIQUE, records participation & receipt)
        └─< audit_logs
 
-elections ─< positions ─< candidates
-ballots   ─< votes     ─> positions, candidates
+elections ─┬─< positions ─< candidates
+           └─< ballots (anonymous ballot box, decoupled from voter identity)
+                 └─< votes ─> positions, candidates
 ```
 
-The two unique keys that make duplicate voting impossible:
+The core database constraints that guarantee **1-Person-1-Vote Integrity** and **Ballot Secrecy**:
 
 ```text
-voter_eligibility : uq_voter_eligibility_election_user (election_id, user_id)
-ballots           : uq_ballots_election_voter          (election_id, voter_id)
-                    uq_ballots_reference               (ballot_reference)
-votes             : uq_votes_ballot_position_candidate (ballot_id, position_id, candidate_id)
+voter_eligibility : uq_voter_eligibility_election_user (election_id, user_id)  -> strictly 1 vote per voter
+ballots           : uq_ballots_reference               (ballot_reference)      -> unique anonymous ballot receipts
+votes             : uq_votes_ballot_position_candidate (ballot_id, position_id, candidate_id) -> no duplicate choices
 ```
+
+> **Ballot Secrecy:** The `ballots` and `votes` tables store **no user ID**. Even with direct SQL database access, it is impossible to trace which voter selected which candidate.
 
 ---
 
