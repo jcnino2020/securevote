@@ -56,11 +56,16 @@ function db(): PDO
     try {
         $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
     } catch (PDOException $e) {
-        // Never print the driver message: it can contain credentials and
-        // table names. Log it and show a friendly page instead.
-        error_log('DB connection failed: ' . $e->getMessage());
-        sv_render_database_error();
-        exit;
+        // If TCP/host connection failed on shared hosting (e.g. Hostinger), try alternate host
+        $fallbackHost = (DB_HOST === 'localhost') ? '127.0.0.1' : 'localhost';
+        try {
+            $fallbackDsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=%s', $fallbackHost, DB_PORT, DB_NAME, DB_CHARSET);
+            $pdo = new PDO($fallbackDsn, DB_USER, DB_PASS, $options);
+        } catch (PDOException $e2) {
+            error_log('DB connection failed: ' . $e->getMessage() . ' | Fallback error: ' . $e2->getMessage());
+            sv_render_database_error();
+            exit;
+        }
     }
 
     return $pdo;

@@ -52,7 +52,7 @@ date_default_timezone_set(APP_TIMEZONE);
  |   SV_DB_SOCKET  (set to a socket path to ignore host/port, e.g.
  |                  /Applications/XAMPP/xamppfiles/var/mysql/mysql.sock)
  * ------------------------------------------------------------------- */
-define('DB_HOST',   getenv('SV_DB_HOST') ?: '127.0.0.1');
+define('DB_HOST',   getenv('SV_DB_HOST') ?: 'localhost');
 define('DB_PORT',   getenv('SV_DB_PORT') ?: '3306');
 define('DB_NAME',   getenv('SV_DB_NAME') ?: 'u184230832_securevote');
 define('DB_USER',   getenv('SV_DB_USER') ?: 'u184230832_ibmn');

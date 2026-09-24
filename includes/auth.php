@@ -168,6 +168,12 @@ function sv_enforce_session_integrity(): void
     $_SESSION['last_activity'] = $now;
 }
 
+/** Alias for bootstrap session guard. */
+function sv_enforce_session_security(): void
+{
+    sv_enforce_session_integrity();
+}
+
 /** Tear down the session in a single place. */
 function sv_end_user_session(string $flashMessage = '', string $auditReason = ''): void
 {
