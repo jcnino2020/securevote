@@ -434,22 +434,61 @@ function election_block_reason(array $election, bool $isEligible, bool $hasVoted
         return 'This election is still being prepared and is not open to voters.';
     }
     if ($status === 'archived') {
-        return 'This election has been archived.';
+        return 'This election has been archived and is no longer votable.';
     }
     if ($status === 'scheduled') {
-        return 'Voting opens on ' . fmt_datetime($election['start_datetime']) . '.';
+        return 'This election has not started yet. Voting opens on '
+            . fmt_datetime($election['start_datetime']) . '.';
     }
     if ($status === 'closed') {
-        return 'Voting closed on ' . fmt_datetime($election['end_datetime']) . '.';
+        return 'This election is closed. Voting ended on '
+            . fmt_datetime($election['end_datetime']) . '.';
     }
     if (!$isEligible) {
         return 'Your account is not on the voter list for this election.';
     }
     if ($hasVoted) {
-        return 'You have already submitted a ballot for this election.';
+        return 'You have already submitted your ballot for this election.';
     }
 
     return null;
+}
+
+/**
+ * Heading and explanation for the 403 shown when a voter reaches a ballot they
+ * may not use. One message per state, because "not available" is not an
+ * explanation, and each one states what the server did.
+ *
+ * @return array{0: string, 1: string} [title, message]
+ */
+function election_state_denial(string $status, array $election): array
+{
+    return match ($status) {
+        'scheduled' => [
+            'This election has not started yet',
+            'This election has not started yet. Voting opens on '
+                . fmt_datetime($election['start_datetime'])
+                . '. The server refused this request, so no ballot was opened.',
+        ],
+        'closed' => [
+            'This election is closed',
+            'This election is closed. Voting is no longer available: it ended on '
+                . fmt_datetime($election['end_datetime'])
+                . '. The server refused this request, so no ballot was opened.',
+        ],
+        'archived' => [
+            'This election has been archived',
+            'This election has been archived and can no longer be voted in.',
+        ],
+        'draft' => [
+            'This election is not open yet',
+            'This election is still being prepared and has not been published to voters.',
+        ],
+        default => [
+            'Voting is not open',
+            'This election is not accepting ballots right now.',
+        ],
+    };
 }
 
 /**

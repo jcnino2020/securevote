@@ -54,8 +54,8 @@ if ($alreadyVoted) {
     audit_log('ballot_duplicate_attempt', 'Reached the ballot for election #' . $electionId
         . ' but a ballot already exists for this account.', (int) $voter['id']);
 
-    flash_warning('You have already submitted a ballot for "' . $election['title']
-        . '". Only one ballot can be recorded per voter.');
+    flash_warning('You have already submitted your ballot for this election. '
+        . 'Only one ballot can be recorded per voter.');
     redirect('voter/elections.php');
 }
 
@@ -80,11 +80,12 @@ if ($effective !== 'open') {
         . '" tried to open the ballot for election #' . $electionId
         . ' while it was ' . $effective . '.', (int) $voter['id']);
 
+    [$denialTitle, $denialMessage] = election_state_denial($effective, $election);
+
     sv_error_page(
         403,
-        'Voting is not open',
-        election_block_reason($election, true, false)
-            ?? 'This election is not accepting ballots right now.',
+        $denialTitle,
+        $denialMessage,
         [['label' => 'Back to my elections', 'href' => url('voter/elections.php')]]
     );
 }

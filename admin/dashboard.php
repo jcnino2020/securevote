@@ -45,13 +45,6 @@ $elections = $pdo->query(
       ORDER BY FIELD(e.status, 'open', 'scheduled', 'draft', 'closed', 'archived'), e.start_datetime DESC"
 )->fetchAll();
 
-$openCount = 0;
-foreach ($elections as $election) {
-    if (election_effective_status($election) === 'open') {
-        $openCount++;
-    }
-}
-
 /* ---------------------------------------------------------------------
  | Recent audit activity
  * ------------------------------------------------------------------- */
@@ -128,13 +121,58 @@ $breadcrumb   = [['label' => 'Dashboard', 'href' => 'admin/dashboard.php']];
 require __DIR__ . '/../includes/header.php';
 ?>
 
+<?php
+/* ---------------------------------------------------------------------
+ | Live figures for the summary tiles
+ |
+ | Every number below is counted from the database on this request. The
+ | election states come from election_effective_status(), so an election
+ | stored as "open" whose end time has passed is reported as closed here
+ | exactly as it is everywhere else in the system.
+ * ------------------------------------------------------------------- */
+$statusCounts = ['open' => 0, 'scheduled' => 0, 'draft' => 0, 'closed' => 0, 'archived' => 0];
+$primaryOpen  = null;
+
+foreach ($elections as $election) {
+    $effective = election_effective_status($election);
+    $statusCounts[$effective] = ($statusCounts[$effective] ?? 0) + 1;
+
+    if ($effective === 'open' && $primaryOpen === null) {
+        $primaryOpen = $election;
+    }
+}
+
+// "Votes cast" describes the election that is open right now, because that is
+// the turnout that means something today. With nothing open it falls back to
+// every election combined.
+if ($primaryOpen !== null) {
+    $castVotes    = (int) $primaryOpen['voted_count'];
+    $castEligible = (int) $primaryOpen['eligible_count'];
+    $castCaption  = (string) $primaryOpen['title'];
+} else {
+    $castVotes    = 0;
+    $castEligible = 0;
+
+    foreach ($elections as $election) {
+        $castVotes    += (int) $election['voted_count'];
+        $castEligible += (int) $election['eligible_count'];
+    }
+
+    $castCaption = 'All elections combined';
+}
+
+$castTurnout = percent($castVotes, $castEligible);
+?>
+
 <section class="stat-grid" aria-label="Summary statistics">
   <div class="stat-card">
     <span class="stat-card__icon stat-card__icon--navy"><?= sv_icon('vote', 20) ?></span>
     <div class="stat-card__body">
       <p class="stat-card__label">Elections</p>
       <p class="stat-card__value"><?= e((string) $totals['elections']) ?></p>
-      <p class="stat-card__meta"><?= e((string) $openCount) ?> open right now</p>
+      <p class="stat-card__meta">
+        <?= e($statusCounts['open'] . ' open, ' . $statusCounts['scheduled'] . ' scheduled, ' . $statusCounts['closed'] . ' closed') ?>
+      </p>
     </div>
   </div>
 
@@ -143,16 +181,26 @@ require __DIR__ . '/../includes/header.php';
     <div class="stat-card__body">
       <p class="stat-card__label">Registered voters</p>
       <p class="stat-card__value"><?= e((string) $totals['voters']) ?></p>
-      <p class="stat-card__meta"><?= e((string) $totals['active_voters']) ?> active</p>
+      <p class="stat-card__meta">
+        <?= e($totals['active_voters'] . ' active, ' . $totals['blocked'] . ' not active') ?>
+      </p>
     </div>
   </div>
 
   <div class="stat-card">
     <span class="stat-card__icon stat-card__icon--teal"><?= sv_icon('check-circle', 20) ?></span>
     <div class="stat-card__body">
-      <p class="stat-card__label">Ballots submitted</p>
-      <p class="stat-card__value"><?= e((string) $totals['ballots']) ?></p>
-      <p class="stat-card__meta">Across every election</p>
+      <p class="stat-card__label">Votes cast</p>
+      <p class="stat-card__value"><?= e((string) $castVotes) ?></p>
+      <p class="stat-card__meta">
+        <?= e('of ' . $castEligible . ' eligible, ' . $castTurnout . '% turnout') ?>
+      </p>
+      <div class="progress" role="img" aria-label="<?= e($castTurnout . '% turnout') ?>"
+           style="margin-top:6px">
+        <span class="progress__bar progress__bar--winner"
+              style="width: <?= e((string) min(100, $castTurnout)) ?>%"></span>
+      </div>
+      <p class="stat-card__meta"><?= e($castCaption) ?></p>
     </div>
   </div>
 
@@ -161,7 +209,16 @@ require __DIR__ . '/../includes/header.php';
     <div class="stat-card__body">
       <p class="stat-card__label">Candidates</p>
       <p class="stat-card__value"><?= e((string) $totals['candidates']) ?></p>
-      <p class="stat-card__meta">All parties</p>
+      <p class="stat-card__meta">Across every election</p>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <span class="stat-card__icon stat-card__icon--navy"><?= sv_icon('file', 20) ?></span>
+    <div class="stat-card__body">
+      <p class="stat-card__label">Ballots submitted</p>
+      <p class="stat-card__value"><?= e((string) $totals['ballots']) ?></p>
+      <p class="stat-card__meta">Across every election</p>
     </div>
   </div>
 

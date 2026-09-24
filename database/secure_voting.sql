@@ -603,6 +603,13 @@ UPDATE `voter_eligibility` AS ve
 -- are recorded, only what happened, who did it, from where and when.
 -- ----------------------------------------------------------------------------
 INSERT INTO `audit_logs` (`user_id`,`action`,`description`,`ip_address`,`user_agent`,`created_at`) VALUES
+-- Voter accounts were created before any election was prepared. The log shows
+-- the first few registrations; routine bulk work (creating all 33 candidates,
+-- all 60 registrations) is represented by a few entries rather than one row
+-- each, which is how a real audit trail reads.
+(1,  'voter_created',      'Created voter #2 "voter001".',                                                '192.168.1.10', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',  NOW() - INTERVAL 55 DAY),
+(1,  'voter_created',      'Created voter #3 "voter002".',                                                '192.168.1.10', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',  NOW() - INTERVAL 54 DAY),
+(1,  'voter_created',      'Created voter #4 "voter003".',                                                '192.168.1.10', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',  NOW() - INTERVAL 53 DAY),
 -- Student Organization Election 2026 was set up, voted in, and closed
 (1,  'election_created',   'Created election #3 "Student Organization Election 2026".',                   '192.168.1.10', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',  NOW() - INTERVAL 45 DAY),
 (1,  'position_created',   'Created position #10 "President" in election #3.',                            '192.168.1.10', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',  NOW() - INTERVAL 45 DAY),
@@ -629,9 +636,6 @@ INSERT INTO `audit_logs` (`user_id`,`action`,`description`,`ip_address`,`user_ag
 (1,  'candidate_created',  'Created candidate #2 "Miguel Reyes" in position #1 of election #1.',           '192.168.1.10', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',  NOW() - INTERVAL 20 DAY),
 (1,  'candidate_created',  'Created candidate #3 "Daniel Cruz" in position #1 of election #1.',            '192.168.1.10', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',  NOW() - INTERVAL 19 DAY),
 (1,  'candidate_updated',  'Updated candidate #3 "Daniel Cruz" in position #1 (status active).',           '192.168.1.10', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',  NOW() - INTERVAL 19 DAY),
-(1,  'voter_created',      'Created voter #2 "voter001".',                                                '192.168.1.10', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',  NOW() - INTERVAL 18 DAY),
-(1,  'voter_created',      'Created voter #3 "voter002".',                                                '192.168.1.10', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',  NOW() - INTERVAL 18 DAY),
-(1,  'voter_created',      'Created voter #4 "voter003".',                                                '192.168.1.10', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',  NOW() - INTERVAL 18 DAY),
 (1,  'eligibility_bulk_added', 'Registered 20 active voter(s) for election #1 "Student Council Election 2026".', '192.168.1.10', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)', NOW() - INTERVAL 18 DAY),
 (1,  'election_activated', 'Election #1 "Student Council Election 2026" set to open.',                    '192.168.1.10', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',  NOW() - INTERVAL 17 DAY),
 -- College Department Election 2026 was created and scheduled

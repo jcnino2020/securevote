@@ -133,20 +133,55 @@ then open `http://localhost:8000/`. Both routes land on the sign-in page.
 
 ## 4. Demonstration accounts
 
-Seeded by `database/secure_voting.sql`:
+Seeded by `database/secure_voting.sql`. Every name in the dataset is fictional.
 
-| Role | Username | Password | Notes |
+| Role | Username | Password | What it is for |
 | --- | --- | --- | --- |
 | Administrator | `admin` | `Admin@12345` | Full access to the admin module |
-| Voter | `juan.delacruz` | `Voter@12345` | Registered for the open election |
-| Voter | `maria.santos` | `Voter@12345` | Registered for the open election |
-| Voter (blocked) | `david.cruz` | `Voter@12345` | Used to demonstrate that a blocked account cannot sign in |
+| Voter, still able to vote | `voter009` | `Voter@12345` | The account to use for a live vote during the presentation |
+| Voter, already voted | `voter001` | `Voter@12345` | Demonstrates that the server refuses a second ballot |
+| Voter, blocked | `voter020` | `Voter@12345` | Demonstrates that a blocked account cannot sign in |
 
-The other seeded voters (`jose.reyes`, `ana.bautista`, `mark.villanueva`, `liza.mendoza`,
-`carlo.garcia`, `nina.torres`, `paolo.ramos`, `kim.aquino`, `rea.lim`) all use `Voter@12345`.
+`voter001` through `voter020` all use `Voter@12345`. Voters `voter001` to `voter008` have
+already voted in the open election; `voter009` to `voter020` have not, so there is always an
+account available to submit a ballot.
 
 > **These passwords exist only for the presentation.** Change them before the system is used
-> for anything real, and remove the demonstration hint block at the top of `auth/login.php`.
+> for anything real, and delete the demonstration hint block in `auth/login.php`.
+
+### 4.1 What the sample dataset contains
+
+Nothing in the database is left empty, so every screen has something to show.
+
+| Table | Rows | What it demonstrates |
+| --- | ---: | --- |
+| `users` | 21 | 1 administrator and 20 voters, one of them blocked |
+| `elections` | 3 | One open, one scheduled, one closed |
+| `positions` | 11 | 7 in the open election; Representative allows 2 selections |
+| `candidates` | 33 | 3 per position in the open election (4 for Representative), 2 to 3 for the other two, across three fictional organizations |
+| `voter_eligibility` | 60 | All 20 voters registered for all three elections |
+| `ballots` | 11 | 8 in the open election, 3 in the closed one |
+| `votes` | 67 | Every selection, each one consistent with its ballot and position |
+| `audit_logs` | 57 | One continuous history, from account creation to this morning |
+
+The three elections are deliberately in three different states, each with a different results
+policy, so the whole state machine can be demonstrated without editing anything:
+
+| Election | State | Results policy | Demonstrates |
+| --- | --- | --- | --- |
+| Student Council Election 2026 | Open | `after_vote` | Voting works normally, and a voter sees the tally once they have voted |
+| College Department Election 2026 | Scheduled | `hidden` | The server refuses a ballot before the start date |
+| Student Organization Election 2026 | Closed | `after_close` | The server refuses a ballot after the end date, and results are published |
+
+Expected figures on the administrator dashboard straight after a fresh import: **3 elections
+(1 open, 1 scheduled, 1 closed)**, **20 registered voters**, **8 votes cast of 20 eligible
+(40% turnout)**, **33 candidates**, **11 ballots submitted** and **3 failed sign-ins in the
+last 24 hours**. Every one of those numbers is counted from the tables on each request, so
+they move as soon as the data moves.
+
+Because every timestamp is written relative to the moment of import, the open election always
+has two days behind it and five ahead, and the audit trail always looks recent. The
+demonstration never goes stale.
 
 ---
 
@@ -173,14 +208,19 @@ want to build one live during the presentation.
    still in the future, because an election can never be open before it starts.
 6. **Vote** — sign in as a registered voter, press **Vote now**, fill the ballot, press
    **Review my ballot**, then **Submit final ballot**.
-7. **See the result** — *Results* as the administrator, or as a voter once the results policy
-   allows it. Close the election to publish results under the `after_close` policy.
+7. **See the result** as the administrator, or as a voter once the election's results policy
+   allows it. Each of the three seeded elections uses a different policy (`after_vote`,
+   `hidden`, `after_close`), so all three behaviours can be shown without editing anything.
+   Note the trade-off: `after_vote` on a running election lets voters see the live tally,
+   which is convenient for a demonstration but can influence later voters. Switch the open
+   election to `after_close` for the more conservative rule.
 
 ---
 
 ## 6. Testing the security controls
 
 The point of the project is that each of these can be *demonstrated*, not just described.
+Every test below can be run against the sample data with no preparation at all.
 
 ### 6.1 Authentication
 
@@ -189,7 +229,7 @@ The point of the project is that each of these can be *demonstrated*, not just d
 | Valid sign-in | `admin` / `Admin@12345` | Redirected to the admin dashboard, entry in the audit log |
 | Wrong password | `admin` / `wrongpass` | "Incorrect username/email or password", `login_failure` in the audit log |
 | Unknown account | `nobody` / `whatever` | Same generic message, so the form never reveals whether an account exists |
-| Blocked account | `david.cruz` / `Voter@12345` | "This account has been blocked", `login_blocked` in the audit log |
+| Blocked account | `voter020` / `Voter@12345` | "This account has been blocked", `login_blocked` in the audit log. This case is seeded. |
 | Brute-force brake | Five wrong passwords in a row | The sixth attempt is refused for about 15 minutes |
 | Session protection | Sign in, then delete the session cookie and reload | Sent back to the sign-in page |
 | Session regeneration | Sign in and watch the session cookie | The id changes at the moment of sign-in |
@@ -199,21 +239,22 @@ The point of the project is that each of these can be *demonstrated*, not just d
 
 | Test | How | Expected result |
 | --- | --- | --- |
-| Voter opens an admin page | Sign in as `juan.delacruz`, then visit `admin/dashboard.php` | 403 "Not authorized", `unauthorized_access` in the audit log |
+| Voter opens an admin page | Sign in as `voter009`, then visit `admin/dashboard.php` | 403 "Not authorized", `unauthorized_access` in the audit log |
 | Admin opens a voter page | Sign in as `admin`, visit `voter/ballot.php?election_id=1` | 403, logged |
-| Voter guesses another election | Sign in as a voter not registered for election 3, visit `voter/ballot.php?election_id=3` | 403 "Not registered for this election", logged |
-| Ballot for a draft election | Visit `voter/ballot.php?election_id=3` while it is a draft | 403 "Voting is not open", logged |
+| Ballot before the start date | Sign in as `voter009` and open the scheduled election (`election_id=2`) | 403 "This election has not started yet", `ballot_closed_attempt` in the audit log. This case is seeded. |
+| Ballot after the end date | Sign in as `voter009` and open the closed election (`election_id=3`) | 403 "This election is closed", logged. This case is seeded. |
+| Voter not on the voter list | As the administrator, untick that voter on *Voters → Elections*, then try to open the ballot | 403 "Not registered for this election", `unauthorized_election_access` in the audit log |
 
 ### 6.3 Integrity
 
 | Test | How | Expected result |
 | --- | --- | --- |
-| Successful vote | Vote once | Confirmation page with a reference such as `SV-2026-8F3K2Q` |
-| Duplicate vote | Sign in again and open the same ballot | Blocked before the ballot renders, with `ballot_duplicate_attempt` in the audit log |
+| Successful vote | Sign in as `voter009` and vote once | Confirmation page with a reference such as `SV-2026-9A31F4` |
+| Duplicate vote | Sign in as `voter001`, who has already voted, and open the same ballot | Blocked before the ballot renders, with `ballot_duplicate_attempt` in the audit log. This case is seeded. |
 | Duplicate vote at the database level | See the demonstration queries at the bottom of `database/secure_voting.sql` | The database itself rejects the insert |
 | Invalid candidate | With the ballot form open, use the browser inspector to add a `votes[…]` value for a candidate from another position and submit | "A selected candidate for … is not standing in this election" and nothing is written |
-| Too many selections | Select four senators where only three are allowed | Rejected on the server with a clear message |
-| Voting outside the window | Close the election, then post the ballot | 403 before the ballot renders; if a stale review screen is submitted, the transaction refuses it |
+| Too many selections | On the Representative position, select three candidates where only two are allowed | Rejected on the server with a clear message |
+| Voting outside the window | Close the open election, then submit a prepared ballot | 403 before the ballot renders; if a stale review screen is submitted, the transaction refuses it |
 | Blank position | Leave a position unselected and submit | Allowed and recorded as an abstention; the review screen warns first |
 | Transaction rollback | Stop MySQL mid-submission | Nothing is recorded: the ballot, its votes and the eligibility flag are rolled back together |
 

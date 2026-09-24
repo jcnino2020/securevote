@@ -153,15 +153,21 @@ require __DIR__ . '/../includes/header.php';
     <?php if ($showDemoHints): ?>
       <div class="auth-demo">
         <strong>Demonstration accounts</strong>
-        <p class="text-xs">Seeded for the presentation. Remove this block before real use.</p>
+        <p class="text-xs">
+          Seeded with the sample dataset. Remove this block before real use.
+        </p>
         <dl>
           <dt>Administrator</dt>
           <dd><span class="mono">admin</span> / <span class="mono">Admin@12345</span></dd>
-          <dt>Voter</dt>
-          <dd><span class="mono">juan.delacruz</span> / <span class="mono">Voter@12345</span></dd>
+          <dt>Voter, not voted yet</dt>
+          <dd><span class="mono">voter009</span> / <span class="mono">Voter@12345</span></dd>
+          <dt>Voter, already voted</dt>
+          <dd><span class="mono">voter001</span> / <span class="mono">Voter@12345</span></dd>
           <dt>Blocked voter</dt>
-          <dd><span class="mono">david.cruz</span> / <span class="mono">Voter@12345</span></dd>
+          <dd><span class="mono">voter020</span> / <span class="mono">Voter@12345</span></dd>
         </dl>
+        <p class="text-xs">Voters run from <span class="mono">voter001</span> to
+          <span class="mono">voter020</span>, all with the same password.</p>
       </div>
     <?php endif; ?>
 
