@@ -189,7 +189,7 @@ require __DIR__ . '/../includes/header.php';
             <tr>
               <td class="table__cell-strong"><?= e($election['title']) ?></td>
               <td>
-                <span class="reference-code" style="font-family:monospace; font-weight:700; background:rgba(37,99,235,0.1); color:#2563eb; padding:2px 8px; border-radius:4px;">
+                <span class="reference-code reference-code--sm">
                   <?= e((string) $election['ballot_reference']) ?>
                 </span>
               </td>

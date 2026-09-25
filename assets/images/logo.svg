@@ -2,10 +2,10 @@
      role="img" aria-label="SecureVote">
   <title>SecureVote</title>
   <g transform="translate(2 4) scale(1.25)">
-    <path d="M16 2.75 5.5 6.5v9.1c0 6.6 4.4 11.9 10.5 13.65C22.1 27.5 26.5 22.2 26.5 15.6V6.5Z" fill="#173B57"/>
+    <path d="M16 2.75 5.5 6.5v9.1c0 6.6 4.4 11.9 10.5 13.65C22.1 27.5 26.5 22.2 26.5 15.6V6.5Z" fill="#0F172A"/>
     <path d="m11.4 16.2 3.2 3.2 6-6.6" fill="none" stroke="#FFFFFF" stroke-width="2.6"
           stroke-linecap="round" stroke-linejoin="round"/>
   </g>
   <text x="48" y="32" font-family="Figtree, system-ui, -apple-system, Segoe UI, sans-serif"
-        font-size="23" font-weight="700" letter-spacing="-0.4" fill="#0F172A">Secure<tspan fill="#2563EB">Vote</tspan></text>
+        font-size="23" font-weight="700" letter-spacing="-0.4" fill="#0F172A">Secure<tspan fill="#059669">Vote</tspan></text>
 </svg>

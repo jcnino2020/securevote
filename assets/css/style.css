@@ -16,25 +16,25 @@
    ========================================================================== */
 
 :root {
-  /* Brand Palettes: Deep Civic Navy, Modern Sapphire & Luminous Accents */
+  /* Brand Palettes: Modern Emerald & Mint Accents */
   --navy:              #0f172a;
   --navy-600:          #1e293b;
   --navy-700:          #0f172a;
   --navy-800:          #090d16;
-  --blue:              #2563eb;
-  --blue-hover:        #1d4ed8;
-  --blue-active:       #1e40af;
-  --blue-50:           #eff6ff;
-  --blue-100:          #dbeafe;
-  --blue-200:          #bfdbfe;
-  --blue-600:          #1d4ed8;
-  --blue-700:          #1e40af;
-  --indigo:            #4f46e5;
-  --indigo-50:         #eef2ff;
-  --teal:              #0d9488;
-  --teal-hover:        #0f766e;
-  --teal-50:           #f0fdfa;
-  --teal-100:          #ccfbf1;
+  --blue:              #059669; /* Emerald Primary */
+  --blue-hover:        #047857;
+  --blue-active:       #065f46;
+  --blue-50:           #ecfdf5;
+  --blue-100:          #d1fae5;
+  --blue-200:          #a7f3d0;
+  --blue-600:          #059669;
+  --blue-700:          #047857;
+  --indigo:            #0d9488;
+  --indigo-50:         #f0fdfa;
+  --teal:              #10b981;
+  --teal-hover:        #059669;
+  --teal-50:           #ecfdf5;
+  --teal-100:          #d1fae5;
 
   /* Functional Status Colors */
   --success:           #059669;
@@ -59,14 +59,14 @@
   --info-50:           #f0f9ff;
   --info-100:          #e0f2fe;
 
-  /* Neutrals & Surfaces (Light Mode) */
+  /* Neutrals & Surfaces (Clean Light Mode) */
   --bg:                #f8fafc;
   --bg-sub:            #f1f5f9;
   --surface:           #ffffff;
   --surface-2:         #f8fafc;
   --surface-3:         #f1f5f9;
   --surface-hover:     #f1f5f9;
-  --surface-glass:     rgba(255, 255, 255, 0.9);
+  --surface-glass:     rgba(255, 255, 255, 0.92);
   --surface-glass-border: rgba(226, 232, 240, 0.9);
 
   /* Typography Colors */
@@ -82,21 +82,21 @@
   --border-strong:     #cbd5e1;
   --border-interactive:#94a3b8;
 
-  /* Sidebar Navigation Rail (Deep Navy Shell) */
-  --sidebar-bg:        #0b1222;
-  --sidebar-surface:   #152037;
+  /* Sidebar Navigation Rail (Deep Charcoal Shell) */
+  --sidebar-bg:        #0b0f17;
+  --sidebar-surface:   #131924;
   --sidebar-text:      #f8fafc;
   --sidebar-muted:     #94a3b8;
-  --sidebar-hover:     rgba(255, 255, 255, 0.08);
-  --sidebar-active-bg: rgba(59, 130, 246, 0.16);
-  --sidebar-active-bar:#3b82f6;
+  --sidebar-hover:     rgba(255, 255, 255, 0.07);
+  --sidebar-active-bg: rgba(16, 185, 129, 0.16);
+  --sidebar-active-bar:#10b981;
   --sidebar-border:    rgba(255, 255, 255, 0.08);
 
   /* Focus System */
-  --focus:             #2563eb;
-  --focus-ring:        rgba(37, 99, 235, 0.22);
+  --focus:             #059669;
+  --focus-ring:        rgba(5, 150, 105, 0.22);
   --focus-ring-danger: rgba(220, 38, 38, 0.2);
-  --glow-primary:      rgba(37, 99, 235, 0.12);
+  --glow-primary:      rgba(5, 150, 105, 0.14);
 
   /* Modern 2026 "Curved Square" Radii (Softer rounded rectangles without pill bloat) */
   --radius-xs:         6px;
@@ -153,57 +153,57 @@
 }
 
 /* ==========================================================================
-   Dark Theme Overrides
+   Dark Theme Overrides (Sleek Dark Charcoal & Gray with Emerald Accents)
    ========================================================================== */
 
 [data-theme="dark"] {
-  /* Dark Obsidian & Slate-Navy Surfaces */
-  --bg:                #080c16;
-  --bg-sub:            #0e1526;
-  --surface:           #111a2e;
-  --surface-2:         #16223b;
-  --surface-3:         #1d2c4c;
-  --surface-hover:     #182642;
-  --surface-glass:     rgba(17, 26, 46, 0.88);
+  /* Dark Charcoal & Neutral Slate-Gray Surfaces (Clean, Not Murky Green) */
+  --bg:                #0b0d12;
+  --bg-sub:            #101319;
+  --surface:           #141720;
+  --surface-2:         #1a1e28;
+  --surface-3:         #212633;
+  --surface-hover:     #1d222e;
+  --surface-glass:     rgba(20, 23, 32, 0.88);
   --surface-glass-border: rgba(255, 255, 255, 0.08);
 
   /* Typography */
-  --text:              #f8fafc;
+  --text:              #f3f4f6;
   --text-secondary:    #cbd5e1;
   --text-muted:        #94a3b8;
   --text-light:        #64748b;
-  --text-inverse:      #0f172a;
+  --text-inverse:      #0b0d12;
 
   /* Borders */
-  --border:            #1e2d4a;
-  --border-subtle:     #16223b;
-  --border-strong:     #2b3e64;
-  --border-interactive:#445b8a;
+  --border:            #1f2430;
+  --border-subtle:     #171b24;
+  --border-strong:     #2b3242;
+  --border-interactive:#444d63;
 
-  /* Sidebar Dark */
-  --sidebar-bg:        #060a13;
-  --sidebar-surface:   #0e1628;
-  --sidebar-text:      #f8fafc;
-  --sidebar-muted:     #8da2bc;
-  --sidebar-hover:     rgba(255, 255, 255, 0.07);
-  --sidebar-active-bg: rgba(59, 130, 246, 0.22);
-  --sidebar-active-bar:#60a5fa;
+  /* Sidebar Dark Rail */
+  --sidebar-bg:        #080a0f;
+  --sidebar-surface:   #10131a;
+  --sidebar-text:      #f3f4f6;
+  --sidebar-muted:     #94a3b8;
+  --sidebar-hover:     rgba(255, 255, 255, 0.06);
+  --sidebar-active-bg: rgba(16, 185, 129, 0.16);
+  --sidebar-active-bar:#10b981;
   --sidebar-border:    rgba(255, 255, 255, 0.07);
 
-  /* Brand Accents */
-  --blue:              #3b82f6;
-  --blue-hover:        #60a5fa;
-  --blue-active:       #93c5fd;
-  --blue-50:           rgba(59, 130, 246, 0.14);
-  --blue-100:          rgba(59, 130, 246, 0.22);
-  --blue-600:          #60a5fa;
-  --blue-700:          #93c5fd;
-  --indigo:            #6366f1;
-  --indigo-50:         rgba(99, 102, 241, 0.14);
-  --teal:              #14b8a6;
-  --teal-hover:        #2dd4bf;
-  --teal-50:           rgba(20, 184, 166, 0.14);
-  --teal-100:          rgba(20, 184, 166, 0.24);
+  /* Brand Accents (Vibrant Emerald & Mint) */
+  --blue:              #10b981;
+  --blue-hover:        #34d399;
+  --blue-active:       #6ee7b7;
+  --blue-50:           rgba(16, 185, 129, 0.14);
+  --blue-100:          rgba(16, 185, 129, 0.22);
+  --blue-600:          #10b981;
+  --blue-700:          #34d399;
+  --indigo:            #14b8a6;
+  --indigo-50:         rgba(20, 184, 166, 0.14);
+  --teal:              #10b981;
+  --teal-hover:        #34d399;
+  --teal-50:           rgba(16, 185, 129, 0.14);
+  --teal-100:          rgba(16, 185, 129, 0.24);
 
   /* Status Colors */
   --success:           #10b981;
@@ -229,17 +229,17 @@
   --info-100:          rgba(56, 189, 248, 0.24);
 
   /* Focus Dark */
-  --focus:             #60a5fa;
-  --focus-ring:        rgba(96, 165, 250, 0.32);
+  --focus:             #10b981;
+  --focus-ring:        rgba(16, 185, 129, 0.32);
   --focus-ring-danger: rgba(248, 113, 113, 0.26);
-  --glow-primary:      rgba(59, 130, 246, 0.22);
+  --glow-primary:      rgba(16, 185, 129, 0.2);
 
   /* Elevation Shadows in Dark */
-  --shadow-xs:         0 1px 2px rgba(0, 0, 0, 0.35);
-  --shadow-sm:         0 1px 3px rgba(0, 0, 0, 0.5);
-  --shadow-md:         0 4px 16px rgba(0, 0, 0, 0.55);
-  --shadow-lg:         0 12px 32px rgba(0, 0, 0, 0.65);
-  --shadow-xl:         0 24px 52px rgba(0, 0, 0, 0.75);
+  --shadow-xs:         0 1px 2px rgba(0, 0, 0, 0.45);
+  --shadow-sm:         0 1px 3px rgba(0, 0, 0, 0.55);
+  --shadow-md:         0 4px 16px rgba(0, 0, 0, 0.6);
+  --shadow-lg:         0 12px 32px rgba(0, 0, 0, 0.7);
+  --shadow-xl:         0 24px 52px rgba(0, 0, 0, 0.8);
 }
 
 /* ==========================================================================
@@ -550,14 +550,14 @@ hr {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: var(--sp-4);
-  border: 1px solid rgba(37, 99, 235, 0.22);
+  border: 1px solid var(--blue-200);
   max-width: 100%;
 }
 
 [data-theme="dark"] .hero-badge {
-  background: rgba(37, 99, 235, 0.15);
-  color: #93c5fd;
-  border-color: rgba(59, 130, 246, 0.35);
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.35);
 }
 
 .hero-title {
@@ -746,7 +746,7 @@ hr {
 }
 
 [data-theme="dark"] .brand__mark {
-  color: #60a5fa;
+  color: #34d399;
 }
 
 .brand__mark--sm {
@@ -770,9 +770,9 @@ hr {
 }
 
 /* Sidebar wordmark */
-.sidebar .brand__mark { color: #60a5fa; }
+.sidebar .brand__mark { color: #34d399; }
 .sidebar .brand__word { color: #ffffff; }
-.sidebar .brand__word span { color: #93c5fd; }
+.sidebar .brand__word span { color: #6ee7b7; }
 
 /* ==========================================================================
    6. Buttons & Interactive Controls (Rounded Rectangles / 2026 Micro-Interactions)
@@ -1248,11 +1248,16 @@ hr {
   border-color: rgba(16, 185, 129, 0.32);
 }
 
-[data-theme="dark"] .badge--primary,
+[data-theme="dark"] .badge--primary {
+  background: rgba(16, 185, 129, 0.14);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.32);
+}
+
 [data-theme="dark"] .badge--info {
-  background: rgba(59, 130, 246, 0.14);
-  color: #60a5fa;
-  border-color: rgba(59, 130, 246, 0.32);
+  background: rgba(56, 189, 248, 0.14);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.32);
 }
 
 [data-theme="dark"] .badge--teal {
@@ -1266,16 +1271,23 @@ hr {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  padding: 4px 9px;
   border-radius: var(--radius-xs);
   background: var(--blue-50);
-  border: 1px solid rgba(37, 99, 235, 0.25);
+  border: 1px solid var(--blue-200);
   font-family: var(--font-mono);
-  font-weight: 600;
-  font-size: 0.84rem;
+  font-weight: 700;
+  font-size: 0.8125rem;
   color: var(--blue);
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
+}
+
+[data-theme="dark"] .voter-code-badge {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #34d399;
 }
 
 /* ==========================================================================
@@ -1484,37 +1496,46 @@ hr {
   box-shadow: var(--shadow-xs);
 }
 
+.card .table-wrap {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
 .table {
   width: 100%;
   text-align: left;
-  border-collapse: separate;
+  border-collapse: collapse;
   border-spacing: 0;
+  min-width: 600px;
 }
 
 .table thead th {
-  padding: var(--sp-4) var(--sp-6);
-  font-size: 0.725rem;
+  padding: 12px 18px;
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--text-muted);
   background: var(--surface-2);
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
+  vertical-align: middle;
 }
 
 .table tbody td {
-  padding: var(--sp-4) var(--sp-6);
-  font-size: 0.9rem;
+  padding: 14px 18px;
+  font-size: 0.875rem;
   color: var(--text);
   border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface);
+  background: transparent;
   vertical-align: middle;
   transition: background-color var(--tr-fast);
 }
 
 .table tbody tr:hover td {
-  background: var(--surface-hover);
+  background-color: var(--surface-hover);
 }
 
 .table tbody tr:last-child td {
@@ -1524,6 +1545,11 @@ hr {
 .table__cell-strong {
   font-weight: 600;
   color: var(--text);
+  line-height: 1.35;
+}
+
+span.table__cell-strong,
+p.table__cell-strong {
   display: block;
 }
 
@@ -1531,19 +1557,28 @@ hr {
   font-size: 0.775rem;
   color: var(--text-muted);
   display: block;
-  margin-top: 2px;
+  margin-top: 3px;
+  line-height: 1.35;
+  white-space: nowrap;
 }
 
 .table__actions-col {
   text-align: right;
   white-space: nowrap;
+  width: 1%;
 }
 
 .table__actions {
   display: inline-flex;
   align-items: center;
-  gap: var(--sp-2);
+  gap: 6px;
   justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.table__actions form {
+  display: inline;
+  margin: 0;
 }
 
 .table-toolbar {
@@ -1552,9 +1587,22 @@ hr {
   gap: var(--sp-3);
   align-items: center;
   justify-content: space-between;
-  padding: var(--sp-4) var(--sp-6);
+  padding: var(--sp-3) var(--sp-6);
   background: var(--surface-2);
   border-bottom: 1px solid var(--border);
+}
+
+.table-toolbar .search-field {
+  flex: 1 1 260px;
+  max-width: 440px;
+}
+
+.table-toolbar .row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: nowrap;
+  margin-bottom: 0;
 }
 
 /* ==========================================================================
@@ -2631,6 +2679,19 @@ img.avatar {
   font-variant-numeric: tabular-nums;
 }
 
+.reference-code--sm {
+  padding: 3px 8px;
+  font-size: 0.85rem;
+  border-radius: var(--radius-xs);
+  letter-spacing: 0.04em;
+}
+
+[data-theme="dark"] .reference-code {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
 /* ==========================================================================
    17. Results, Progress Bars & Tallies
    ========================================================================== */
@@ -3350,7 +3411,7 @@ dialog.modal::backdrop {
 
 [data-theme="dark"] .soc-range-pill.is-active {
   background: var(--surface-2);
-  color: #60a5fa;
+  color: #34d399;
   border-color: var(--border-strong);
 }
 

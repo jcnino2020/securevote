@@ -912,36 +912,38 @@ require __DIR__ . '/../includes/header.php';
           <?php foreach ($voters as $voter): ?>
             <tr>
               <td>
-                <div class="row">
+                <div style="display:flex; align-items:center; gap:12px;">
                   <span class="avatar avatar--sm" aria-hidden="true">
                     <?= e(initials($voter['first_name'], $voter['last_name'])) ?>
                   </span>
-                  <span>
-                    <span class="table__cell-strong"><?= e(user_full_name($voter)) ?></span>
+                  <div>
+                    <span class="table__cell-strong" style="white-space:nowrap;"><?= e(user_full_name($voter)) ?></span>
                     <span class="table__cell-sub mono">@<?= e($voter['username']) ?></span>
-                  </span>
+                  </div>
                 </div>
               </td>
               <td>
                 <span class="voter-code-badge"><?= e((string) ($voter['voter_code'] ?? '—')) ?></span>
               </td>
               <td>
-                <span><?= e($voter['email']) ?></span>
-                <?php if (!empty($voter['google_id'])): ?>
-                  <span class="badge badge--primary" style="margin-top:2px; display:inline-flex; font-size:0.7rem; padding:2px 6px;">
-                    <?= sv_icon('google', 10) ?> Google Linked
-                  </span>
-                <?php endif; ?>
+                <div style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;">
+                  <span style="white-space:nowrap;"><?= e($voter['email']) ?></span>
+                  <?php if (!empty($voter['google_id'])): ?>
+                    <span class="badge badge--primary" style="font-size:0.7rem; padding:2px 6px;">
+                      <?= sv_icon('google', 10) ?> Google Linked
+                    </span>
+                  <?php endif; ?>
+                </div>
               </td>
               <td><?= account_badge((string) $voter['status']) ?></td>
               <td>
-                <?= e((string) $voter['eligible_count']) ?> registered
+                <span style="white-space:nowrap;"><?= e((string) $voter['eligible_count']) ?> registered</span>
                 <span class="table__cell-sub">
-                  <?= e((string) $voter['ballot_count']) ?> ballot<?= (int) $voter['ballot_count'] === 1 ? '' : 's' ?> submitted
+                  <?= e((string) $voter['ballot_count']) ?> ballot<?= (int) $voter['ballot_count'] === 1 ? '' : 's' ?> cast
                 </span>
               </td>
               <td>
-                <?= e($voter['last_login'] !== null ? relative_time((string) $voter['last_login']) : 'Never') ?>
+                <span style="white-space:nowrap; color:var(--text-secondary);"><?= e($voter['last_login'] !== null ? relative_time((string) $voter['last_login']) : 'Never') ?></span>
               </td>
               <td class="table__actions-col">
                 <div class="table__actions">
