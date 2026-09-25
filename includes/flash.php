@@ -22,6 +22,21 @@ function flash(string $type, string $message): void
         $type = 'info';
     }
 
+    if (!isset($_SESSION['_flash']) || !is_array($_SESSION['_flash'])) {
+        $_SESSION['_flash'] = [];
+    }
+
+    // De-duplicate identical messages
+    foreach ($_SESSION['_flash'] as $existing) {
+        if (($existing['message'] ?? '') === $message) {
+            return;
+        }
+        // Don't add generic "Please sign in to continue" if a specific session timeout notice is already queued
+        if ($message === 'Please sign in to continue.' && str_contains((string) ($existing['message'] ?? ''), 'signed out')) {
+            return;
+        }
+    }
+
     $_SESSION['_flash'][] = ['type' => $type, 'message' => $message];
 }
 

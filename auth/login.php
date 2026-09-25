@@ -43,7 +43,7 @@ require __DIR__ . '/../includes/header.php';
     <?php if ($formMessage !== ''): ?>
       <div class="alert alert--danger" role="alert">
         <span class="alert__icon" aria-hidden="true"><?= sv_icon('x-circle', 18) ?></span>
-        <p class="alert__text"><?= e($formMessage) ?></p>
+        <div class="alert__text"><?= e($formMessage) ?></div>
       </div>
       <div class="divider" role="presentation"></div>
     <?php endif; ?>

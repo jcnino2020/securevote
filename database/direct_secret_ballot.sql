@@ -31,6 +31,7 @@ USE `u184230832_securevote`;
 -- ----------------------------------------------------------------------------
 -- Drop existing tables (child tables first)
 -- ----------------------------------------------------------------------------
+DROP TABLE IF EXISTS `dismissed_alerts`;
 DROP TABLE IF EXISTS `audit_logs`;
 DROP TABLE IF EXISTS `votes`;
 DROP TABLE IF EXISTS `ballots`;
@@ -238,6 +239,27 @@ CREATE TABLE `audit_logs` (
     FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
     ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================================
+-- 10. dismissed_alerts - tracks acknowledged/resolved security alerts
+-- ============================================================================
+CREATE TABLE `dismissed_alerts` (
+  `id`           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `alert_key`    VARCHAR(100) NOT NULL,
+  `alert_title`  VARCHAR(150) NOT NULL,
+  `severity`     VARCHAR(30)  NOT NULL DEFAULT 'Medium',
+  `reason`       VARCHAR(255) NULL DEFAULT NULL,
+  `dismissed_by` INT UNSIGNED NULL DEFAULT NULL,
+  `dismissed_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `status`       ENUM('resolved','active') NOT NULL DEFAULT 'resolved',
+  PRIMARY KEY (`id`),
+  KEY `idx_dismissed_alert_key` (`alert_key`),
+  KEY `idx_dismissed_by` (`dismissed_by`),
+  CONSTRAINT `fk_dismissed_alerts_user_direct`
+    FOREIGN KEY (`dismissed_by`) REFERENCES `users` (`id`)
+    ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  COMMENT='Tracks dismissed or resolved security alerts by administrators.';
 
 SET FOREIGN_KEY_CHECKS = 1;
 

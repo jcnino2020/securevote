@@ -158,7 +158,7 @@ require __DIR__ . '/../includes/header.php';
     <?php if ($errors !== []): ?>
       <div class="alert alert--danger" role="alert">
         <span class="alert__icon" aria-hidden="true"><?= sv_icon('x-circle', 18) ?></span>
-        <p class="alert__text">Please check the highlighted fields below to continue.</p>
+        <div class="alert__text">Please check the highlighted fields below to continue.</div>
       </div>
       <div class="divider" role="presentation"></div>
     <?php endif; ?>

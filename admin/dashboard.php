@@ -21,11 +21,79 @@ $admin = require_admin();
 $pdo   = db();
 
 /* =====================================================================
+ | POST Handlers: Security Alert Dismissal & Resolution
+ * =================================================================== */
+if (is_post()) {
+    require_csrf();
+    $postAction = (string) input('action', '');
+    $currentRange = trim((string) input('range', '24h'));
+    $rangeQuery = in_array($currentRange, ['24h', '7d', '30d', 'all'], true) && $currentRange !== '24h'
+        ? '?range=' . urlencode($currentRange)
+        : '';
+
+    if ($postAction === 'resolve_alert') {
+        $alertKey   = trim((string) input('alert_key', ''));
+        $alertTitle = trim((string) input('alert_title', 'Security Alert'));
+        $severity   = trim((string) input('severity', 'Medium'));
+        $reason     = trim((string) input('reason', ''));
+
+        if ($alertKey !== '') {
+            sv_dismiss_alert($pdo, $alertKey, $alertTitle, $severity, $reason, (int) $admin['id']);
+            flash_success('Security alert "' . $alertTitle . '" marked as resolved.');
+        }
+        redirect('admin/dashboard.php' . $rangeQuery);
+    }
+
+    if ($postAction === 'resolve_all_alerts') {
+        $alertsToResolve = json_decode((string) input('alerts_json', '[]'), true);
+        $resolvedCount = 0;
+        if (is_array($alertsToResolve)) {
+            foreach ($alertsToResolve as $a) {
+                if (!empty($a['key'])) {
+                    sv_dismiss_alert(
+                        $pdo,
+                        (string) $a['key'],
+                        (string) ($a['title'] ?? 'Security Alert'),
+                        (string) ($a['severity'] ?? 'Medium'),
+                        'Bulk resolved by administrator',
+                        (int) $admin['id']
+                    );
+                    $resolvedCount++;
+                }
+            }
+        }
+        flash_success(($resolvedCount > 0 ? $resolvedCount : 'All') . ' security alert(s) marked as resolved.');
+        redirect('admin/dashboard.php' . $rangeQuery);
+    }
+
+    if ($postAction === 'restore_alert') {
+        $dismissedId = (int) input('dismissed_id', 0);
+        if ($dismissedId > 0) {
+            sv_restore_alert($pdo, $dismissedId, (int) $admin['id']);
+            flash_success('Security alert restored to active monitoring.');
+        }
+        $glue = $rangeQuery !== '' ? '&' : '?';
+        redirect('admin/dashboard.php' . $rangeQuery . $glue . 'tab=resolved');
+    }
+
+    if ($postAction === 'restore_all_alerts') {
+        sv_restore_all_alerts($pdo, (int) $admin['id']);
+        flash_success('All resolved alerts restored to active monitoring.');
+        redirect('admin/dashboard.php' . $rangeQuery);
+    }
+}
+
+/* =====================================================================
  | 1. Time Window Filter & Intervals
  * =================================================================== */
 $range = trim((string) input('range', '24h'));
 if (!in_array($range, ['24h', '7d', '30d', 'all'], true)) {
     $range = '24h';
+}
+
+$activeTab = trim((string) input('tab', 'active'));
+if (!in_array($activeTab, ['active', 'resolved'], true)) {
+    $activeTab = 'active';
 }
 
 $rangeIntervals = [
@@ -146,42 +214,7 @@ $invalidBallotBlocks = (int) $pdo->query(
 )->fetchColumn();
 
 /* =====================================================================
- | 4. Overall Security Status Indicator Logic
- * =================================================================== */
-$criticalHijacks = (int) $pdo->query(
-    "SELECT COUNT(*) FROM audit_logs WHERE action = 'session_hijack_attempt' AND created_at >= (NOW() - INTERVAL 24 HOUR)"
-)->fetchColumn();
-
-$criticalFailed24h = (int) $pdo->query(
-    "SELECT COUNT(*) FROM audit_logs WHERE action = 'login_failure' AND created_at >= (NOW() - INTERVAL 24 HOUR)"
-)->fetchColumn();
-
-$criticalUnauth24h = (int) $pdo->query(
-    "SELECT COUNT(*) FROM audit_logs WHERE action = 'unauthorized_access' AND created_at >= (NOW() - INTERVAL 24 HOUR)"
-)->fetchColumn();
-
-if ($criticalHijacks > 0 || $criticalUnauth24h >= 5 || $criticalFailed24h >= 15) {
-    $systemSecurityStatus = 'CRITICAL';
-    $systemStatusClass    = 'critical';
-    $systemStatusIcon     = 'ban';
-    $systemStatusTitle    = 'CRITICAL SECURITY ALERT';
-    $systemStatusDesc     = 'Multiple high-severity security events or repeated unauthorized access attempts detected. Immediate administrator review required.';
-} elseif ($criticalUnauth24h >= 1 || $criticalFailed24h >= 3 || $duplicateVoteBlocks >= 1 || $blockedRequestsCount >= 2) {
-    $systemSecurityStatus = 'WARNING';
-    $systemStatusClass    = 'warning';
-    $systemStatusIcon     = 'alert-triangle';
-    $systemStatusTitle    = 'SECURITY WARNING';
-    $systemStatusDesc     = 'Authentication warnings or blocked unauthorized requests detected within the monitoring period.';
-} else {
-    $systemSecurityStatus = 'SECURE';
-    $systemStatusClass    = 'secure';
-    $systemStatusIcon     = 'shield-check';
-    $systemStatusTitle    = 'SYSTEM SECURE';
-    $systemStatusDesc     = 'All security controls operational. No critical security events or unauthorized access attempts detected.';
-}
-
-/* =====================================================================
- | 5. Elections & Open Election Counts
+ | 4. Elections & Open Election Counts
  * =================================================================== */
 $elections = $pdo->query(
     "SELECT e.*,
@@ -205,12 +238,25 @@ foreach ($elections as $election) {
 }
 
 /* =====================================================================
- | 6. Security Alerts (Dynamic Rule-Based Evaluation)
+ | 5. Security Alerts (Rule-Based Evaluation + DB-Persisted Dismissal)
  * =================================================================== */
-$alerts = [];
+$criticalHijacks = (int) $pdo->query(
+    "SELECT COUNT(*) FROM audit_logs WHERE action = 'session_hijack_attempt' AND created_at >= (NOW() - INTERVAL 24 HOUR)"
+)->fetchColumn();
+
+$criticalFailed24h = (int) $pdo->query(
+    "SELECT COUNT(*) FROM audit_logs WHERE action = 'login_failure' AND created_at >= (NOW() - INTERVAL 24 HOUR)"
+)->fetchColumn();
+
+$criticalUnauth24h = (int) $pdo->query(
+    "SELECT COUNT(*) FROM audit_logs WHERE action = 'unauthorized_access' AND created_at >= (NOW() - INTERVAL 24 HOUR)"
+)->fetchColumn();
+
+$rawAlerts = [];
 
 if ($criticalFailed24h >= 5) {
-    $alerts[] = [
+    $rawAlerts[] = [
+        'key'      => 'repeated_failed_auth',
         'type'     => 'danger',
         'severity' => 'High',
         'icon'     => 'ban',
@@ -220,7 +266,8 @@ if ($criticalFailed24h >= 5) {
         'label'    => 'Review in Audit Log',
     ];
 } elseif ($failedLoginsCount > 0) {
-    $alerts[] = [
+    $rawAlerts[] = [
+        'key'      => 'auth_warning',
         'type'     => 'warning',
         'severity' => 'Low',
         'icon'     => 'ban',
@@ -232,7 +279,8 @@ if ($criticalFailed24h >= 5) {
 }
 
 if ($unauthorizedAccessCount > 0) {
-    $alerts[] = [
+    $rawAlerts[] = [
+        'key'      => 'unauthorized_access_blocked',
         'type'     => 'danger',
         'severity' => 'High',
         'icon'     => 'shield',
@@ -244,7 +292,8 @@ if ($unauthorizedAccessCount > 0) {
 }
 
 if ($duplicateVoteBlocks > 0) {
-    $alerts[] = [
+    $rawAlerts[] = [
+        'key'      => 'duplicate_vote_prevented',
         'type'     => 'warning',
         'severity' => 'Medium',
         'icon'     => 'alert-triangle',
@@ -256,7 +305,8 @@ if ($duplicateVoteBlocks > 0) {
 }
 
 if ($blockedUsers > 0) {
-    $alerts[] = [
+    $rawAlerts[] = [
+        'key'      => 'restricted_account_status',
         'type'     => 'info',
         'severity' => 'Informational',
         'icon'     => 'user',
@@ -269,7 +319,8 @@ if ($blockedUsers > 0) {
 
 $drafts = array_filter($elections, static fn(array $e): bool => $e['status'] === 'draft');
 if ($drafts !== []) {
-    $alerts[] = [
+    $rawAlerts[] = [
+        'key'      => 'draft_elections_pending',
         'type'     => 'warning',
         'severity' => 'Low',
         'icon'     => 'file',
@@ -286,7 +337,8 @@ $noCandidates = array_filter(
         && in_array(election_effective_status($e), ['open', 'scheduled'], true)
 );
 foreach ($noCandidates as $ncElection) {
-    $alerts[] = [
+    $rawAlerts[] = [
+        'key'      => 'candidate_missing_' . (int) $ncElection['id'],
         'type'     => 'danger',
         'severity' => 'High',
         'icon'     => 'alert-triangle',
@@ -295,6 +347,62 @@ foreach ($noCandidates as $ncElection) {
         'href'     => 'admin/candidates.php?election_id=' . (int) $ncElection['id'],
         'label'    => 'Add candidates',
     ];
+}
+
+// Map against database-persisted dismissals
+$dismissedMap    = sv_get_dismissed_alerts($pdo);
+$resolvedHistory = sv_get_resolved_alerts_list($pdo);
+
+$alerts         = [];
+$resolvedAlerts = [];
+
+foreach ($rawAlerts as $a) {
+    if (isset($dismissedMap[$a['key']])) {
+        $meta = $dismissedMap[$a['key']];
+        $resolvedAlerts[] = array_merge($a, [
+            'dismissed_id' => (int) $meta['id'],
+            'dismissed_at' => $meta['dismissed_at'],
+            'dismissed_by' => $meta['username'] ?? 'admin',
+            'reason'       => $meta['reason'] ?? '',
+        ]);
+    } else {
+        $alerts[] = $a;
+    }
+}
+
+/* =====================================================================
+ | 6. Overall Security Status Indicator Logic
+ * =================================================================== */
+$hasActiveCriticalAlert = false;
+$hasActiveWarningAlert  = false;
+foreach ($alerts as $al) {
+    if ($al['type'] === 'danger') {
+        $hasActiveCriticalAlert = true;
+    } elseif ($al['type'] === 'warning') {
+        $hasActiveWarningAlert = true;
+    }
+}
+
+if ($hasActiveCriticalAlert) {
+    $systemSecurityStatus = 'CRITICAL';
+    $systemStatusClass    = 'critical';
+    $systemStatusIcon     = 'ban';
+    $systemStatusTitle    = 'CRITICAL SECURITY ALERT';
+    $systemStatusDesc     = 'High-severity security events or repeated unauthorized access attempts require immediate review.';
+} elseif ($hasActiveWarningAlert) {
+    $systemSecurityStatus = 'WARNING';
+    $systemStatusClass    = 'warning';
+    $systemStatusIcon     = 'alert-triangle';
+    $systemStatusTitle    = 'SECURITY WARNING';
+    $systemStatusDesc     = 'Active authentication warnings or security incidents detected within the monitoring period.';
+} else {
+    $systemSecurityStatus = 'SECURE';
+    $systemStatusClass    = 'secure';
+    $systemStatusIcon     = 'shield-check';
+    $systemStatusTitle    = 'SYSTEM SECURE';
+    $systemStatusDesc     = (count($resolvedAlerts) > 0 || count($resolvedHistory) > 0)
+        ? 'All active security alerts and incidents have been reviewed and marked as resolved by administrators.'
+        : 'All security controls operational. No critical security events or unauthorized access attempts detected.';
 }
 
 /* =====================================================================
@@ -705,36 +813,158 @@ require __DIR__ . '/../includes/header.php';
     </div>
   </section>
 
-  <!-- Security Alerts Area -->
+  <!-- Security Alerts & Incidents Area with DB Persistence -->
   <section class="card" aria-labelledby="alerts-heading">
     <div class="card__header">
       <div class="card__headings">
         <h2 class="card__title" id="alerts-heading">Security Alerts & Incidents</h2>
-        <p class="card__subtitle">Evaluated in real-time from authentication and audit logs.</p>
+        <p class="card__subtitle">Evaluated from real-time telemetry with persistent database dismissal.</p>
       </div>
-      <span class="badge badge--<?= count($alerts) > 0 ? ($alerts[0]['type'] === 'danger' ? 'danger' : 'warning') : 'success' ?>">
-        <?= sv_icon(count($alerts) > 0 ? 'bell' : 'check-circle', 14) ?>
-        <?= e((string) count($alerts)) ?> active
-      </span>
+      <div class="row row--compact" style="gap:var(--sp-2);">
+        <span class="badge badge--<?= count($alerts) > 0 ? ($alerts[0]['type'] === 'danger' ? 'danger' : 'warning') : 'success' ?>">
+          <?= sv_icon(count($alerts) > 0 ? 'bell' : 'check-circle', 14) ?>
+          <?= e((string) count($alerts)) ?> active
+        </span>
+        <?php if ($resolvedHistory !== []): ?>
+          <span class="badge badge--neutral">
+            <?= sv_icon('check', 12) ?>
+            <?= e((string) count($resolvedHistory)) ?> resolved
+          </span>
+        <?php endif; ?>
+      </div>
     </div>
     <div class="card__body stack-sm">
-      <?php if ($alerts === []): ?>
-        <div class="empty-state empty-state--inline">
-          <span class="empty-state__icon text-success"><?= sv_icon('shield-check', 26) ?></span>
-          <p class="empty-state__title">No Security Alerts</p>
-          <p class="empty-state__text">All security controls and role authorization policies operating normally within baseline thresholds.</p>
-        </div>
-      <?php else: ?>
-        <?php foreach ($alerts as $alert): ?>
-          <div class="alert alert--<?= e($alert['type']) ?>">
-            <span class="alert__icon" aria-hidden="true"><?= sv_icon($alert['icon'], 18) ?></span>
-            <div class="alert__text">
-              <strong><?= e($alert['title']) ?>:</strong> <?= e($alert['text']) ?>
-            </div>
-            <a class="btn btn--sm btn--secondary" href="<?= e(url($alert['href'])) ?>"><?= e($alert['label']) ?></a>
+      <!-- Tabs for Active vs Resolved -->
+      <div class="tabs mb-4" role="tablist" aria-label="Security alerts views">
+        <button type="button" class="tab <?= $activeTab === 'active' ? 'is-active' : '' ?>" id="alert-tab-active-btn" role="tab" aria-selected="<?= $activeTab === 'active' ? 'true' : 'false' ?>" onclick="switchAlertTab('active')">
+          <?= sv_icon('bell', 14) ?> Active Alerts (<?= count($alerts) ?>)
+        </button>
+        <button type="button" class="tab <?= $activeTab === 'resolved' ? 'is-active' : '' ?>" id="alert-tab-resolved-btn" role="tab" aria-selected="<?= $activeTab === 'resolved' ? 'true' : 'false' ?>" onclick="switchAlertTab('resolved')">
+          <?= sv_icon('check-circle', 14) ?> Resolved History (<?= count($resolvedHistory) ?>)
+        </button>
+      </div>
+
+      <!-- Tab 1: Active Alerts Panel -->
+      <div id="alert-panel-active" style="display: <?= $activeTab === 'active' ? 'block' : 'none' ?>;">
+        <?php if (count($alerts) > 1): ?>
+          <div class="row mb-3" style="justify-content: flex-end;">
+            <form method="post" action="<?= e(url('admin/dashboard.php' . ($range !== '24h' ? '?range=' . urlencode($range) : ''))) ?>">
+              <?= csrf_field() ?>
+              <input type="hidden" name="action" value="resolve_all_alerts">
+              <input type="hidden" name="alerts_json" value="<?= e(json_encode($alerts)) ?>">
+              <button type="submit" class="btn btn--sm btn--outline" onclick="return confirm('Mark all <?= count($alerts) ?> active security alerts as resolved?');">
+                <?= sv_icon('check', 14) ?> Resolve All Active Alerts
+              </button>
+            </form>
           </div>
-        <?php endforeach; ?>
-      <?php endif; ?>
+        <?php endif; ?>
+
+        <?php if ($alerts === []): ?>
+          <div class="empty-state empty-state--inline">
+            <span class="empty-state__icon text-success"><?= sv_icon('shield-check', 26) ?></span>
+            <p class="empty-state__title">No Active Security Alerts</p>
+            <p class="empty-state__text">All security controls and role authorization policies are operating normally within baseline thresholds.</p>
+            <?php if ($resolvedHistory !== []): ?>
+              <p class="text-xs text-muted mt-2">
+                <?= count($resolvedHistory) ?> alert(s) have been resolved by administrators.
+                <a href="javascript:void(0)" onclick="switchAlertTab('resolved')" class="font-semibold text-main">View Resolved History &rarr;</a>
+              </p>
+            <?php endif; ?>
+          </div>
+        <?php else: ?>
+          <div class="stack-sm">
+            <?php foreach ($alerts as $alert): ?>
+              <div class="alert alert--<?= e($alert['type']) ?>">
+                <span class="alert__icon" aria-hidden="true"><?= sv_icon($alert['icon'], 18) ?></span>
+                <div class="alert__text">
+                  <div class="row row--compact" style="gap:var(--sp-2); margin-bottom: 2px;">
+                    <strong><?= e($alert['title']) ?></strong>
+                    <span class="badge badge--<?= $alert['type'] === 'danger' ? 'danger' : ($alert['type'] === 'warning' ? 'warning' : 'info') ?> text-xs">
+                      <?= e($alert['severity']) ?>
+                    </span>
+                  </div>
+                  <div><?= e($alert['text']) ?></div>
+                </div>
+                <div class="alert__actions">
+                  <a class="btn btn--sm btn--secondary" href="<?= e(url($alert['href'])) ?>"><?= e($alert['label']) ?></a>
+                  <button type="button" class="btn btn--sm btn--success" onclick="openResolveModal('<?= e(addslashes($alert['key'])) ?>', '<?= e(addslashes($alert['title'])) ?>', '<?= e(addslashes($alert['severity'])) ?>', '<?= e(addslashes($alert['text'])) ?>')" title="Mark this alert as resolved">
+                    <?= sv_icon('check', 14) ?> Mark Resolved
+                  </button>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
+      </div>
+
+      <!-- Tab 2: Resolved Alerts History Panel -->
+      <div id="alert-panel-resolved" style="display: <?= $activeTab === 'resolved' ? 'block' : 'none' ?>;">
+        <?php if ($resolvedHistory === []): ?>
+          <div class="empty-state empty-state--inline">
+            <span class="empty-state__icon text-muted"><?= sv_icon('archive', 26) ?></span>
+            <p class="empty-state__title">No Resolved Alerts</p>
+            <p class="empty-state__text">Acknowledged security alerts and resolution records will be saved here persistently.</p>
+          </div>
+        <?php else: ?>
+          <div class="stack-sm">
+            <div class="row mb-2" style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--sp-2);">
+              <span class="text-xs text-muted">Showing <?= count($resolvedHistory) ?> alert(s) resolved in database.</span>
+              <form method="post" action="<?= e(url('admin/dashboard.php' . ($range !== '24h' ? '?range=' . urlencode($range) . '&tab=resolved' : '?tab=resolved'))) ?>" onsubmit="return confirm('Restore all resolved alerts back to active status?');">
+                <?= csrf_field() ?>
+                <input type="hidden" name="action" value="restore_all_alerts">
+                <button type="submit" class="btn btn--sm btn--ghost text-xs">
+                  <?= sv_icon('refresh', 13) ?> Restore All to Active
+                </button>
+              </form>
+            </div>
+            <div class="table-wrap">
+              <table class="table table--compact">
+                <thead>
+                  <tr>
+                    <th scope="col">Incident</th>
+                    <th scope="col">Severity</th>
+                    <th scope="col">Resolved By</th>
+                    <th scope="col">Date Resolved</th>
+                    <th scope="col">Note</th>
+                    <th scope="col" style="text-align: right;">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($resolvedHistory as $res): ?>
+                    <tr>
+                      <td>
+                        <span class="table__cell-strong"><?= e($res['alert_title']) ?></span>
+                        <span class="table__cell-sub mono text-xs"><?= e($res['alert_key']) ?></span>
+                      </td>
+                      <td><?= security_severity_badge($res['severity'] ?? 'Medium') ?></td>
+                      <td>
+                        <span class="font-medium"><?= e($res['username'] ?? 'admin') ?></span>
+                      </td>
+                      <td>
+                        <span><?= e(relative_time($res['dismissed_at'])) ?></span>
+                        <span class="table__cell-sub text-xs"><?= e(date('M j, g:i A', strtotime($res['dismissed_at']))) ?></span>
+                      </td>
+                      <td>
+                        <span class="text-xs text-muted"><?= e($res['reason'] ?: 'Acknowledged by admin') ?></span>
+                      </td>
+                      <td style="text-align: right;">
+                        <form method="post" action="<?= e(url('admin/dashboard.php' . ($range !== '24h' ? '?range=' . urlencode($range) . '&tab=resolved' : '?tab=resolved'))) ?>" class="d-inline">
+                          <?= csrf_field() ?>
+                          <input type="hidden" name="action" value="restore_alert">
+                          <input type="hidden" name="dismissed_id" value="<?= (int) $res['id'] ?>">
+                          <button type="submit" class="btn btn--sm btn--outline" title="Reopen alert">
+                            <?= sv_icon('refresh', 13) ?> Re-open
+                          </button>
+                        </form>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        <?php endif; ?>
+      </div>
     </div>
   </section>
 </div>
@@ -1129,5 +1359,93 @@ require __DIR__ . '/../includes/header.php';
     </div>
   <?php endif; ?>
 </section>
+
+<!-- Modal: Mark Security Alert as Resolved -->
+<dialog class="modal" id="resolveAlertModal">
+  <form method="post" action="<?= e(url('admin/dashboard.php' . ($range !== '24h' ? '?range=' . urlencode($range) : ''))) ?>">
+    <?= csrf_field() ?>
+    <input type="hidden" name="action" value="resolve_alert">
+    <input type="hidden" name="alert_key" id="resolveModalKey" value="">
+    <input type="hidden" name="alert_title" id="resolveModalTitle" value="">
+    <input type="hidden" name="severity" id="resolveModalSeverity" value="Medium">
+
+    <div class="modal__header">
+      <div class="row row--compact" style="gap:var(--sp-2);">
+        <span class="text-success"><?= sv_icon('check-circle', 20) ?></span>
+        <h3 class="modal__title">Resolve Security Alert</h3>
+      </div>
+      <button type="button" class="btn btn--sm btn--ghost" onclick="document.getElementById('resolveAlertModal').close();" aria-label="Close dialog">
+        <?= sv_icon('x', 18) ?>
+      </button>
+    </div>
+
+    <div class="modal__body stack-md">
+      <p class="text-sm">You are recording this security alert / incident as acknowledged and resolved in the database:</p>
+      
+      <div class="notice" style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:var(--sp-3) var(--sp-4);">
+        <strong id="resolveModalDisplayTitle" class="font-semibold text-main">Alert Title</strong>
+        <p id="resolveModalDisplayText" class="text-xs text-muted" style="margin-top:4px;">Alert Description</p>
+      </div>
+
+      <div class="field">
+        <label for="resolveModalReason" class="field__label">Resolution Note / Action Taken (Optional)</label>
+        <textarea id="resolveModalReason" name="reason" class="input" rows="3" placeholder="e.g. Reviewed IP activity and confirmed legitimate administration access."></textarea>
+        <p class="field__help">This explanation and your admin username will be saved in the persistent security alert registry.</p>
+      </div>
+    </div>
+
+    <div class="modal__footer">
+      <button type="button" class="btn btn--secondary" onclick="document.getElementById('resolveAlertModal').close();">Cancel</button>
+      <button type="submit" class="btn btn--success">
+        <?= sv_icon('check', 16) ?> Confirm & Mark Resolved
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+function openResolveModal(key, title, severity, text) {
+  var modal = document.getElementById('resolveAlertModal');
+  if (!modal) return;
+  document.getElementById('resolveModalKey').value = key;
+  document.getElementById('resolveModalTitle').value = title;
+  document.getElementById('resolveModalSeverity').value = severity;
+  document.getElementById('resolveModalDisplayTitle').textContent = title;
+  document.getElementById('resolveModalDisplayText').textContent = text || '';
+  document.getElementById('resolveModalReason').value = '';
+  modal.showModal();
+}
+
+function switchAlertTab(tabName) {
+  var activeTabBtn = document.getElementById('alert-tab-active-btn');
+  var resolvedTabBtn = document.getElementById('alert-tab-resolved-btn');
+  var activePanel = document.getElementById('alert-panel-active');
+  var resolvedPanel = document.getElementById('alert-panel-resolved');
+
+  if (tabName === 'resolved') {
+    if (activeTabBtn) {
+      activeTabBtn.classList.remove('is-active');
+      activeTabBtn.setAttribute('aria-selected', 'false');
+    }
+    if (resolvedTabBtn) {
+      resolvedTabBtn.classList.add('is-active');
+      resolvedTabBtn.setAttribute('aria-selected', 'true');
+    }
+    if (activePanel) activePanel.style.display = 'none';
+    if (resolvedPanel) resolvedPanel.style.display = 'block';
+  } else {
+    if (resolvedTabBtn) {
+      resolvedTabBtn.classList.remove('is-active');
+      resolvedTabBtn.setAttribute('aria-selected', 'false');
+    }
+    if (activeTabBtn) {
+      activeTabBtn.classList.add('is-active');
+      activeTabBtn.setAttribute('aria-selected', 'true');
+    }
+    if (resolvedPanel) resolvedPanel.style.display = 'none';
+    if (activePanel) activePanel.style.display = 'block';
+  }
+}
+</script>
 
 <?php require __DIR__ . '/../includes/footer.php'; ?>

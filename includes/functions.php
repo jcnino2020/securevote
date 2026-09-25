@@ -411,6 +411,8 @@ function audit_action_severity(string $action, string $description = ''): string
         'ballot_rejected', 'ballot_validation_failed' => 'Medium',
         'voter_status_changed', 'voter_deleted'       => 'Medium',
         'candidate_deleted', 'position_deleted'       => 'Medium',
+        'alert_resolved', 'alert_restored'            => 'Low',
+        'all_alerts_restored'                         => 'Low',
         'login_failure', 'password_change_failed'     => 'Low',
         'password_rehash', 'session_idle_timeout'     => 'Low',
         'audit_log_exported', 'results_exported'      => 'Low',
@@ -778,3 +780,176 @@ function sv_handle_shutdown(): void
     error_log(sprintf('Fatal error: %s in %s:%d', $error['message'], $error['file'], $error['line']));
     sv_error_page(500, 'Something went wrong', 'The request could not be completed.');
 }
+
+/* =====================================================================
+ | 9. Security Alerts & Incidents Persistence (Dismiss & Resolution)
+ * =================================================================== */
+
+/**
+ * Ensures the dismissed_alerts table exists in the database.
+ */
+function sv_ensure_dismissed_alerts_table(PDO $pdo): void
+{
+    static $checked = false;
+    if ($checked) {
+        return;
+    }
+
+    try {
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS `dismissed_alerts` (
+              `id`           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+              `alert_key`    VARCHAR(100) NOT NULL,
+              `alert_title`  VARCHAR(150) NOT NULL,
+              `severity`     VARCHAR(30)  NOT NULL DEFAULT 'Medium',
+              `reason`       VARCHAR(255) NULL DEFAULT NULL,
+              `dismissed_by` INT UNSIGNED NULL DEFAULT NULL,
+              `dismissed_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              `status`       ENUM('resolved', 'active') NOT NULL DEFAULT 'resolved',
+              PRIMARY KEY (`id`),
+              KEY `idx_dismissed_alert_key` (`alert_key`),
+              KEY `idx_dismissed_by` (`dismissed_by`),
+              CONSTRAINT `fk_dismissed_alerts_user`
+                FOREIGN KEY (`dismissed_by`) REFERENCES `users` (`id`)
+                ON DELETE SET NULL ON UPDATE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+              COMMENT='Tracks dismissed or resolved security alerts by administrators.';
+        ");
+        $checked = true;
+    } catch (Throwable $e) {
+        error_log('sv_ensure_dismissed_alerts_table failed: ' . $e->getMessage());
+    }
+}
+
+/**
+ * Fetch all currently resolved/dismissed alert keys and metadata.
+ *
+ * @return array<string, array> Keyed by alert_key
+ */
+function sv_get_dismissed_alerts(PDO $pdo): array
+{
+    sv_ensure_dismissed_alerts_table($pdo);
+
+    try {
+        $stmt = $pdo->query("
+            SELECT d.*, u.username, u.first_name, u.last_name
+              FROM dismissed_alerts d
+              LEFT JOIN users u ON u.id = d.dismissed_by
+             WHERE d.status = 'resolved'
+             ORDER BY d.dismissed_at DESC
+        ");
+        $rows = $stmt->fetchAll();
+
+        $byKey = [];
+        foreach ($rows as $row) {
+            $key = (string) $row['alert_key'];
+            if (!isset($byKey[$key])) {
+                $byKey[$key] = $row;
+            }
+        }
+        return $byKey;
+    } catch (Throwable $e) {
+        error_log('sv_get_dismissed_alerts failed: ' . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Fetch list of all resolved alerts for history display.
+ */
+function sv_get_resolved_alerts_list(PDO $pdo): array
+{
+    sv_ensure_dismissed_alerts_table($pdo);
+
+    try {
+        $stmt = $pdo->query("
+            SELECT d.*, u.username, u.first_name, u.last_name
+              FROM dismissed_alerts d
+              LEFT JOIN users u ON u.id = d.dismissed_by
+             WHERE d.status = 'resolved'
+             ORDER BY d.dismissed_at DESC
+        ");
+        return $stmt->fetchAll();
+    } catch (Throwable $e) {
+        error_log('sv_get_resolved_alerts_list failed: ' . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Mark an alert as resolved in the database.
+ */
+function sv_dismiss_alert(PDO $pdo, string $alertKey, string $alertTitle, string $severity, ?string $reason, int $userId): bool
+{
+    sv_ensure_dismissed_alerts_table($pdo);
+
+    $reasonText = $reason !== null && trim($reason) !== '' ? trim($reason) : 'Acknowledged and marked as resolved by administrator';
+
+    try {
+        // Delete any existing record with this key first to keep clean active state
+        $stmtDel = $pdo->prepare("DELETE FROM dismissed_alerts WHERE alert_key = ?");
+        $stmtDel->execute([$alertKey]);
+
+        $stmt = $pdo->prepare("
+            INSERT INTO dismissed_alerts (alert_key, alert_title, severity, reason, dismissed_by, dismissed_at, status)
+            VALUES (?, ?, ?, ?, ?, NOW(), 'resolved')
+        ");
+        $stmt->execute([
+            mb_substr($alertKey, 0, 100),
+            mb_substr($alertTitle, 0, 150),
+            mb_substr($severity, 0, 30),
+            mb_substr($reasonText, 0, 255),
+            $userId > 0 ? $userId : null,
+        ]);
+
+        audit_log('alert_resolved', sprintf('Security alert "%s" (%s) marked as resolved: %s', $alertTitle, $severity, $reasonText), $userId);
+        return true;
+    } catch (Throwable $e) {
+        error_log('sv_dismiss_alert failed: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Restore/Re-open a resolved alert.
+ */
+function sv_restore_alert(PDO $pdo, int $dismissedId, int $userId): bool
+{
+    sv_ensure_dismissed_alerts_table($pdo);
+
+    try {
+        $stmtFind = $pdo->prepare("SELECT alert_title, severity FROM dismissed_alerts WHERE id = ?");
+        $stmtFind->execute([$dismissedId]);
+        $row = $stmtFind->fetch();
+
+        $stmt = $pdo->prepare("DELETE FROM dismissed_alerts WHERE id = ?");
+        $stmt->execute([$dismissedId]);
+
+        if ($row) {
+            audit_log('alert_restored', sprintf('Security alert "%s" restored to active monitoring.', $row['alert_title']), $userId);
+        }
+        return true;
+    } catch (Throwable $e) {
+        error_log('sv_restore_alert failed: ' . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Restore all resolved alerts.
+ */
+function sv_restore_all_alerts(PDO $pdo, int $userId): bool
+{
+    sv_ensure_dismissed_alerts_table($pdo);
+
+    try {
+        $count = (int) $pdo->query("SELECT COUNT(*) FROM dismissed_alerts WHERE status = 'resolved'")->fetchColumn();
+        $pdo->exec("DELETE FROM dismissed_alerts WHERE status = 'resolved'");
+        audit_log('all_alerts_restored', sprintf('All %d resolved security alerts restored to active monitoring.', $count), $userId);
+        return true;
+    } catch (Throwable $e) {
+        error_log('sv_restore_all_alerts failed: ' . $e->getMessage());
+        return false;
+    }
+}
+

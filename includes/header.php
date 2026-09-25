@@ -75,8 +75,9 @@ if ($user !== null && ($user['role'] ?? '') === 'admin') {
         ],
     ];
     $navGroups[] = [
-        'label' => 'System',
+        'label' => 'Security & system',
         'items' => [
+            ['file' => 'security-testing.php', 'label' => 'CIA Security Testing', 'icon' => 'shield-check', 'href' => 'admin/security-testing.php'],
             ['file' => 'settings.php', 'label' => 'Settings', 'icon' => 'settings', 'href' => 'admin/settings.php'],
         ],
     ];
@@ -108,7 +109,8 @@ if ($flashes !== []) {
         $type = (string) $flashMessage['type'];
         echo '<div class="alert alert--' . e($type) . '" role="' . ($type === 'danger' ? 'alert' : 'status') . '">'
             . '<span class="alert__icon" aria-hidden="true">' . sv_icon(flash_icon($type), 18) . '</span>'
-            . '<p class="alert__text">' . e((string) $flashMessage['message']) . '</p>'
+            . '<div class="alert__text">' . e((string) $flashMessage['message']) . '</div>'
+            . '<button type="button" class="alert__close" onclick="var a=this.closest(\'.alert\');if(a){a.style.opacity=\'0\';a.style.transform=\'scale(0.98)\';setTimeout(function(){a.remove()},180);}" aria-label="Dismiss message">' . sv_icon('x', 14) . '</button>'
             . '</div>';
     }
     echo '</div>';
