@@ -25,13 +25,20 @@ $userId = $voter !== null ? (int) $voter['id'] : 0;
  | Load Elections
  * =================================================================== */
 
-$stmt = $pdo->query(
-    'SELECT e.*,
-            (SELECT COUNT(*) FROM ballots bb WHERE bb.election_id = e.id AND bb.status = \'submitted\') AS ballot_count
+$stmt = $pdo->prepare(
+    "SELECT e.*,
+            (SELECT COUNT(*) FROM ballots bb WHERE bb.election_id = e.id AND bb.status = 'submitted') AS ballot_count,
+            b.id AS ballot_id,
+            b.ballot_reference,
+            COALESCE(b.submitted_at, ve.voted_at) AS ballot_submitted_at,
+            (CASE WHEN b.id IS NOT NULL OR ve.has_voted = 1 THEN 1 ELSE 0 END) AS has_voted
        FROM elections e
-      WHERE e.status != \'draft\'
-      ORDER BY FIELD(e.status, \'open\', \'scheduled\', \'closed\', \'archived\'), e.start_datetime DESC'
+       LEFT JOIN ballots b ON b.election_id = e.id AND b.voter_id = :user_id AND b.status = 'submitted'
+       LEFT JOIN voter_eligibility ve ON ve.election_id = e.id AND ve.user_id = :user_id
+      WHERE e.status != 'draft'
+      ORDER BY FIELD(e.status, 'open', 'scheduled', 'closed', 'archived'), e.start_datetime DESC"
 );
+$stmt->execute([':user_id' => $userId]);
 $elections = $stmt->fetchAll();
 
 /* =====================================================================
@@ -50,8 +57,19 @@ if ($electionId > 0) {
     }
 
     if ($focus === null) {
-        $stmtFocus = $pdo->prepare('SELECT * FROM elections WHERE id = ? LIMIT 1');
-        $stmtFocus->execute([$electionId]);
+        $stmtFocus = $pdo->prepare(
+            "SELECT e.*,
+                    (SELECT COUNT(*) FROM ballots bb WHERE bb.election_id = e.id AND bb.status = 'submitted') AS ballot_count,
+                    b.id AS ballot_id,
+                    b.ballot_reference,
+                    COALESCE(b.submitted_at, ve.voted_at) AS ballot_submitted_at,
+                    (CASE WHEN b.id IS NOT NULL OR ve.has_voted = 1 THEN 1 ELSE 0 END) AS has_voted
+               FROM elections e
+               LEFT JOIN ballots b ON b.election_id = e.id AND b.voter_id = :user_id AND b.status = 'submitted'
+               LEFT JOIN voter_eligibility ve ON ve.election_id = e.id AND ve.user_id = :user_id
+              WHERE e.id = :id LIMIT 1"
+        );
+        $stmtFocus->execute([':user_id' => $userId, ':id' => $electionId]);
         $focus = $stmtFocus->fetch() ?: null;
     }
 
@@ -65,7 +83,7 @@ if ($electionId > 0) {
     }
 }
 
-$focusVoted  = false;
+$focusVoted  = $focus !== null && ((int) ($focus['has_voted'] ?? 0) === 1 || !empty($focus['ballot_reference']));
 $focusMaySee = $focus !== null && may_view_results($focus, $voter, $focusVoted);
 
 // The tally is only computed when it may be shown or summarised.
@@ -130,7 +148,7 @@ require __DIR__ . '/../includes/header.php';
           <?php foreach ($elections as $election): ?>
             <?php
               $status  = election_effective_status($election);
-              $voted   = (int) $election['has_voted'] === 1;
+              $voted   = (int) ($election['has_voted'] ?? 0) === 1 || !empty($election['ballot_reference']);
               $maySee  = may_view_results($election, $voter, $voted);
               $note    = results_policy_notice($election, $voted);
             ?>

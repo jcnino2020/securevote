@@ -72,15 +72,21 @@ if (input('sim') === '1') {
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => http_build_query($postData),
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_HTTPHEADER     => ['Content-Type: application/x-www-form-urlencoded'],
-        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_HTTPHEADER     => [
+            'Content-Type: application/x-www-form-urlencoded',
+            'Accept: application/json',
+        ],
+        CURLOPT_TIMEOUT        => 15,
+        CURLOPT_USERAGENT      => 'SecureVote-App',
+        CURLOPT_SSL_VERIFYPEER => true,
     ]);
     $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlErr  = curl_error($ch);
+    $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
-    if ($httpCode !== 200 || !$response) {
-        error_log('Google token exchange failed: ' . (string) $response);
+    if ($httpCode !== 200 || $response === false || $response === '') {
+        error_log('Google token exchange failed [HTTP ' . $httpCode . ']: ' . ($curlErr !== '' ? $curlErr : (string) $response));
         flash_error('Could not authenticate with Google servers. Please try again or use your password.');
         redirect('auth/login.php');
     }
@@ -98,14 +104,28 @@ if (input('sim') === '1') {
     $ch = curl_init($userinfoUrl);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $accessToken],
-        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_HTTPHEADER     => [
+            'Authorization: Bearer ' . $accessToken,
+            'Accept: application/json',
+        ],
+        CURLOPT_TIMEOUT        => 15,
+        CURLOPT_USERAGENT      => 'SecureVote-App',
+        CURLOPT_SSL_VERIFYPEER => true,
     ]);
     $userResponse = curl_exec($ch);
+    $userErr      = curl_error($ch);
+    $userHttpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
+
+    if ($userHttpCode !== 200 || !$userResponse) {
+        error_log('Google userinfo failed [HTTP ' . $userHttpCode . ']: ' . ($userErr !== '' ? $userErr : (string) $userResponse));
+        flash_error('Could not retrieve Google profile details.');
+        redirect('auth/login.php');
+    }
 
     $userData = json_decode((string) $userResponse, true);
     if (!is_array($userData) || empty($userData['email'])) {
+        error_log('Google userinfo missing email: ' . (string) $userResponse);
         flash_error('Could not retrieve Google profile details.');
         redirect('auth/login.php');
     }

@@ -146,6 +146,11 @@ require __DIR__ . '/../includes/header.php';
     <?= sv_icon('shield', 14) ?>
     <span>Protected by bcrypt password hashing and TLS/HTTPS session binding.</span>
   </p>
+  <p class="text-muted text-xs text-center" style="margin-top: var(--sp-2);">
+    By signing in, you agree to our 
+    <a href="<?= e(url('terms.php')) ?>" class="link" style="color:inherit; text-decoration:underline;">Terms of Service</a> and 
+    <a href="<?= e(url('privacy.php')) ?>" class="link" style="color:inherit; text-decoration:underline;">Privacy Policy</a>.
+  </p>
 </div>
 
 <?php require __DIR__ . '/../includes/footer.php'; ?>

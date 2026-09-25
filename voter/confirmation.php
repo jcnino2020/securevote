@@ -16,7 +16,38 @@ require_once __DIR__ . '/../includes/voting.php';
 $pdo  = db();
 $user = current_user();
 
-$receipt = $_SESSION['submitted_ballot'] ?? null;
+$reqElectionId = int_input('election_id', 0);
+$receipt       = null;
+
+if ($reqElectionId > 0 && $user !== null) {
+    $stmt = $pdo->prepare(
+        'SELECT b.ballot_reference, b.submitted_at, e.title AS election_title, e.id AS election_id,
+                u.first_name, u.last_name, u.voter_code, u.username
+           FROM ballots b
+           JOIN elections e ON e.id = b.election_id
+           JOIN users u ON u.id = b.voter_id
+          WHERE b.voter_id = ? AND b.election_id = ? AND b.status = \'submitted\'
+          ORDER BY b.submitted_at DESC, b.id DESC
+          LIMIT 1'
+    );
+    $stmt->execute([(int) $user['id'], $reqElectionId]);
+    $ballot = $stmt->fetch();
+
+    if ($ballot) {
+        $receipt = [
+            'election_id'    => (int) $ballot['election_id'],
+            'election_title' => (string) $ballot['election_title'],
+            'reference'      => (string) $ballot['ballot_reference'],
+            'voter_name'     => user_full_name($ballot),
+            'voter_code'     => (string) ($ballot['voter_code'] ?? ''),
+            'submitted_at'   => (string) $ballot['submitted_at'],
+        ];
+    }
+}
+
+if ($receipt === null) {
+    $receipt = $_SESSION['submitted_ballot'] ?? null;
+}
 
 if (!is_array($receipt) || !isset($receipt['reference'])) {
     if ($user !== null) {

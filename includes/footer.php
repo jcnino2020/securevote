@@ -48,7 +48,10 @@ $transport    = $isHttps
       </ul>
 
       <span class="app-footer__note text-muted text-sm">
-        <?= e(date('Y')) ?> &middot; Academic project — not affiliated with any government body.
+        &copy; <?= e(date('Y')) ?> SecureVote &middot; 
+        <a href="<?= e(url('privacy.php')) ?>" class="link" style="color:inherit; text-decoration:underline;">Privacy Policy</a> &middot; 
+        <a href="<?= e(url('terms.php')) ?>" class="link" style="color:inherit; text-decoration:underline;">Terms of Service</a> &middot; 
+        Academic civic project.
       </span>
     </div>
   </footer>

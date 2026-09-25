@@ -562,7 +562,7 @@ function may_view_results(array $election, ?array $user = null, bool $hasVoted =
 
     return match ((string) ($election['results_visibility'] ?? 'after_close')) {
         'hidden'      => false,
-        'after_vote'  => true,
+        'after_vote'  => $hasVoted || $closed,
         'after_close' => $closed,
         default       => $closed,
     };

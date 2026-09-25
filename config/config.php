@@ -96,12 +96,10 @@ unset($svDocRoot, $svAppRoot, $svBase);
 /* ---------------------------------------------------------------------
  | 6. Google OAuth 2.0 Credentials
  |
- | Provide GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable Google
- | sign-in. If left empty in development, SecureVote provides an instant
- | verified OAuth sign-in flow for testing.
+ | Production Google OAuth 2.0 Credentials configured for SecureVote.
  * ------------------------------------------------------------------- */
-define('GOOGLE_CLIENT_ID',     (string) (getenv('GOOGLE_CLIENT_ID') ?: ''));
-define('GOOGLE_CLIENT_SECRET', (string) (getenv('GOOGLE_CLIENT_SECRET') ?: ''));
+define('GOOGLE_CLIENT_ID',     (string) (getenv('GOOGLE_CLIENT_ID') ?: '325756328134-pis0eimshrnjs2iqtvv2j6ht0g87ih99.apps.googleusercontent.com'));
+define('GOOGLE_CLIENT_SECRET', (string) (getenv('GOOGLE_CLIENT_SECRET') ?: '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'));
 define('GOOGLE_OAUTH_ENABLED', true);
 
 

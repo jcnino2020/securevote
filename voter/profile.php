@@ -68,14 +68,19 @@ if (is_post()) {
  * =================================================================== */
 
 $stmt = $pdo->prepare(
-    "SELECT ve.ballot_reference, ve.voted_at AS submitted_at, 'submitted' AS status,
-            e.title AS election_title, e.id AS election_id, e.end_datetime, e.results_visibility
-       FROM voter_eligibility ve
-       JOIN elections e ON e.id = ve.election_id
-      WHERE ve.user_id = :user_id AND ve.has_voted = 1
-      ORDER BY ve.voted_at DESC, ve.id DESC"
+    "SELECT b.ballot_reference,
+            b.submitted_at,
+            b.status,
+            e.title AS election_title,
+            e.id AS election_id,
+            e.end_datetime,
+            e.results_visibility
+       FROM ballots b
+       JOIN elections e ON e.id = b.election_id
+      WHERE b.voter_id = ? AND b.status = 'submitted'
+      ORDER BY b.submitted_at DESC, b.id DESC"
 );
-$stmt->execute([':user_id' => $userId]);
+$stmt->execute([$userId]);
 $history = $stmt->fetchAll();
 
 /* =====================================================================
@@ -299,7 +304,7 @@ require __DIR__ . '/../includes/header.php';
             <?php [$label, $variant] = ballot_status_meta((string) $row['status']); ?>
             <tr>
               <td class="table__cell-strong"><?= e($row['election_title']) ?></td>
-              <td class="mono"><?= e((string) $row['ballot_reference']) ?></td>
+              <td class="mono"><?= e((string) ($row['ballot_reference'] !== '' ? $row['ballot_reference'] : '—')) ?></td>
               <td>
                 <?= e(fmt_datetime((string) $row['submitted_at'])) ?>
                 <span class="table__cell-sub"><?= e(relative_time((string) $row['submitted_at'])) ?></span>
@@ -308,7 +313,7 @@ require __DIR__ . '/../includes/header.php';
               <td><?= badge($label, $variant) ?></td>
               <td class="table__actions-col">
                 <div class="table__actions">
-                  <a class="btn btn--secondary btn--sm" href="<?= e(url('voter/confirmation.php')) ?>">
+                  <a class="btn btn--secondary btn--sm" href="<?= e(url('voter/confirmation.php?election_id=' . (int) $row['election_id'])) ?>">
                     <?= sv_icon('file', 14, 'btn__icon') ?><span>View</span>
                   </a>
                 </div>

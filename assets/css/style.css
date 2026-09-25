@@ -1827,11 +1827,17 @@ img.avatar {
    15. Authentication Layout (Google + Credentials Centered Portal)
    ========================================================================== */
 
-.app-shell--auth {
+.app-shell--auth,
+.app-auth {
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: center;
   min-height: 100vh;
+  width: 100%;
+  padding: var(--sp-8) var(--sp-4);
   background: var(--bg);
+  box-sizing: border-box;
 }
 
 .auth-layout {
@@ -1843,6 +1849,7 @@ img.avatar {
   width: 100%;
   padding: var(--sp-8) var(--sp-4);
   background: var(--bg);
+  box-sizing: border-box;
 }
 
 .app-shell--auth .flash-stack {
@@ -1951,6 +1958,121 @@ img.avatar {
 }
 
 .auth-demo dt { font-weight: 600; color: var(--text); }
+
+/* --- Error Page Surface & Elements --- */
+.error-card {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: clamp(var(--sp-6), 3.5vw, var(--sp-8));
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.error-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ef4444, #f59e0b, #3b82f6);
+}
+
+.error-card .brand {
+  margin-bottom: var(--sp-5);
+}
+
+.error-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1-5);
+  padding: 4px 14px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: var(--sp-3);
+  background: rgba(220, 38, 38, 0.08);
+  color: var(--danger);
+  border: 1px solid var(--danger-border);
+}
+
+.error-card__badge--404 {
+  background: rgba(2, 132, 199, 0.08);
+  color: var(--info);
+  border-color: var(--info-100);
+}
+
+.error-card__badge--403 {
+  background: rgba(217, 119, 6, 0.08);
+  color: var(--warning);
+  border-color: var(--warning-border);
+}
+
+.error-card__code {
+  font-size: 3.5rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--text-muted);
+  opacity: 0.25;
+  margin: 0 0 var(--sp-2);
+  font-feature-settings: "tnum";
+}
+
+.error-card__title {
+  font-size: clamp(1.4rem, 2.5vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  color: var(--text);
+  margin: 0 0 var(--sp-2);
+  line-height: 1.25;
+}
+
+.error-card__message {
+  font-size: 0.9375rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  max-width: 400px;
+  margin: 0 0 var(--sp-6);
+}
+
+.error-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  justify-content: center;
+  width: 100%;
+  margin-bottom: var(--sp-6);
+}
+
+.error-card__actions .btn {
+  min-width: 140px;
+}
+
+.error-card__note {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--border);
+  width: 100%;
+  font-size: 0.8125rem;
+  color: var(--text-light);
+  margin: 0;
+}
 
 /* ==========================================================================
    16. Ballot Experience & Candidate Selection

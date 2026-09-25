@@ -131,6 +131,11 @@ require __DIR__ . '/../includes/header.php';
       <?= sv_icon('arrow-left', 14) ?> Back to standard sign in
     </a>
   </div>
+
+  <p class="text-muted text-xs" style="margin-top: var(--sp-4);">
+    <a href="<?= e(url('terms.php')) ?>" class="link" style="color:inherit; text-decoration:underline;">Terms of Service</a> &middot; 
+    <a href="<?= e(url('privacy.php')) ?>" class="link" style="color:inherit; text-decoration:underline;">Privacy Policy</a>
+  </p>
 </div>
 
 <?php require __DIR__ . '/../includes/footer.php'; ?>
