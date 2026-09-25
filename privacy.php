@@ -44,7 +44,7 @@ require __DIR__ . '/includes/header.php';
 <div class="grid-3" style="align-items: start; gap: var(--sp-6);">
   
   <!-- Left Side: Table of Contents & Quick Summary -->
-  <aside style="position: sticky; top: var(--sp-6);">
+  <aside class="policy-sidebar">
     <div class="card" style="margin-bottom: var(--sp-6); border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface);">
       <div class="card__header" style="border-bottom: 1px solid var(--border); padding: var(--sp-4) var(--sp-5);">
         <h3 class="card__title" style="font-size: 0.95rem; font-weight: 700;"><?= sv_icon('file', 16, 'card__title-icon') ?> Policy Summary</h3>

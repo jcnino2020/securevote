@@ -256,6 +256,8 @@ html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11", "ss01";
+  overflow-x: clip;
+  max-width: 100vw;
 }
 
 body {
@@ -269,6 +271,17 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   caret-color: var(--blue);
+  overflow-x: clip;
+  max-width: 100vw;
+  width: 100%;
+  position: relative;
+}
+
+@supports not (overflow-x: clip) {
+  html,
+  body {
+    overflow-x: hidden;
+  }
 }
 
 ::selection {
@@ -508,6 +521,140 @@ hr {
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   gap: var(--sp-8);
   align-items: center;
+}
+
+/* Hero Portal Section Components */
+.hero-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--sp-8);
+  overflow: hidden;
+}
+
+.hero-card__body {
+  padding: clamp(var(--sp-6), 3vw, var(--sp-10));
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--blue-50);
+  color: var(--blue);
+  padding: 4px 12px;
+  border-radius: var(--radius-xs);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--sp-4);
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  max-width: 100%;
+}
+
+[data-theme="dark"] .hero-badge {
+  background: rgba(37, 99, 235, 0.15);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+.hero-title {
+  font-size: clamp(1.75rem, 3.2vw, 2.5rem);
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.22;
+  margin-bottom: var(--sp-4);
+  letter-spacing: -0.03em;
+  word-break: break-word;
+}
+
+.hero-desc {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: var(--sp-8);
+  max-width: 60ch;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  align-items: center;
+}
+
+.hero-pillars {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-6);
+  box-shadow: var(--shadow-xs);
+}
+
+.hero-pillars__title {
+  font-size: 0.775rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-bottom: var(--sp-5);
+}
+
+.hero-pillars__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  font-size: 0.875rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.hero-pillars__list li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.hero-pillars__icon {
+  margin-top: 2px;
+  flex: none;
+}
+
+.section-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-5);
+  gap: var(--sp-3);
+  flex-wrap: wrap;
+}
+
+.step-guide-card {
+  padding: var(--sp-5);
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.step-guide-num {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--blue);
+  margin-bottom: var(--sp-2);
+}
+
+.step-guide-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: var(--sp-1);
+}
+
+.policy-sidebar {
+  position: sticky;
+  top: var(--sp-6);
 }
 
 .divider {
@@ -2575,8 +2722,22 @@ dialog.modal::backdrop {
 
   .topbar {
     padding: var(--sp-2) var(--sp-4);
-    min-height: 60px;
+    min-height: 56px;
     gap: var(--sp-2);
+  }
+
+  .app-shell--portal .topbar {
+    padding: var(--sp-2) var(--sp-4);
+    min-height: 56px;
+    gap: var(--sp-2);
+  }
+
+  .app-shell--portal .topbar__titles {
+    display: none !important;
+  }
+
+  .topbar__brand {
+    margin-right: 0;
   }
 
   .page-title {
@@ -2585,6 +2746,10 @@ dialog.modal::backdrop {
 
   .page-subtitle {
     display: none;
+  }
+
+  .policy-sidebar {
+    position: static;
   }
 
   .card__header,
@@ -2702,10 +2867,110 @@ dialog.modal::backdrop {
   }
 }
 
+/* Medium Mobile (640px and below) */
+@media (max-width: 640px) {
+  .topbar__register-btn {
+    display: none !important;
+  }
+
+  .session-chip {
+    display: none !important;
+  }
+
+  .topbar__actions {
+    gap: 8px !important;
+  }
+
+  /* Hero Section Mobile Enhancements */
+  .hero-card {
+    margin-bottom: var(--sp-6);
+    border-radius: var(--radius-lg);
+  }
+
+  .hero-card__body {
+    padding: var(--sp-5) var(--sp-4) !important;
+  }
+
+  .hero-title {
+    font-size: 1.5rem !important;
+    line-height: 1.25 !important;
+    margin-bottom: var(--sp-3);
+  }
+
+  .hero-desc {
+    font-size: 0.9375rem !important;
+    line-height: 1.55 !important;
+    margin-bottom: var(--sp-5) !important;
+  }
+
+  .hero-actions {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    gap: var(--sp-3) !important;
+  }
+
+  .hero-actions .btn {
+    width: 100% !important;
+    justify-content: center !important;
+    padding-left: var(--sp-4) !important;
+    padding-right: var(--sp-4) !important;
+    white-space: normal !important;
+    min-height: 48px !important;
+    text-align: center;
+  }
+
+  .hero-pillars {
+    padding: var(--sp-4) !important;
+    margin-top: var(--sp-2);
+  }
+
+  .step-guide-card {
+    padding: var(--sp-4);
+  }
+
+  .section-heading-row h2 {
+    font-size: 1.2rem;
+  }
+}
+
 /* Compact Mobile (480px and below) */
 @media (max-width: 480px) {
   .topbar__actions {
     gap: 6px;
+  }
+
+  .brand {
+    gap: 8px;
+  }
+
+  .brand__word {
+    font-size: 1.125rem;
+  }
+
+  .hero-title {
+    font-size: 1.35rem !important;
+  }
+
+  .hero-badge {
+    font-size: 0.7rem;
+    padding: 3px 10px;
+  }
+
+  .topbar {
+    padding: var(--sp-2) 12px !important;
+  }
+
+  .content {
+    padding: 12px !important;
+  }
+
+  .card__header,
+  .card__body,
+  .card__footer {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
   }
 
   .table {
@@ -2751,22 +3016,30 @@ dialog.modal::backdrop {
 }
 
 /* Ultra-Compact Mobile (360px–390px / 375px breakpoint) */
-/* Single-column stack with strict 16px edge padding maintained */
+/* Single-column stack with strict edge padding maintained */
 @media (max-width: 375px) {
   .content {
-    padding: 16px;
+    padding: 10px !important;
   }
 
   .topbar {
-    padding: var(--sp-2) 16px;
+    padding: var(--sp-2) 10px !important;
   }
 
   .page-title {
-    font-size: 1.15rem;
+    font-size: 1.1rem;
   }
 
   .brand__word {
-    font-size: 1.05rem;
+    font-size: 1.02rem;
+  }
+
+  .hero-title {
+    font-size: 1.25rem !important;
+  }
+
+  .hero-card__body {
+    padding: var(--sp-4) 10px !important;
   }
 
   .btn {
