@@ -2826,12 +2826,15 @@ dialog.modal::backdrop {
     width: min(300px, 86vw);
     height: 100vh;
     transform: translateX(-100%);
-    transition: transform var(--tr-smooth);
-    box-shadow: var(--shadow-xl);
+    transition: transform var(--tr-smooth), box-shadow var(--tr-smooth), visibility var(--tr-smooth);
+    box-shadow: none;
+    visibility: hidden;
   }
 
   .sidebar.is-open {
     transform: translateX(0);
+    box-shadow: var(--shadow-xl);
+    visibility: visible;
   }
 
   .sidebar__close {

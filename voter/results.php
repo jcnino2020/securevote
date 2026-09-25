@@ -17,9 +17,9 @@
 require_once __DIR__ . '/../includes/bootstrap.php';
 require_once __DIR__ . '/../includes/voting.php';
 
-$voter  = current_user();
+$voter  = require_voter();
 $pdo    = db();
-$userId = $voter !== null ? (int) $voter['id'] : 0;
+$userId = (int) $voter['id'];
 
 /* =====================================================================
  | Load Elections
@@ -33,12 +33,15 @@ $stmt = $pdo->prepare(
             COALESCE(b.submitted_at, ve.voted_at) AS ballot_submitted_at,
             (CASE WHEN b.id IS NOT NULL OR ve.has_voted = 1 THEN 1 ELSE 0 END) AS has_voted
        FROM elections e
-       LEFT JOIN ballots b ON b.election_id = e.id AND b.voter_id = :user_id AND b.status = 'submitted'
-       LEFT JOIN voter_eligibility ve ON ve.election_id = e.id AND ve.user_id = :user_id
+       LEFT JOIN ballots b ON b.election_id = e.id AND b.voter_id = :ballot_user_id AND b.status = 'submitted'
+       LEFT JOIN voter_eligibility ve ON ve.election_id = e.id AND ve.user_id = :ve_user_id
       WHERE e.status != 'draft'
       ORDER BY FIELD(e.status, 'open', 'scheduled', 'closed', 'archived'), e.start_datetime DESC"
 );
-$stmt->execute([':user_id' => $userId]);
+$stmt->execute([
+    ':ballot_user_id' => $userId,
+    ':ve_user_id'     => $userId,
+]);
 $elections = $stmt->fetchAll();
 
 /* =====================================================================
@@ -65,11 +68,15 @@ if ($electionId > 0) {
                     COALESCE(b.submitted_at, ve.voted_at) AS ballot_submitted_at,
                     (CASE WHEN b.id IS NOT NULL OR ve.has_voted = 1 THEN 1 ELSE 0 END) AS has_voted
                FROM elections e
-               LEFT JOIN ballots b ON b.election_id = e.id AND b.voter_id = :user_id AND b.status = 'submitted'
-               LEFT JOIN voter_eligibility ve ON ve.election_id = e.id AND ve.user_id = :user_id
+               LEFT JOIN ballots b ON b.election_id = e.id AND b.voter_id = :ballot_user_id AND b.status = 'submitted'
+               LEFT JOIN voter_eligibility ve ON ve.election_id = e.id AND ve.user_id = :ve_user_id
               WHERE e.id = :id LIMIT 1"
         );
-        $stmtFocus->execute([':user_id' => $userId, ':id' => $electionId]);
+        $stmtFocus->execute([
+            ':ballot_user_id' => $userId,
+            ':ve_user_id'     => $userId,
+            ':id'             => $electionId,
+        ]);
         $focus = $stmtFocus->fetch() ?: null;
     }
 
