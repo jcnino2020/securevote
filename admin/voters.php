@@ -949,7 +949,7 @@ require __DIR__ . '/../includes/header.php';
               </td>
               <td><?= account_badge((string) $voter['status']) ?></td>
               <td>
-                <span style="white-space:nowrap;"><?= e((string) $voter['eligible_count']) ?> registered</span>
+                <span class="table__cell-strong" style="white-space:nowrap;"><?= e((string) $voter['eligible_count']) ?> registered</span>
                 <span class="table__cell-sub">
                   <?= e((string) $voter['ballot_count']) ?> ballot<?= (int) $voter['ballot_count'] === 1 ? '' : 's' ?> cast
                 </span>

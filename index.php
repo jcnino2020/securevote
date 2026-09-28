@@ -4,10 +4,10 @@
  * =====================================================================
  * index.php
  *
- * Welcome Portal & Voter Gateway (2026 Edition):
+ * Welcome Portal & Civic Gateway (2026 Edition):
  *   - Signed-in admin -> redirects to admin/dashboard.php
  *   - Signed-in voter -> redirects to voter/dashboard.php
- *   - Public / Students -> Welcome gateway with Google OAuth 2.0,
+ *   - Public / Students -> High-trust civic gateway with Google OAuth 2.0,
  *     Email/Password sign-in, Voter Code authentication, and live election status.
  */
 
@@ -49,7 +49,7 @@ $closedStmt = $pdo->query(
 $closedElections = $closedStmt->fetchAll();
 
 $pageTitle    = 'Welcome to SecureVote';
-$pageSubtitle = 'University Online Voting Portal with Google OAuth & Voter Code Authentication.';
+$pageSubtitle = 'Official University Online Voting Portal & Digital Ballot Gateway.';
 $activeNav    = '';
 $breadcrumb   = [];
 $layout       = 'portal';
@@ -73,7 +73,7 @@ require __DIR__ . '/includes/header.php';
           University Student Council Online Voting
         </h1>
         <p class="hero-desc">
-          Authenticate securely with your <strong>Google Account</strong>, <strong>Personal Voter Code</strong>, or <strong>Email/Password</strong>. Ballots are linked with strict 1-person-1-vote database constraints and verifiable digital receipts.
+          Authenticate securely with your <strong>Google Account</strong>, <strong>Personal Voter Code</strong>, or <strong>Email/Password</strong>. Ballots are recorded with cryptographic isolation, strict 1-person-1-vote constraints, and verifiable digital receipts.
         </p>
         
         <!-- Multi-Method Action Buttons (Curved Squares) -->
@@ -84,10 +84,10 @@ require __DIR__ . '/includes/header.php';
           </a>
           <a class="btn btn--primary btn--lg" href="<?= e(url('auth/login.php')) ?>">
             <?= sv_icon('lock', 18, 'btn__icon') ?>
-            <span>Sign In with Voter Code</span>
+            <span>Sign In to Vote</span>
           </a>
           <a class="btn btn--secondary btn--lg" href="<?= e(url('auth/register.php')) ?>">
-            <?= sv_icon('user', 18, 'btn__icon') ?>
+            <?= sv_icon('user-plus', 18, 'btn__icon') ?>
             <span>Register Account</span>
           </a>
         </div>
@@ -95,25 +95,25 @@ require __DIR__ . '/includes/header.php';
 
       <!-- Quick Security Pillars (Curved Panel) -->
       <div class="hero-pillars">
-        <h3 class="hero-pillars__title">
+        <h2 class="hero-pillars__title">
           Voting Integrity Pillars
-        </h3>
+        </h2>
         <ul class="hero-pillars__list">
           <li>
-            <span class="hero-pillars__icon" style="color: var(--blue);"><?= sv_icon('google', 18) ?></span>
-            <span><strong>Google OAuth 2.0:</strong> One-click institutional sign-in.</span>
+            <span class="hero-pillars__icon" style="color: var(--primary);"><?= sv_icon('google', 18) ?></span>
+            <span><strong>Google OAuth 2.0:</strong> Fast 1-click institutional verification.</span>
           </li>
           <li>
-            <span class="hero-pillars__icon" style="color: var(--blue);"><?= sv_icon('key', 18) ?></span>
-            <span><strong>Personal Voter Code:</strong> Unique passcode for every voter.</span>
+            <span class="hero-pillars__icon" style="color: var(--accent);"><?= sv_icon('key', 18) ?></span>
+            <span><strong>Personal Voter Code:</strong> Unique passcode issued to every registered voter.</span>
           </li>
           <li>
             <span class="hero-pillars__icon" style="color: var(--success);"><?= sv_icon('shield-check', 18) ?></span>
-            <span><strong>1 Person, 1 Vote:</strong> Database-enforced unique constraints.</span>
+            <span><strong>1 Person, 1 Vote:</strong> Database-enforced unique ballot constraints.</span>
           </li>
           <li>
-            <span class="hero-pillars__icon" style="color: var(--teal);"><?= sv_icon('copy', 18) ?></span>
-            <span><strong>Digital Receipts:</strong> Verifiable cryptographic token.</span>
+            <span class="hero-pillars__icon" style="color: var(--primary);"><?= sv_icon('copy', 18) ?></span>
+            <span><strong>Digital Receipts:</strong> Cryptographic token to verify your ballot was counted.</span>
           </li>
         </ul>
       </div>
@@ -135,7 +135,7 @@ require __DIR__ . '/includes/header.php';
     <div class="card">
       <div class="empty-state">
         <span class="empty-state__icon"><?= sv_icon('clock', 30) ?></span>
-        <p class="empty-state__title">No elections currently open for voting</p>
+        <h3 class="empty-state__title">No elections currently open for voting</h3>
         <p class="empty-state__text">Check back soon or view finalized results from past elections below.</p>
       </div>
     </div>
@@ -237,22 +237,31 @@ require __DIR__ . '/includes/header.php';
       <div class="step-guide-card">
         <div class="step-guide-num">01</div>
         <h3 class="step-guide-title">Sign In</h3>
-        <p class="text-sm text-muted" style="line-height: 1.55;">Use 1-click Google OAuth, your database Email/Password, or your personal Voter Code (<code>VC-2026-XXXX</code>).</p>
+        <p class="text-sm text-muted" style="line-height: 1.55;">Use 1-click Google OAuth, your university Email/Password, or your personal Voter Code (<code>VC-2026-XXXX</code>).</p>
       </div>
 
       <div class="step-guide-card">
         <div class="step-guide-num">02</div>
         <h3 class="step-guide-title">Select Candidates</h3>
-        <p class="text-sm text-muted" style="line-height: 1.55;">Review platforms and select candidates for each position with live selection counters and limits.</p>
+        <p class="text-sm text-muted" style="line-height: 1.55;">Review candidate platforms, inspect biographies, and select candidates with real-time selection limits.</p>
       </div>
 
       <div class="step-guide-card">
         <div class="step-guide-num">03</div>
         <h3 class="step-guide-title">Get Digital Receipt</h3>
-        <p class="text-sm text-muted" style="line-height: 1.55;">Submit your ballot and receive an official verification token (<code>SV-2026-XXXXXX</code>) to verify your vote was counted.</p>
+        <p class="text-sm text-muted" style="line-height: 1.55;">Submit your ballot and receive an official verification token (<code>SV-2026-XXXXXX</code>) to prove your ballot was counted.</p>
       </div>
     </div>
   </div>
 </section>
+
+<!-- Verification Guarantee Callout -->
+<div class="security-note" style="margin-bottom: var(--sp-6);">
+  <?= sv_icon('shield-check', 20) ?>
+  <div>
+    <strong>Civic Trust &amp; Secret Ballot Guarantee:</strong>
+    SecureVote uses database-level decoupling to ensure true ballot secrecy. Your candidate selections are stored anonymously in the digital ballot box, while your eligibility record confirms that you participated.
+  </div>
+</div>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>

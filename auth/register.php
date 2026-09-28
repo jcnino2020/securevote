@@ -143,10 +143,10 @@ require __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="auth-main">
-  <div class="auth-card" style="max-width: 540px;">
+  <div class="auth-card">
     <div class="auth-card__head">
-      <a class="brand" href="<?= e(url('index.php')) ?>" style="margin-bottom: var(--sp-2);">
-        <?= sv_logo_mark(36) ?>
+      <a class="brand" href="<?= e(url('index.php')) ?>">
+        <?= sv_logo_mark(32) ?>
         <span class="brand__word">Secure<span>Vote</span></span>
       </a>
       <h1 class="auth-card__title">Create voter account</h1>
@@ -164,9 +164,9 @@ require __DIR__ . '/../includes/header.php';
     <?php endif; ?>
 
     <!-- Google OAuth 2.0 Sign Up Button -->
-    <div class="stack-sm" style="margin-bottom: var(--sp-4);">
+    <div class="stack-sm">
       <a href="<?= e(url('auth/google-login.php')) ?>" class="btn btn--google btn--lg btn--block" id="btn-google-signup">
-        <?= sv_icon('google', 20, 'btn__icon') ?>
+        <?= sv_icon('google', 18, 'btn__icon') ?>
         <span>Sign up with Google</span>
       </a>
     </div>
@@ -340,7 +340,7 @@ require __DIR__ . '/../includes/header.php';
         </div>
       </div>
 
-      <div class="form-actions" style="margin-top: var(--sp-4);">
+      <div class="form-actions">
         <button class="btn btn--primary btn--lg btn--block" type="submit" data-submit-once
                 data-submitting-label="Creating account…">
           <?= sv_icon('user-plus', 18, 'btn__icon') ?>
@@ -360,9 +360,14 @@ require __DIR__ . '/../includes/header.php';
     </div>
   </div>
 
-  <p class="text-muted text-xs text-center" style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: var(--sp-4);">
+  <p class="text-muted text-xs text-center auth-footnote">
     <?= sv_icon('shield', 14) ?>
     <span>Protected by bcrypt password hashing and TLS/HTTPS session binding.</span>
+  </p>
+  <p class="text-muted text-xs text-center auth-footnote-sub">
+    By registering, you agree to our 
+    <a href="<?= e(url('terms.php')) ?>" class="link" style="color:inherit; text-decoration:underline;">Terms of Service</a> and 
+    <a href="<?= e(url('privacy.php')) ?>" class="link" style="color:inherit; text-decoration:underline;">Privacy Policy</a>.
   </p>
 </div>
 

@@ -4,55 +4,54 @@
  * =====================================================================
  * includes/footer.php
  *
- * Closes the shell opened by header.php and prints the shared footer.
- *
- * The security strip states what the system actually does. It never
- * claims a protection that has not been implemented: on plain HTTP it
- * says so instead of pretending the connection is encrypted.
+ * Closes the application shell and prints the modern 2026 security strip
+ * and footer navigation.
  */
 
-$user         = current_user();
-$isHttps      = sv_is_https();
-$transport    = $isHttps
-    ? ['icon' => 'lock',          'label' => 'Encrypted connection (HTTPS)']
-    : ['icon' => 'alert-triangle','label' => 'Local development mode (HTTP) — enable HTTPS before real use'];
+$user      = current_user();
+$isHttps   = sv_is_https();
+$transport = $isHttps
+    ? ['icon' => 'lock',          'label' => 'Encrypted TLS/HTTPS Active']
+    : ['icon' => 'alert-triangle','label' => 'Local Environment (HTTP) — Deploy with HTTPS for Production'];
 ?>
 <?php if (($layout ?? 'app') !== 'auth'): ?>
   </main>
 
-  <footer class="app-footer">
+  <footer class="app-footer" role="contentinfo">
     <div class="app-footer__row">
-      <span class="app-footer__brand">
-        <?= sv_logo_mark(20, 'brand__mark brand__mark--sm') ?>
-        <span><?= e(APP_NAME) ?></span>
-        <span class="text-muted">&middot; <?= e(APP_VERSION) ?></span>
-      </span>
+      <div class="app-footer__brand">
+        <?= sv_logo_mark(22, 'brand__mark brand__mark--sm') ?>
+        <span class="app-footer__title"><?= e(APP_NAME) ?></span>
+        <span class="app-footer__ver">v<?= e(APP_VERSION) ?></span>
+      </div>
 
-      <ul class="security-strip" aria-label="Security controls in effect">
+      <ul class="security-strip" aria-label="Security controls active on this system">
         <li class="security-strip__item security-strip__item--<?= $isHttps ? 'ok' : 'warn' ?>">
-          <?= sv_icon($transport['icon'], 15) ?>
+          <?= sv_icon($transport['icon'], 14) ?>
           <span><?= e($transport['label']) ?></span>
         </li>
         <li class="security-strip__item">
-          <?= sv_icon('key', 15) ?>
-          <span>Passwords stored as bcrypt hashes</span>
+          <?= sv_icon('key', 14) ?>
+          <span>Bcrypt Password Hashing</span>
         </li>
         <li class="security-strip__item">
-          <?= sv_icon('database', 15) ?>
-          <span>All queries use prepared statements</span>
+          <?= sv_icon('database', 14) ?>
+          <span>Parameterized PDO Statements</span>
         </li>
         <li class="security-strip__item">
-          <?= sv_icon('shield-check', 15) ?>
-          <span>Ballots are recorded in a database transaction</span>
+          <?= sv_icon('shield-check', 14) ?>
+          <span>Secret Ballot Transaction Integrity</span>
         </li>
       </ul>
 
-      <span class="app-footer__note text-muted text-sm">
-        &copy; <?= e(date('Y')) ?> SecureVote &middot; 
-        <a href="<?= e(url('privacy.php')) ?>" class="link" style="color:inherit; text-decoration:underline;">Privacy Policy</a> &middot; 
-        <a href="<?= e(url('terms.php')) ?>" class="link" style="color:inherit; text-decoration:underline;">Terms of Service</a> &middot; 
-        Academic civic project.
-      </span>
+      <div class="app-footer__legal">
+        <span>&copy; <?= e(date('Y')) ?> <?= e(APP_NAME) ?> &middot; Academic Civic Voting Platform</span>
+        <div class="app-footer__links">
+          <a href="<?= e(url('privacy.php')) ?>" class="link">Privacy Policy</a>
+          <span aria-hidden="true">&middot;</span>
+          <a href="<?= e(url('terms.php')) ?>" class="link">Terms of Service</a>
+        </div>
+      </div>
     </div>
   </footer>
 </div>

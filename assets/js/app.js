@@ -1,16 +1,16 @@
 /* ==========================================================================
    SecureVote - Secure Online Voting System
-   assets/js/app.js (2026 Modernized & Accessible Suite)
-
-   Progressive enhancement only. The system works with JavaScript switched
-   off: every form posts normally and the server re-validates everything.
+   assets/js/app.js (2026 Production Accessible Suite)
 
    WCAG 2.2 Level AA Accessible Enhancements:
-     - Accessible Authentication: Show/Hide Password toggles
-     - Focus trapping & focus restoration for modals and mobile drawer
-     - Screen-reader friendly live announcements (table search, copy tokens)
-     - Touch-target ergonomics & keyboard trap avoidance
-     - Progressive submission guards with animated loading indicators
+     - Instant Flash-Free Theme Engine (Light / Dark Mode)
+     - Accessible Password Visibility Controls
+     - Accessible Mobile Navigation Drawer (Focus Trap & Escape handling)
+     - Interactive Ballot Engine (Real-Time Selection Counters & Limits)
+     - Candidate Platform Expanders
+     - 1-Click Clipboard Copy with Accessible Live Announcements
+     - Double-Submit Protection with Loading States
+     - Accessible Modal Dialogs & Dismissable Alerts
    ========================================================================== */
 
 (function () {
@@ -19,13 +19,13 @@
   var STORAGE_KEY = 'securevote.theme';
 
   /* ======================================================================
-     1. Theme Management (Instant Flash-Free Execution)
+     1. Instant Theme Engine (Runs before first paint)
      ==================================================================== */
 
   function storedTheme() {
     try {
       return window.localStorage.getItem(STORAGE_KEY);
-    } catch (error) {
+    } catch (e) {
       return null;
     }
   }
@@ -43,24 +43,20 @@
     var toggle = document.querySelector('[data-theme-toggle]');
     if (toggle) {
       toggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
-      toggle.setAttribute(
-        'aria-label',
-        theme === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance'
-      );
-      toggle.setAttribute(
-        'title',
-        theme === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance'
-      );
+      var label = theme === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance';
+      toggle.setAttribute('aria-label', label);
+      toggle.setAttribute('title', label);
     }
   }
 
-  // Runs immediately in <head> to prevent FOUC / wrong color flash
-  var initialTheme = storedTheme() || systemTheme();
-  applyTheme(initialTheme);
+  // Apply saved theme immediately
+  var currentTheme = storedTheme() || systemTheme();
+  applyTheme(currentTheme);
 
   /* ======================================================================
-     2. Live Screen Reader Announcer Utility
+     2. Live Screen Reader Announcer
      ==================================================================== */
+
   var liveAnnouncer = null;
 
   function announce(message) {
@@ -83,55 +79,127 @@
      ==================================================================== */
 
   document.addEventListener('DOMContentLoaded', function () {
-    var toggle = document.querySelector('[data-theme-toggle]');
+    initThemeToggle();
+    initSidebarDrawer();
+    initPasswordToggles();
+    initBallotEngine();
+    initBioToggles();
+    initCopyButtons();
+    initSubmitGuards();
+    initAlertDismissals();
+    initConfirmPrompts();
+    initTableFilters();
+    initDialogs();
+  });
 
+  /* ======================================================================
+     4. Theme Toggle Listener
+     ==================================================================== */
+
+  function initThemeToggle() {
+    var toggle = document.querySelector('[data-theme-toggle]');
     if (toggle) {
       toggle.addEventListener('click', function () {
-        var current = document.documentElement.getAttribute('data-theme') || 'light';
-        var next = current === 'dark' ? 'light' : 'dark';
+        var active = document.documentElement.getAttribute('data-theme') || 'light';
+        var next = active === 'dark' ? 'light' : 'dark';
         applyTheme(next);
         try {
           window.localStorage.setItem(STORAGE_KEY, next);
-        } catch (error) {}
+        } catch (e) {}
         announce('Color appearance switched to ' + next + ' mode');
       });
     }
 
     if (window.matchMedia) {
-      var query = window.matchMedia('(prefers-color-scheme: dark)');
-      var onChange = function (event) {
+      var media = window.matchMedia('(prefers-color-scheme: dark)');
+      var handler = function (event) {
         if (!storedTheme()) {
           applyTheme(event.matches ? 'dark' : 'light');
         }
       };
-      if (query.addEventListener) {
-        query.addEventListener('change', onChange);
-      } else if (query.addListener) {
-        query.addListener(onChange);
+      if (media.addEventListener) {
+        media.addEventListener('change', handler);
+      } else if (media.addListener) {
+        media.addListener(handler);
       }
     }
-
-    initSidebar();
-    initPasswordToggles();
-    initConfirms();
-    initBallot();
-    initCandidateToggles();
-    initCopyButtons();
-    initTableFilters();
-    initModals();
-    initAutoSubmit();
-    initSubmitGuard();
-    initAlertDismissals();
-  });
+  }
 
   /* ======================================================================
-     4. Password Visibility Toggles (WCAG 2.2 Accessible Authentication)
+     5. Mobile Navigation Drawer & Backdrop
+     ==================================================================== */
+
+  function initSidebarDrawer() {
+    var sidebar = document.getElementById('sidebar');
+    if (!sidebar) return;
+
+    var backdrop = document.querySelector('.sidebar-backdrop');
+    var toggles = document.querySelectorAll('[data-sidebar-toggle]');
+    var closers = document.querySelectorAll('[data-sidebar-close]');
+    var lastFocusedElement = null;
+
+    function openSidebar() {
+      lastFocusedElement = document.activeElement;
+      sidebar.classList.add('is-open');
+      if (backdrop) backdrop.hidden = false;
+      document.body.style.overflow = 'hidden';
+
+      Array.prototype.forEach.call(toggles, function (btn) {
+        btn.setAttribute('aria-expanded', 'true');
+      });
+
+      var closeBtn = sidebar.querySelector('.sidebar__close');
+      if (closeBtn) closeBtn.focus();
+      announce('Navigation menu opened');
+    }
+
+    function closeSidebar() {
+      sidebar.classList.remove('is-open');
+      if (backdrop) backdrop.hidden = true;
+      document.body.style.overflow = '';
+
+      Array.prototype.forEach.call(toggles, function (btn) {
+        btn.setAttribute('aria-expanded', 'false');
+      });
+
+      if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+        lastFocusedElement.focus();
+      }
+      announce('Navigation menu closed');
+    }
+
+    Array.prototype.forEach.call(toggles, function (btn) {
+      btn.addEventListener('click', function () {
+        var isOpen = sidebar.classList.contains('is-open');
+        if (isOpen) closeSidebar();
+        else openSidebar();
+      });
+    });
+
+    Array.prototype.forEach.call(closers, function (btn) {
+      btn.addEventListener('click', closeSidebar);
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
+        closeSidebar();
+      }
+    });
+
+    window.addEventListener('resize', function () {
+      if (window.innerWidth > 900 && sidebar.classList.contains('is-open')) {
+        closeSidebar();
+      }
+    });
+  }
+
+  /* ======================================================================
+     6. Password Visibility Toggles (WCAG 2.2)
      ==================================================================== */
 
   function initPasswordToggles() {
-    var toggleButtons = document.querySelectorAll('[data-toggle-password]');
-
-    Array.prototype.forEach.call(toggleButtons, function (button) {
+    var buttons = document.querySelectorAll('[data-toggle-password]');
+    Array.prototype.forEach.call(buttons, function (button) {
       button.addEventListener('click', function () {
         var targetSelector = button.getAttribute('data-toggle-password');
         var input = targetSelector
@@ -141,501 +209,223 @@
         if (!input) return;
 
         var isPassword = input.getAttribute('type') === 'password';
-        var newType = isPassword ? 'text' : 'password';
-        input.setAttribute('type', newType);
+        var nextType = isPassword ? 'text' : 'password';
+        input.setAttribute('type', nextType);
 
         button.setAttribute('aria-pressed', isPassword ? 'true' : 'false');
-        button.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
-        button.setAttribute('title', isPassword ? 'Hide password' : 'Show password');
+        var label = isPassword ? 'Hide password' : 'Show password';
+        button.setAttribute('aria-label', label);
+        button.setAttribute('title', label);
 
         var eyeIcon = button.querySelector('.icon-eye');
         var eyeOffIcon = button.querySelector('.icon-eye-off');
-
         if (eyeIcon && eyeOffIcon) {
           eyeIcon.hidden = isPassword;
           eyeOffIcon.hidden = !isPassword;
         }
 
-        // Keep cursor position at end of input
         if (typeof input.selectionStart === 'number') {
           var len = input.value.length;
           input.setSelectionRange(len, len);
         }
 
-        announce(isPassword ? 'Password is now shown.' : 'Password is now hidden.');
+        announce(isPassword ? 'Password revealed.' : 'Password hidden.');
       });
     });
   }
 
   /* ======================================================================
-     5. Mobile Navigation Rail & Drawer (Accessible Focus Trap)
+     7. Interactive Tactile Ballot Engine
      ==================================================================== */
 
-  function initSidebar() {
-    var sidebar = document.getElementById('sidebar');
-    if (!sidebar) return;
+  function initBallotEngine() {
+    var form = document.getElementById('ballot-form');
+    if (!form) return;
 
-    var backdrop = document.querySelector('.sidebar-backdrop');
-    var toggles = document.querySelectorAll('[data-sidebar-toggle]');
-    var closers = document.querySelectorAll('[data-sidebar-close]');
-    var menuButton = document.querySelector('[data-sidebar-toggle]');
-    var lastFocusedBeforeOpen = null;
+    var positions = form.querySelectorAll('.ballot__position');
 
-    function getFocusableElements(container) {
-      return container.querySelectorAll(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      );
-    }
+    Array.prototype.forEach.call(positions, function (pos) {
+      var max = parseInt(pos.getAttribute('data-max') || '1', 10);
+      var counter = pos.querySelector('.ballot__counter');
+      var warning = pos.querySelector('[data-ballot-warning]');
+      var checkboxes = pos.querySelectorAll('input[type="checkbox"]');
+      var radios = pos.querySelectorAll('input[type="radio"]');
 
-    function open() {
-      lastFocusedBeforeOpen = document.activeElement;
-      sidebar.classList.add('is-open');
-      sidebar.setAttribute('aria-hidden', 'false');
-
-      if (backdrop) {
-        backdrop.hidden = false;
-      }
-      if (menuButton) {
-        menuButton.setAttribute('aria-expanded', 'true');
-        menuButton.setAttribute('aria-label', 'Close navigation');
-      }
-
-      var focusables = getFocusableElements(sidebar);
-      if (focusables.length > 0) {
-        focusables[0].focus();
-      }
-      announce('Navigation drawer opened.');
-    }
-
-    function close() {
-      sidebar.classList.remove('is-open');
-      sidebar.setAttribute('aria-hidden', 'true');
-
-      if (backdrop) {
-        backdrop.hidden = true;
-      }
-      if (menuButton) {
-        menuButton.setAttribute('aria-expanded', 'false');
-        menuButton.setAttribute('aria-label', 'Open navigation');
-      }
-
-      if (lastFocusedBeforeOpen && typeof lastFocusedBeforeOpen.focus === 'function') {
-        lastFocusedBeforeOpen.focus();
-      } else if (menuButton) {
-        menuButton.focus();
-      }
-    }
-
-    Array.prototype.forEach.call(toggles, function (button) {
-      button.addEventListener('click', function () {
-        if (sidebar.classList.contains('is-open')) {
-          close();
-        } else {
-          open();
-        }
-      });
-    });
-
-    Array.prototype.forEach.call(closers, function (button) {
-      button.addEventListener('click', close);
-    });
-
-    // Close on mobile nav click
-    var navLinks = sidebar.querySelectorAll('.nav__item');
-    Array.prototype.forEach.call(navLinks, function (link) {
-      link.addEventListener('click', function () {
-        if (window.innerWidth <= 1024 && sidebar.classList.contains('is-open')) {
-          close();
-        }
-      });
-    });
-
-    // Focus trapping & Escape key
-    sidebar.addEventListener('keydown', function (event) {
-      if (event.key === 'Escape') {
-        close();
-        return;
-      }
-
-      if (event.key === 'Tab' && sidebar.classList.contains('is-open') && window.innerWidth <= 1024) {
-        var focusables = getFocusableElements(sidebar);
-        if (focusables.length === 0) return;
-
-        var first = focusables[0];
-        var last = focusables[focusables.length - 1];
-
-        if (event.shiftKey && document.activeElement === first) {
-          event.preventDefault();
-          last.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault();
-          first.focus();
-        }
-      }
-    });
-
-    document.addEventListener('keydown', function (event) {
-      if (event.key === 'Escape' && sidebar.classList.contains('is-open')) {
-        close();
-      }
-    });
-  }
-
-  /* ======================================================================
-     6. Confirmation for Destructive Actions
-     ==================================================================== */
-
-  function initConfirms() {
-    Array.prototype.forEach.call(
-      document.querySelectorAll('[data-confirm]'),
-      function (node) {
-        var message = node.getAttribute('data-confirm') || 'Are you sure you want to proceed?';
-
-        if (node.tagName === 'FORM') {
-          node.addEventListener('submit', function (event) {
-            if (!window.confirm(message)) {
-              event.preventDefault();
-            }
-          });
-        } else if (node.tagName === 'A') {
-          node.addEventListener('click', function (event) {
-            if (!window.confirm(message)) {
-              event.preventDefault();
-            }
-          });
-        } else if (node.form) {
-          node.form.addEventListener('submit', function (event) {
-            if (event.submitter !== node) return;
-            if (!window.confirm(message)) {
-              event.preventDefault();
-            }
-          });
-        }
-      }
-    );
-  }
-
-  /* ======================================================================
-     7. Ballot: Selection Limits & Live Accessible Counters
-     ==================================================================== */
-
-  function initBallot() {
-    var positions = document.querySelectorAll('.ballot__position[data-max]');
-
-    Array.prototype.forEach.call(positions, function (position) {
-      var max = parseInt(position.getAttribute('data-max'), 10) || 1;
-      var inputs = position.querySelectorAll('.choice__input');
-      var counter = position.querySelector('.ballot__counter');
-      var warning = position.querySelector('[data-ballot-warning]');
-      var titleElem = position.querySelector('.ballot__position-title');
-      var positionName = titleElem ? titleElem.textContent.trim() : 'this position';
-
-      function selected() {
-        return Array.prototype.filter.call(inputs, function (input) {
-          return input.checked && input.value !== '';
-        });
-      }
-
-      function refresh(announceChange) {
-        var count = selected().length;
+      function updateMultiChoice() {
+        var checked = pos.querySelectorAll('input[type="checkbox"]:checked');
+        var count = checked.length;
 
         if (counter) {
           counter.textContent = count + ' of ' + max + ' selected';
-          counter.classList.toggle('is-full', count >= max);
-        }
-        if (warning && count <= max) {
-          warning.hidden = true;
+          if (count >= max) {
+            counter.classList.add('is-full');
+          } else {
+            counter.classList.remove('is-full');
+          }
         }
 
-        if (announceChange) {
-          announce(positionName + ': ' + count + ' of ' + max + ' selected.');
+        // Disable unchecked if max reached
+        Array.prototype.forEach.call(checkboxes, function (cb) {
+          if (!cb.checked) {
+            if (count >= max) {
+              cb.disabled = true;
+              cb.closest('.choice').classList.add('is-disabled');
+            } else {
+              cb.disabled = false;
+              cb.closest('.choice').classList.remove('is-disabled');
+            }
+          }
+        });
+
+        if (count > max && warning) {
+          warning.hidden = false;
+          warning.textContent = 'Maximum ' + max + ' candidates allowed.';
+        } else if (warning) {
+          warning.hidden = true;
         }
       }
 
-      Array.prototype.forEach.call(inputs, function (input) {
-        input.addEventListener('click', function (event) {
-          var count = selected().length;
+      function updateSingleChoice() {
+        var checked = pos.querySelector('input[type="radio"]:checked');
+        var isAbstain = checked && checked.value === '';
 
-          // If checking an input exceeds max selections:
-          if (input.checked && input.value !== '' && count > max) {
-            event.preventDefault();
-            input.checked = false;
-            if (warning) {
-              warning.hidden = false;
-              warning.textContent =
-                'Selection limit reached for ' + positionName + ' (maximum ' + max +
-                ' candidate' + (max > 1 ? 's' : '') + '). Please uncheck one candidate first.';
-              announce(warning.textContent);
-            }
+        if (counter) {
+          if (isAbstain || !checked) {
+            counter.textContent = '0 of 1 selected (Abstained)';
+            counter.classList.remove('is-full');
+          } else {
+            counter.textContent = '1 of 1 selected';
+            counter.classList.add('is-full');
           }
-          refresh(false);
-        });
+        }
+      }
 
-        input.addEventListener('change', function () {
-          refresh(true);
+      if (checkboxes.length > 0) {
+        Array.prototype.forEach.call(checkboxes, function (cb) {
+          cb.addEventListener('change', updateMultiChoice);
         });
-      });
+        updateMultiChoice();
+      }
 
-      refresh(false);
+      if (radios.length > 0) {
+        Array.prototype.forEach.call(radios, function (rd) {
+          rd.addEventListener('change', updateSingleChoice);
+        });
+        updateSingleChoice();
+      }
     });
   }
 
   /* ======================================================================
-     8. Candidate Biography / Platform Expanders
+     8. Candidate Platform & Bio Expanders
      ==================================================================== */
 
-  function initCandidateToggles() {
-    var toggles = document.querySelectorAll('[data-toggle-bio]');
-    Array.prototype.forEach.call(toggles, function (btn) {
+  function initBioToggles() {
+    var buttons = document.querySelectorAll('[data-toggle-bio]');
+    Array.prototype.forEach.call(buttons, function (btn) {
       btn.addEventListener('click', function (e) {
         e.preventDefault();
-        e.stopPropagation();
-        var targetId = btn.getAttribute('data-toggle-bio');
-        var target = document.getElementById(targetId);
+        var targetId = btn.getAttribute('aria-controls');
+        var target = targetId ? document.getElementById(targetId) : null;
         if (!target) return;
 
         var isExpanded = btn.getAttribute('aria-expanded') === 'true';
         btn.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
         target.hidden = isExpanded;
+
         var label = btn.querySelector('.bio-toggle-label');
         if (label) {
-          label.textContent = isExpanded ? 'Show platform' : 'Hide platform';
+          label.textContent = isExpanded ? 'Read platform & bio' : 'Hide platform & bio';
         }
       });
     });
   }
 
   /* ======================================================================
-     9. Copy to Clipboard (Cryptographic Receipt Verification Tokens)
+     9. 1-Click Clipboard Copy with Live Feedback
      ==================================================================== */
 
   function initCopyButtons() {
-    Array.prototype.forEach.call(
-      document.querySelectorAll('[data-copy]'),
-      function (button) {
-        button.addEventListener('click', function () {
-          var selector = button.getAttribute('data-copy');
-          var source = document.querySelector(selector);
-          if (!source) return;
+    var buttons = document.querySelectorAll('[data-copy]');
+    Array.prototype.forEach.call(buttons, function (btn) {
+      btn.addEventListener('click', function () {
+        var targetSelector = btn.getAttribute('data-copy');
+        var target = targetSelector ? document.querySelector(targetSelector) : null;
+        if (!target) return;
 
-          var text = source.textContent.trim();
-          var label = button.querySelector('[data-copy-label]');
-          var originalText = label ? label.textContent : button.textContent;
+        var text = target.value || target.textContent || '';
+        text = text.trim();
 
-          function done() {
-            button.classList.add('is-copied');
-            if (label) {
-              label.textContent = 'Copied!';
-            }
-            announce('Receipt verification token copied to clipboard: ' + text);
-
-            window.setTimeout(function () {
-              button.classList.remove('is-copied');
-              if (label) {
-                label.textContent = originalText;
-              }
-            }, 2000);
-          }
-
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(text).then(done, function () {
-              window.prompt('Copy this token:', text);
-            });
-          } else {
-            window.prompt('Copy this token:', text);
-          }
-        });
-      }
-    );
-  }
-
-  /* ======================================================================
-     10. Table Filter: Instant Live Search with Screen Reader Status
-     ==================================================================== */
-
-  function initTableFilters() {
-    Array.prototype.forEach.call(
-      document.querySelectorAll('[data-table-filter]'),
-      function (input) {
-        var table = document.querySelector(input.getAttribute('data-table-filter'));
-        if (!table) return;
-
-        var tbody = table.tBodies[0];
-        if (!tbody) return;
-
-        var rows = Array.prototype.slice.call(tbody.rows);
-        var emptyRow = tbody.querySelector('[data-filter-empty]');
-        var debounceTimer = null;
-
-        function apply() {
-          var needle = input.value.trim().toLowerCase();
-          var visible = 0;
-
-          rows.forEach(function (row) {
-            if (row === emptyRow) return;
-            var text = row.textContent.toLowerCase();
-            var hit = needle === '' || text.indexOf(needle) !== -1;
-            row.hidden = !hit;
-            if (hit) {
-              visible += 1;
-            }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () {
+            showCopySuccess(btn);
           });
-
-          if (emptyRow) {
-            emptyRow.hidden = visible > 0 || needle === '';
-          }
-
-          if (needle !== '') {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(function () {
-              announce(visible + ' matching item' + (visible === 1 ? '' : 's') + ' found.');
-            }, 300);
-          }
+        } else {
+          var textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          try {
+            document.execCommand('copy');
+            showCopySuccess(btn);
+          } catch (err) {}
+          document.body.removeChild(textarea);
         }
+      });
+    });
 
-        input.addEventListener('input', apply);
-        apply();
-      }
-    );
-  }
+    function showCopySuccess(btn) {
+      var labelSpan = btn.querySelector('[data-copy-label]') || btn.querySelector('span:not(.btn__icon)');
+      var originalText = labelSpan ? labelSpan.textContent : '';
 
-  /* ======================================================================
-     11. Native <dialog> Modal Windows (Focus Trap & Restoration)
-     ==================================================================== */
+      if (labelSpan) labelSpan.textContent = 'Copied!';
+      btn.classList.add('btn--success');
 
-  function initModals() {
-    var lastFocused = null;
+      announce('Copied to clipboard');
 
-    function getFocusableElements(container) {
-      return container.querySelectorAll(
-        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      );
+      window.setTimeout(function () {
+        if (labelSpan) labelSpan.textContent = originalText;
+        btn.classList.remove('btn--success');
+      }, 2000);
     }
-
-    Array.prototype.forEach.call(
-      document.querySelectorAll('[data-modal-open]'),
-      function (trigger) {
-        trigger.addEventListener('click', function () {
-          lastFocused = trigger;
-          var dialog = document.querySelector(trigger.getAttribute('data-modal-open'));
-          if (dialog && typeof dialog.showModal === 'function') {
-            dialog.showModal();
-            dialog.setAttribute('aria-modal', 'true');
-
-            var focusables = getFocusableElements(dialog);
-            if (focusables.length > 0) {
-              focusables[0].focus();
-            }
-          }
-        });
-      }
-    );
-
-    Array.prototype.forEach.call(
-      document.querySelectorAll('[data-modal-close]'),
-      function (closer) {
-        closer.addEventListener('click', function () {
-          var dialog = closer.closest('dialog');
-          if (dialog) {
-            dialog.close();
-            if (lastFocused && typeof lastFocused.focus === 'function') {
-              lastFocused.focus();
-            }
-          }
-        });
-      }
-    );
-
-    // Backdrop click closes dialog & traps tab
-    Array.prototype.forEach.call(document.querySelectorAll('dialog.modal'), function (dialog) {
-      dialog.addEventListener('click', function (event) {
-        if (event.target === dialog) {
-          dialog.close();
-          if (lastFocused && typeof lastFocused.focus === 'function') {
-            lastFocused.focus();
-          }
-        }
-      });
-
-      dialog.addEventListener('close', function () {
-        if (lastFocused && typeof lastFocused.focus === 'function') {
-          lastFocused.focus();
-        }
-      });
-
-      dialog.addEventListener('keydown', function (event) {
-        if (event.key === 'Tab') {
-          var focusables = getFocusableElements(dialog);
-          if (focusables.length === 0) return;
-
-          var first = focusables[0];
-          var last = focusables[focusables.length - 1];
-
-          if (event.shiftKey && document.activeElement === first) {
-            event.preventDefault();
-            last.focus();
-          } else if (!event.shiftKey && document.activeElement === last) {
-            event.preventDefault();
-            first.focus();
-          }
-        }
-      });
-    });
   }
 
   /* ======================================================================
-     12. Auto-Submit Filter Selects
+     10. Form Submission Guards & Loading States
      ==================================================================== */
 
-  function initAutoSubmit() {
-    Array.prototype.forEach.call(
-      document.querySelectorAll('[data-auto-submit]'),
-      function (control) {
-        control.addEventListener('change', function () {
-          if (control.form) {
-            control.form.submit();
-          }
-        });
-      }
-    );
-  }
-
-  /* ======================================================================
-     13. Accessible Submit Guard with Loading Spinner
-     ==================================================================== */
-
-  function initSubmitGuard() {
-    Array.prototype.forEach.call(document.querySelectorAll('form'), function (form) {
+  function initSubmitGuards() {
+    var forms = document.querySelectorAll('form');
+    Array.prototype.forEach.call(forms, function (form) {
       form.addEventListener('submit', function (e) {
-        var button = form.querySelector('[data-submit-once]');
-        if (!button) return;
+        var submitBtn = form.querySelector('[data-submit-once]');
+        if (submitBtn) {
+          if (submitBtn.disabled) {
+            e.preventDefault();
+            return;
+          }
 
-        // If form has invalid fields, don't trigger busy state
-        if (form.checkValidity && !form.checkValidity()) {
-          return;
+          var labelText = submitBtn.getAttribute('data-submitting-label');
+          if (labelText) {
+            var span = submitBtn.querySelector('span:not(.btn__icon)') || submitBtn;
+            span.textContent = labelText;
+          }
+          submitBtn.disabled = true;
+          submitBtn.classList.add('is-submitting');
         }
-
-        form.setAttribute('aria-busy', 'true');
-        var label = button.getAttribute('data-submitting-label') || 'Processing…';
-
-        window.setTimeout(function () {
-          button.disabled = true;
-          button.classList.add('is-loading');
-          button.innerHTML =
-            '<svg class="btn__spinner" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle><path d="M12 2a10 10 0 0 1 10 10"></path></svg><span>' +
-            label +
-            '</span>';
-        }, 0);
       });
     });
   }
 
   /* ======================================================================
-     14. Accessible Alert Dismissals
+     11. Dismissable Alerts
      ==================================================================== */
 
   function initAlertDismissals() {
-    Array.prototype.forEach.call(document.querySelectorAll('.alert__close'), function (btn) {
+    var buttons = document.querySelectorAll('[data-dismiss-alert]');
+    Array.prototype.forEach.call(buttons, function (btn) {
       btn.addEventListener('click', function () {
         var alert = btn.closest('.alert');
         if (alert) {
@@ -643,9 +433,75 @@
           alert.style.transform = 'scale(0.98)';
           window.setTimeout(function () {
             alert.remove();
-          }, 200);
+          }, 180);
         }
       });
     });
   }
+
+  /* ======================================================================
+     12. Confirmation Prompts
+     ==================================================================== */
+
+  function initConfirmPrompts() {
+    var buttons = document.querySelectorAll('[data-confirm]');
+    Array.prototype.forEach.call(buttons, function (btn) {
+      btn.addEventListener('click', function (e) {
+        var message = btn.getAttribute('data-confirm') || 'Are you sure you wish to proceed?';
+        if (!window.confirm(message)) {
+          e.preventDefault();
+        }
+      });
+    });
+  }
+
+  /* ======================================================================
+     13. Table Search Filtering Utility
+     ==================================================================== */
+
+  function initTableFilters() {
+    var searchInputs = document.querySelectorAll('[data-table-filter]');
+    Array.prototype.forEach.call(searchInputs, function (input) {
+      var targetTableSelector = input.getAttribute('data-table-filter');
+      var table = targetTableSelector ? document.querySelector(targetTableSelector) : null;
+      if (!table) return;
+
+      input.addEventListener('input', function () {
+        var query = input.value.toLowerCase().trim();
+        var rows = table.querySelectorAll('tbody tr');
+        var matchCount = 0;
+
+        Array.prototype.forEach.call(rows, function (row) {
+          var text = row.textContent.toLowerCase();
+          if (text.indexOf(query) !== -1) {
+            row.style.display = '';
+            matchCount++;
+          } else {
+            row.style.display = 'none';
+          }
+        });
+
+        announce(matchCount + ' matching entries found.');
+      });
+    });
+  }
+
+  /* ======================================================================
+     14. Accessible Dialogs & Backdrop Dismissal
+     ==================================================================== */
+
+  function initDialogs() {
+    var dialogs = document.querySelectorAll('dialog');
+    Array.prototype.forEach.call(dialogs, function (dialog) {
+      dialog.addEventListener('click', function (e) {
+        var rect = dialog.getBoundingClientRect();
+        var isInDialog = (rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+          rect.left <= e.clientX && e.clientX <= rect.left + rect.width);
+        if (!isInDialog) {
+          dialog.close();
+        }
+      });
+    });
+  }
+
 })();

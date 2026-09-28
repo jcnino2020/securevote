@@ -856,18 +856,18 @@ $candidates = $listStmt->fetchAll();
                       <?= e(initials($candidate['first_name'], $candidate['last_name'])) ?>
                     </span>
                   <?php endif; ?>
-                  <span>
-                    <span class="table__cell-strong">
+                  <div>
+                    <span class="table__cell-strong" style="white-space:nowrap;">
                       <?= e($candidate['first_name'] . ' ' . $candidate['last_name']) ?>
                     </span>
                     <span class="table__cell-sub"><?= e($candidate['party'] ?: 'No party listed') ?></span>
-                  </span>
+                  </div>
                 </div>
               </td>
-              <td><?= e($candidate['position_name']) ?></td>
-              <td><?= e(str_limit($candidate['election_title'], 40)) ?></td>
+              <td><span class="table__cell-strong"><?= e($candidate['position_name']) ?></span></td>
+              <td><span><?= e(str_limit($candidate['election_title'], 40)) ?></span></td>
               <td><?= candidate_badge((string) $candidate['status']) ?></td>
-              <td><?= e((string) $candidate['vote_count']) ?></td>
+              <td><span class="mono font-bold"><?= e((string) $candidate['vote_count']) ?></span></td>
               <td class="table__actions-col">
                 <div class="table__actions">
                   <a class="btn btn--secondary btn--sm"

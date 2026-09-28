@@ -758,11 +758,11 @@ $elections = $listStmt->fetchAll();
                 <?php endif; ?>
               </td>
               <td>
-                <?= e((string) $election['position_count']) ?> positions
-                <span class="table__cell-sub"><?= e((string) $election['candidate_count']) ?> candidates</span>
+                <span class="table__cell-strong"><?= e((string) $election['position_count']) ?> position<?= (int) $election['position_count'] === 1 ? '' : 's' ?></span>
+                <span class="table__cell-sub"><?= e((string) $election['candidate_count']) ?> candidate<?= (int) $election['candidate_count'] === 1 ? '' : 's' ?></span>
               </td>
               <td>
-                <?= e((string) $voted) ?> / <?= e((string) $eligible) ?>
+                <span class="table__cell-strong"><?= e((string) $voted) ?> / <?= e((string) $eligible) ?></span>
                 <span class="table__cell-sub"><?= e((string) $turnout) ?>% &middot; <?= e((string) $election['results_visibility']) ?> results</span>
               </td>
               <td class="table__actions-col">

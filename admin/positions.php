@@ -535,19 +535,21 @@ $headingElection = $filterId > 0 ? ($electionTitles[$filterId] ?? null) : null;
                 <span class="table__cell-sub"><?= e(str_limit($position['description'], 60) ?: 'No description') ?></span>
               </td>
               <td>
-                <a href="<?= e(url('admin/elections.php?action=edit&id=' . (int) $position['election_id'])) ?>">
-                  <?= e(str_limit($position['election_title'], 40)) ?>
-                </a>
+                <span class="table__cell-strong">
+                  <a href="<?= e(url('admin/elections.php?action=edit&id=' . (int) $position['election_id'])) ?>">
+                    <?= e(str_limit($position['election_title'], 40)) ?>
+                  </a>
+                </span>
                 <span class="table__cell-sub"><?= e(ucfirst((string) $position['election_status'])) ?></span>
               </td>
               <td>
-                <?= e((string) $position['max_selections']) ?>
+                <span class="table__cell-strong"><?= e((string) $position['max_selections']) ?></span>
                 <span class="table__cell-sub">
                   <?= (int) $position['max_selections'] === 1 ? 'Single choice' : 'Choose up to ' . (int) $position['max_selections'] ?>
                 </span>
               </td>
               <td>
-                <?= e((string) $position['candidate_count']) ?>
+                <span class="table__cell-strong"><?= e((string) $position['candidate_count']) ?> candidate<?= (int) $position['candidate_count'] === 1 ? '' : 's' ?></span>
                 <?php if ((int) $position['vote_count'] > 0): ?>
                   <span class="table__cell-sub"><?= e((string) $position['vote_count']) ?> votes recorded</span>
                 <?php endif; ?>

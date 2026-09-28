@@ -49,19 +49,19 @@ require __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="auth-card" style="max-width: 480px; margin: 0 auto; text-align: center;">
-  <div class="auth-card__head" style="margin-bottom: var(--sp-6);">
-    <div style="display:inline-flex; align-items:center; justify-content:center; width:56px; height:56px; border-radius:50%; background:rgba(37,99,235,0.1); margin-bottom:var(--sp-3);">
-      <?= sv_icon('google', 28) ?>
+  <div class="auth-card__head">
+    <div style="display:inline-flex; align-items:center; justify-content:center; width:48px; height:48px; border-radius:50%; background:rgba(37,99,235,0.1); margin-bottom:var(--sp-2);">
+      <?= sv_icon('google', 24) ?>
     </div>
-    <h1 class="auth-card__title" style="font-size:1.5rem; font-weight:700;">Google Authentication</h1>
-    <p class="auth-card__text" style="color:var(--text-muted); font-size:0.9rem;">
+    <h1 class="auth-card__title">Google Authentication</h1>
+    <p class="auth-card__text">
       Select an authorized university Google account to sign in or register automatically.
     </p>
   </div>
 
-  <div class="card" style="background:var(--bg-card); text-align:left; border:1px solid var(--border-color); box-shadow:var(--shadow-sm); margin-bottom:var(--sp-6);">
-    <div class="card__header" style="border-bottom:1px solid var(--border-color); padding:var(--sp-4);">
-      <span class="card__title" style="font-size:0.9rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">
+  <div class="card" style="background:var(--bg-card); text-align:left; border:1px solid var(--border-color); box-shadow:var(--shadow-sm); margin-bottom:clamp(8px, 1.4vh, 16px);">
+    <div class="card__header" style="border-bottom:1px solid var(--border-color); padding:clamp(8px, 1.2vh, 12px) 14px;">
+      <span class="card__title" style="font-size:0.82rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px;">
         Choose Google Account
       </span>
     </div>
@@ -110,7 +110,7 @@ require __DIR__ . '/../includes/header.php';
   </div>
 
   <!-- Custom Google Email Form -->
-  <form method="get" action="<?= e(url('auth/google-callback.php')) ?>" class="form" style="text-align:left; margin-bottom:var(--sp-6);">
+  <form method="get" action="<?= e(url('auth/google-callback.php')) ?>" class="form" style="text-align:left; margin-bottom:clamp(8px, 1.4vh, 16px);">
     <input type="hidden" name="sim" value="1">
     <input type="hidden" name="state" value="<?= e($state) ?>">
 
@@ -132,7 +132,7 @@ require __DIR__ . '/../includes/header.php';
     </a>
   </div>
 
-  <p class="text-muted text-xs" style="margin-top: var(--sp-4);">
+  <p class="text-muted text-xs auth-footnote-sub">
     <a href="<?= e(url('terms.php')) ?>" class="link" style="color:inherit; text-decoration:underline;">Terms of Service</a> &middot; 
     <a href="<?= e(url('privacy.php')) ?>" class="link" style="color:inherit; text-decoration:underline;">Privacy Policy</a>
   </p>
