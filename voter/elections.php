@@ -69,12 +69,9 @@ if ($focus !== null) {
  | Header
  * =================================================================== */
 
-$pageTitle    = $focus !== null ? (string) $focus['title'] : 'Elections';
-$pageSubtitle = $focus !== null
-    ? 'Election instructions and contested positions.'
-    : 'Active and upcoming university elections open for your ballot.';
-$activeNav    = 'elections.php';
-$breadcrumb   = $focus !== null
+$pageTitle  = $focus !== null ? (string) $focus['title'] : 'Elections';
+$activeNav  = 'elections.php';
+$breadcrumb = $focus !== null
     ? [['label' => 'Dashboard', 'href' => 'voter/dashboard.php'], ['label' => 'Elections', 'href' => 'voter/elections.php'], ['label' => 'Details']]
     : [['label' => 'Dashboard', 'href' => 'voter/dashboard.php'], ['label' => 'Elections']];
 

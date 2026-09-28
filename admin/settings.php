@@ -201,9 +201,8 @@ foreach (array_keys($tables) as $table) {
  | Header
  * =================================================================== */
 
-$pageTitle    = 'Settings';
-$pageSubtitle = 'Account details, security configuration and database maintenance.';
-$activeNav    = 'settings.php';
+$pageTitle = 'Settings';
+$activeNav = 'settings.php';
 $breadcrumb   = [['label' => 'Settings', 'href' => 'admin/settings.php']];
 
 require __DIR__ . '/../includes/header.php';

@@ -97,9 +97,8 @@ $registrationCount = (int) $stmt->fetchColumn();
  | Header
  * =================================================================== */
 
-$pageTitle    = 'My profile';
-$pageSubtitle = 'Your account details, participation history and password.';
-$activeNav    = 'profile.php';
+$pageTitle = 'My profile';
+$activeNav = 'profile.php';
 $breadcrumb   = [['label' => 'My profile', 'href' => 'voter/profile.php']];
 
 require __DIR__ . '/../includes/header.php';
@@ -290,9 +289,6 @@ require __DIR__ . '/../includes/header.php';
         What you took part in and when. The candidates you chose are never listed here.
       </p>
     </div>
-    <?php if ($history !== []): ?>
-      <span class="chip"><?= sv_icon('file', 13) ?><?= e((string) count($history)) ?> receipt<?= count($history) === 1 ? '' : 's' ?></span>
-    <?php endif; ?>
   </div>
 
   <?php if ($history === []): ?>

@@ -101,9 +101,8 @@ foreach ($ballot as $entry) {
  | Header
  * =================================================================== */
 
-$pageTitle    = $election['title'];
-$pageSubtitle = 'Ballot — Select your candidates, then review before submitting.';
-$activeNav    = 'elections.php';
+$pageTitle   = $election['title'];
+$activeNav   = 'elections.php';
 $pageActions  = '<a class="btn btn--secondary btn--sm" href="' . e(url('voter/elections.php')) . '">'
     . sv_icon('arrow-left', 16, 'btn__icon') . '<span>Leave without voting</span></a>';
 $breadcrumb   = [

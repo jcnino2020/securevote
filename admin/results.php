@@ -32,9 +32,8 @@ $elections = $pdo->query(
 )->fetchAll();
 
 if ($elections === []) {
-    $pageTitle    = 'Results';
-    $pageSubtitle = 'No election exists yet.';
-    $activeNav    = 'results.php';
+    $pageTitle  = 'Results';
+    $activeNav  = 'results.php';
     $breadcrumb   = [['label' => 'Results', 'href' => 'admin/results.php']];
 
     require __DIR__ . '/../includes/header.php';
@@ -159,13 +158,15 @@ if ((string) input('export', '') === 'csv') {
  | Header
  * =================================================================== */
 
-$pageTitle    = 'Results';
-$pageSubtitle = (string) $election['title'];
-$activeNav    = 'results.php';
+$pageTitle   = 'Results';
+$activeNav   = 'results.php';
 $pageActions  = '<a class="btn btn--secondary btn--sm" href="'
     . e(url('admin/results.php?election_id=' . $electionId . '&export=csv')) . '">'
     . sv_icon('download', 16, 'btn__icon') . '<span>Export CSV</span></a>';
-$breadcrumb   = [['label' => 'Results', 'href' => 'admin/results.php']];
+$breadcrumb = [
+    ['label' => 'Results', 'href' => 'admin/results.php'],
+    ['label' => (string) $election['title']],
+];
 
 require __DIR__ . '/../includes/header.php';
 ?>

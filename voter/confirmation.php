@@ -92,9 +92,8 @@ if ($electionTitle === '' && $electionId > 0) {
     $electionTitle = (string) ($stmt->fetchColumn() ?: 'University Election');
 }
 
-$pageTitle    = 'Ballot Recorded';
-$pageSubtitle = $electionTitle;
-$activeNav    = 'elections.php';
+$pageTitle = 'Ballot Recorded';
+$activeNav = 'elections.php';
 $breadcrumb   = [
     ['label' => 'Dashboard', 'href' => 'voter/dashboard.php'],
     ['label' => 'Elections', 'href' => 'voter/elections.php'],

@@ -906,9 +906,8 @@ if ($exportFormat === 'json') {
 /* =====================================================================
  | 4. Page Header Setup
  * =================================================================== */
-$pageTitle    = 'CIA Security Testing';
-$pageSubtitle = 'Functional verification and telemetry of Confidentiality, Integrity, and Availability controls.';
-$activeNav    = 'security-testing.php';
+$pageTitle = 'CIA Security Testing';
+$activeNav = 'security-testing.php';
 $breadcrumb   = [['label' => 'CIA Security Testing', 'href' => 'admin/security-testing.php']];
 
 $pageActions  = '<div class="btn-group">'
@@ -1026,7 +1025,7 @@ require __DIR__ . '/../includes/header.php';
   align-items: center;
   gap: 5px;
   padding: 4px 10px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   font-size: 0.775rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -1285,7 +1284,7 @@ require __DIR__ . '/../includes/header.php';
   align-items: center;
   gap: 6px;
   padding: 3px 10px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.03em;

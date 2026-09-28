@@ -242,16 +242,12 @@ if ($isForm) {
 $isNew = (int) $form['id'] === 0;
 
 if ($isForm) {
-    $pageTitle    = $isNew ? 'New position' : 'Edit position';
-    $pageSubtitle = $isNew
-        ? 'A position is one contest on the ballot.'
-        : 'Change the name, the number of allowed selections, or the ballot order.';
-    $pageActions  = '<a class="btn btn--secondary btn--sm" href="' . e(url('admin/positions.php?election_id=' . $filterId)) . '">'
+    $pageTitle   = $isNew ? 'New position' : 'Edit position';
+    $pageActions = '<a class="btn btn--secondary btn--sm" href="' . e(url('admin/positions.php?election_id=' . $filterId)) . '">'
         . sv_icon('arrow-left', 16, 'btn__icon') . '<span>Back to positions</span></a>';
 } else {
-    $pageTitle    = 'Positions';
-    $pageSubtitle = 'The contests inside each election, in the order voters will see them.';
-    $pageActions  = '<a class="btn btn--accent btn--sm" href="'
+    $pageTitle   = 'Positions';
+    $pageActions = '<a class="btn btn--accent btn--sm" href="'
         . e(url('admin/positions.php?action=create' . ($filterId > 0 ? '&election_id=' . $filterId : ''))) . '">'
         . sv_icon('plus', 16, 'btn__icon') . '<span>New position</span></a>';
 }

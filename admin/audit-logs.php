@@ -184,9 +184,8 @@ if ((string) input('export', '') === 'csv') {
 
 $hasFilters = $search !== '' || $action !== '' || $severity !== '' || $userId > 0 || $from !== null || $to !== null;
 
-$pageTitle    = 'Audit logs';
-$pageSubtitle = 'Every security and administrative event, newest first. Entries cannot be edited.';
-$activeNav    = 'audit-logs.php';
+$pageTitle   = 'Audit logs';
+$activeNav   = 'audit-logs.php';
 $pageActions  = '<a class="btn btn--secondary btn--sm" href="'
     . e(url('admin/audit-logs.php' . query_with(['export' => 'csv', 'page' => null]))) . '">'
     . sv_icon('download', 16, 'btn__icon') . '<span>Export CSV</span></a>';

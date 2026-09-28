@@ -106,9 +106,8 @@ if (is_post()) {
  | 4. Header
  * =================================================================== */
 
-$pageTitle    = 'Review your ballot';
-$pageSubtitle = (string) $election['title'];
-$activeNav    = 'elections.php';
+$pageTitle = 'Review your ballot';
+$activeNav = 'elections.php';
 $breadcrumb   = [
     ['label' => 'Elections', 'href' => 'voter/elections.php'],
     ['label' => 'Ballot', 'href' => 'voter/ballot.php?election_id=' . $electionId],

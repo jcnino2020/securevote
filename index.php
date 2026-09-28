@@ -48,11 +48,10 @@ $closedStmt = $pdo->query(
 );
 $closedElections = $closedStmt->fetchAll();
 
-$pageTitle    = 'Welcome to SecureVote';
-$pageSubtitle = 'Official University Online Voting Portal & Digital Ballot Gateway.';
-$activeNav    = '';
-$breadcrumb   = [];
-$layout       = 'portal';
+$pageTitle   = 'Welcome to SecureVote';
+$activeNav   = '';
+$breadcrumb  = [];
+$layout      = 'portal';
 $pageActions  = '<a class="btn btn--sm btn--primary" href="' . e(url('auth/login.php')) . '">'
     . sv_icon('lock', 16, 'btn__icon') . '<span>Sign In</span></a>'
     . '<a class="btn btn--sm btn--secondary topbar__register-btn" href="' . e(url('auth/register.php')) . '">'
@@ -66,9 +65,6 @@ require __DIR__ . '/includes/header.php';
   <div class="card__body hero-card__body">
     <div class="hero-grid">
       <div class="hero-main">
-        <div class="hero-badge">
-          <?= sv_icon('shield-check', 14) ?> Official University Voting System
-        </div>
         <h1 class="hero-title">
           University Student Council Online Voting
         </h1>

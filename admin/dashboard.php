@@ -576,9 +576,8 @@ foreach ($chartBuckets as $b) {
 /* =====================================================================
  | 11. Header & Breadcrumbs
  * =================================================================== */
-$pageTitle    = 'Security Operations Center';
-$pageSubtitle = 'Real-time telemetry, authentication activity, voting integrity, and security event monitoring.';
-$activeNav    = 'dashboard.php';
+$pageTitle   = 'Security Operations Center';
+$activeNav   = 'dashboard.php';
 $breadcrumb   = [];
 $pageActions  = '<a class="btn btn--secondary btn--sm" href="' . e(url('admin/dashboard.php' . query_with())) . '">'
     . sv_icon('refresh', 16, 'btn__icon') . '<span>Refresh telemetry</span></a>';

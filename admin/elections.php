@@ -382,24 +382,20 @@ $isForm = $viewAction === 'create' || $viewAction === 'edit';
 if ($isForm) {
     $isNew = ($form['id'] ?? 0) === 0;
 
-    $pageTitle    = $isNew ? 'New election' : 'Edit election';
-    $pageSubtitle = $isNew
-        ? 'Create the election, then add its positions and candidates.'
-        : 'Change the schedule, visibility of results, or status.';
-    $activeNav    = 'elections.php';
-    $pageActions  = '<a class="btn btn--secondary btn--sm" href="' . e(url('admin/elections.php')) . '">'
+    $pageTitle   = $isNew ? 'New election' : 'Edit election';
+    $activeNav   = 'elections.php';
+    $pageActions = '<a class="btn btn--secondary btn--sm" href="' . e(url('admin/elections.php')) . '">'
         . sv_icon('arrow-left', 16, 'btn__icon') . '<span>Back to list</span></a>';
-    $breadcrumb   = [
+    $breadcrumb  = [
         ['label' => 'Elections', 'href' => 'admin/elections.php'],
         ['label' => $isNew ? 'New' : 'Edit'],
     ];
 } else {
-    $pageTitle    = 'Elections';
-    $pageSubtitle = 'Everything about an election: schedule, status and readiness.';
-    $activeNav    = 'elections.php';
-    $pageActions  = '<a class="btn btn--accent btn--sm" href="' . e(url('admin/elections.php?action=create')) . '">'
+    $pageTitle   = 'Elections';
+    $activeNav   = 'elections.php';
+    $pageActions = '<a class="btn btn--accent btn--sm" href="' . e(url('admin/elections.php?action=create')) . '">'
         . sv_icon('plus', 16, 'btn__icon') . '<span>New election</span></a>';
-    $breadcrumb   = [['label' => 'Elections', 'href' => 'admin/elections.php']];
+    $breadcrumb  = [['label' => 'Elections', 'href' => 'admin/elections.php']];
 }
 
 require __DIR__ . '/../includes/header.php';

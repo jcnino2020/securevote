@@ -47,10 +47,9 @@ foreach ($elections as $election) {
     }
 }
 
-$pageTitle    = 'Welcome, ' . (string) $voter['first_name'];
-$pageSubtitle = 'Your verified voter portal, active elections, and official ballot receipts.';
-$activeNav    = 'dashboard.php';
-$breadcrumb   = [['label' => 'Dashboard', 'href' => 'voter/dashboard.php']];
+$pageTitle  = 'Welcome, ' . (string) $voter['first_name'];
+$activeNav  = 'dashboard.php';
+$breadcrumb = [['label' => 'Dashboard', 'href' => 'voter/dashboard.php']];
 
 require __DIR__ . '/../includes/header.php';
 ?>

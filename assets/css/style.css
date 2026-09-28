@@ -727,15 +727,6 @@ button {
   margin: 0;
 }
 
-.page-subtitle {
-  font-size: 0.84rem;
-  color: var(--text-muted);
-  margin: 1px 0 0 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .breadcrumb {
   font-size: 0.8rem;
   color: var(--text-muted);
@@ -778,20 +769,6 @@ button {
   align-items: center;
   gap: var(--sp-3);
   flex-shrink: 0;
-}
-
-/* Session Chip */
-.session-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--success);
 }
 
 /* Theme Toggle Button */
@@ -1080,13 +1057,13 @@ button {
   background-color: currentColor;
 }
 
-/* Status Pill Component (Verification Suite & Telemetry) */
+/* Status Badge Component (Verification Suite & Telemetry) */
 .status-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 3px 10px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -1407,20 +1384,6 @@ button {
   grid-template-columns: 1.6fr 1fr;
   gap: var(--sp-8);
   align-items: center;
-}
-
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 14px;
-  border-radius: var(--radius-sm);
-  background: var(--primary-light);
-  color: var(--primary);
-  font-size: 0.85rem;
-  font-weight: 700;
-  border: 1px solid var(--primary-border);
-  margin-bottom: var(--sp-4);
 }
 
 .hero-title {
@@ -2248,7 +2211,7 @@ form.row .select {
   display: inline-flex;
   align-items: center;
   padding: 4px 12px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   background: var(--surface-2);
   border: 1px solid var(--border);
   font-size: 0.82rem;
@@ -2526,7 +2489,7 @@ form.row .select {
   align-items: center;
   gap: 8px;
   padding: 5px 14px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
   font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -3609,10 +3572,6 @@ dialog.modal::backdrop {
 
   .hero-card__body {
     padding: var(--sp-5);
-  }
-
-  .topbar__actions .session-chip {
-    display: none;
   }
 
   .ballot__foot {

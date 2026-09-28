@@ -406,9 +406,8 @@ if ($viewAction === 'eligibility') {
         $eligibility[(int) $row['election_id']] = $row;
     }
 
-    $pageTitle    = 'Election eligibility';
-    $pageSubtitle = 'Choose which elections ' . user_full_name($voter) . ' may vote in.';
-    $activeNav    = 'voters.php';
+    $pageTitle   = 'Election eligibility';
+    $activeNav   = 'voters.php';
     $pageActions  = '<a class="btn btn--secondary btn--sm" href="' . e(url('admin/voters.php')) . '">'
         . sv_icon('arrow-left', 16, 'btn__icon') . '<span>Back to voters</span></a>';
     $breadcrumb   = [
@@ -559,11 +558,8 @@ if ($isForm) {
 $isNew = (int) $form['id'] === 0;
 
 if ($isForm) {
-    $pageTitle    = $isNew ? 'New voter account' : 'Edit voter account';
-    $pageSubtitle = $isNew
-        ? 'Create the account, then register the voter for an election.'
-        : 'Update the details, change the status, or issue a new password.';
-    $activeNav    = 'voters.php';
+    $pageTitle   = $isNew ? 'New voter account' : 'Edit voter account';
+    $activeNav   = 'voters.php';
     $pageActions  = '<a class="btn btn--secondary btn--sm" href="' . e(url('admin/voters.php')) . '">'
         . sv_icon('arrow-left', 16, 'btn__icon') . '<span>Back to voters</span></a>';
     $breadcrumb   = [
@@ -849,9 +845,8 @@ $listStmt = $pdo->prepare(
 $listStmt->execute($params);
 $voters = $listStmt->fetchAll();
 
-$pageTitle    = 'Voters';
-$pageSubtitle = 'Accounts that may sign in, and which elections each one may vote in.';
-$activeNav    = 'voters.php';
+$pageTitle   = 'Voters';
+$activeNav   = 'voters.php';
 $pageActions  = '<a class="btn btn--accent btn--sm" href="' . e(url('admin/voters.php?action=create')) . '">'
     . sv_icon('plus', 16, 'btn__icon') . '<span>New voter</span></a>';
 $breadcrumb   = [['label' => 'Voters', 'href' => 'admin/voters.php']];

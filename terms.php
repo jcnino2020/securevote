@@ -11,10 +11,9 @@
 
 require_once __DIR__ . '/includes/bootstrap.php';
 
-$pageTitle    = 'Terms of Service';
-$pageSubtitle = 'Rules and legal conditions governing voting, platform integrity, and digital ballots.';
-$activeNav    = 'terms.php';
-$layout       = 'portal';
+$pageTitle   = 'Terms of Service';
+$activeNav   = 'terms.php';
+$layout      = 'portal';
 $breadcrumb   = [
     ['label' => 'Home', 'href' => 'index.php'],
     ['label' => 'Terms of Service'],
@@ -29,9 +28,6 @@ require __DIR__ . '/includes/header.php';
 <!-- Terms Header Card -->
 <section class="card" style="margin-bottom: var(--sp-6); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);">
   <div class="card__body" style="padding: clamp(var(--sp-6), 3vw, var(--sp-8));">
-    <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(5,150,105,0.08); color: var(--success); padding: 4px 14px; border-radius: var(--radius-full); font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--sp-3); border: 1px solid rgba(5,150,105,0.2);">
-      <?= sv_icon('shield-check', 15) ?> Institutional Election Agreement
-    </div>
     <h1 style="font-size: clamp(1.75rem, 2.8vw, 2.25rem); font-weight: 800; color: var(--text); letter-spacing: -0.03em; margin-bottom: var(--sp-2);">
       SecureVote Terms of Service
     </h1>

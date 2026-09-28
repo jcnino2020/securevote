@@ -11,10 +11,9 @@
 
 require_once __DIR__ . '/includes/bootstrap.php';
 
-$pageTitle    = 'Privacy Policy';
-$pageSubtitle = 'How SecureVote protects your identity, personal information, and secret ballot.';
-$activeNav    = 'privacy.php';
-$layout       = 'portal';
+$pageTitle   = 'Privacy Policy';
+$activeNav   = 'privacy.php';
+$layout      = 'portal';
 $breadcrumb   = [
     ['label' => 'Home', 'href' => 'index.php'],
     ['label' => 'Privacy Policy'],
@@ -29,9 +28,6 @@ require __DIR__ . '/includes/header.php';
 <!-- Privacy Policy Header Card -->
 <section class="card" style="margin-bottom: var(--sp-6); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-xl); box-shadow: var(--shadow-sm);">
   <div class="card__body" style="padding: clamp(var(--sp-6), 3vw, var(--sp-8));">
-    <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(37,99,235,0.08); color: var(--blue); padding: 4px 14px; border-radius: var(--radius-full); font-size: 0.8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: var(--sp-3); border: 1px solid rgba(37,99,235,0.2);">
-      <?= sv_icon('shield-check', 15) ?> Civic Privacy & Ballot Secrecy
-    </div>
     <h1 style="font-size: clamp(1.75rem, 2.8vw, 2.25rem); font-weight: 800; color: var(--text); letter-spacing: -0.03em; margin-bottom: var(--sp-2);">
       SecureVote Privacy Policy
     </h1>

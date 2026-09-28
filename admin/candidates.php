@@ -436,18 +436,16 @@ if ($isForm) {
 $isNew = (int) $form['id'] === 0;
 
 if ($isForm) {
-    $pageTitle    = $isNew ? 'New candidate' : 'Edit candidate';
-    $pageSubtitle = 'A candidate belongs to one position inside one election.';
-    $pageActions  = '<a class="btn btn--secondary btn--sm" href="'
+    $pageTitle   = $isNew ? 'New candidate' : 'Edit candidate';
+    $pageActions = '<a class="btn btn--secondary btn--sm" href="'
         . e(url('admin/candidates.php' . ($filterElection > 0 ? '?election_id=' . $filterElection : ''))) . '">'
         . sv_icon('arrow-left', 16, 'btn__icon') . '<span>Back to candidates</span></a>';
 } else {
-    $pageTitle    = 'Candidates';
-    $pageSubtitle = 'Everyone standing for a position, with their status on the ballot.';
-    $createHref   = 'admin/candidates.php?action=create'
+    $pageTitle   = 'Candidates';
+    $createHref  = 'admin/candidates.php?action=create'
         . ($filterElection > 0 ? '&election_id=' . $filterElection : '')
         . ($filterPosition > 0 ? '&position_id=' . $filterPosition : '');
-    $pageActions  = '<a class="btn btn--accent btn--sm" href="' . e(url($createHref)) . '">'
+    $pageActions = '<a class="btn btn--accent btn--sm" href="' . e(url($createHref)) . '">'
         . sv_icon('plus', 16, 'btn__icon') . '<span>New candidate</span></a>';
 }
 

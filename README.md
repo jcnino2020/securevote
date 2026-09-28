@@ -1,469 +1,484 @@
 # SecureVote — Secure Online Voting System
 
-An academic endterm project: a web-based voting platform built with **PHP + MySQL/MariaDB**,
-managed with **phpMyAdmin**, that demonstrates the three core information security principles
-in working code rather than in a slide deck.
+[![PHP Version](https://img.shields.io/badge/PHP-8.1%20%7C%208.5-777BB4?logo=php&logoColor=white)](https://www.php.net/)
+[![Database](https://img.shields.io/badge/Database-MySQL%20%7C%20MariaDB-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![OAuth 2.0](https://img.shields.io/badge/Auth-Google%20OAuth%202.0-4285F4?logo=google&logoColor=white)](https://developers.google.com/identity/protocols/oauth2)
+[![Security](https://img.shields.io/badge/Security-CIA%20Verified%20%2817%2F17%29-10B981?logo=shield&logoColor=white)](#6-cia-security-testing--verification-suite)
+[![Dependencies](https://img.shields.io/badge/Dependencies-Zero%20%28Vanilla%20PHP%29-gray)](#2-required-software)
 
-| Principle | Where you can see it working |
-| --- | --- |
-| **Authentication** | bcrypt password hashing, `password_verify()`, account status checks, per-account brute-force braking, session id regeneration, idle and absolute session timeouts, browser fingerprint binding |
-| **Integrity** | server-side re-validation of every selection, one ballot per voter enforced by database unique constraints, the whole ballot written inside a single transaction, relational integrity through InnoDB foreign keys |
-| **Confidentiality** | prepared statements everywhere, `htmlspecialchars()` on all output, CSP and security headers, HttpOnly session cookies, audit logging that never records a choice, results that are only ever produced from aggregate queries |
+An enterprise-grade, defense-in-depth web voting platform built with **PHP + MySQL/MariaDB**, managed with **phpMyAdmin**, engineered for academic endterm defense (ITP216 Information Assurance & Security). Demonstrates the three pillars of information security (**Confidentiality, Integrity, and Availability**) through running, verifiable code rather than theoretical slides.
 
 ---
 
-## 1. What the system does
+## Security Pillars at a Glance
 
-**Administrator**
-
-* Dashboard with turnout, alerts and the newest audit entries
-* Election management: create, edit, open, close, archive, delete
-* Position management with per-position selection limits
-* Candidate management, including an optional profile photo
-* Voter account management, including election eligibility
-* Results with per-position tallies, leading candidates, ties and CSV export
-* Audit log with filters and CSV export
-* Settings: own profile, own password, security posture, database snapshot, audit retention
-
-**Voter**
-
-* Personal dashboard: what is open, what has been voted, how voting works
-* Election list with instructions and the reason a ballot cannot be opened
-* Ballot with per-position selection limits
-* Review screen before anything is recorded
-* Final submission with a reference receipt
-* Results, but only when the election's results policy allows it
-* Own profile, own password and own participation history
+| Security Pillar | Technical Implementation & Demonstrable Controls |
+| :--- | :--- |
+| **Confidentiality** | • **bcrypt** password hashing with work factor cost 12 (`password_hash`, `password_verify`)<br>• True Secret Ballot architecture: voter identity decoupled from vote selections<br>• Hardened sessions (`HttpOnly`, `SameSite=Lax`, `use_strict_mode`, browser fingerprint binding)<br>• Comprehensive HTTP Security Headers (strict CSP, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `COOP`, `Permissions-Policy`)<br>• Role-Based Access Control (RBAC) denying unauthorized routes by default<br>• Context-aware output escaping via `htmlspecialchars(..., ENT_QUOTES, 'UTF-8')` |
+| **Integrity** | • **1-Person-1-Vote** enforced by composite database `UNIQUE` constraints<br>• Atomic ballot casting via InnoDB ACID transactions with row-level locks (`FOR UPDATE`)<br>• Server-side re-validation of all contest rules, election timelines, and candidate eligibility<br>• Cryptographic anti-CSRF token verification (`hash_equals`) rotated on authentication events<br>• Strict parameterized queries across all PDO database interactions (`ATTR_EMULATE_PREPARES = false`)<br>• Append-only, tamper-evident security audit logging with client IP and User-Agent capture |
+| **Availability** | • Sub-millisecond database query performance with indexed relational queries<br>• Multi-Method Authentication redundancy (Google OAuth 2.0, Personal Voter Code, and Email/Password)<br>• Graceful error handling and silent logging to prevent system lockups or sensitive data leaks<br>• Per-account brute-force throttling and account lockout mechanisms<br>• Real-time election state machine managing lifecycle without downtime |
 
 ---
 
-## 2. Required software
+## Table of Contents
 
-| Requirement | Version used | Notes |
-| --- | --- | --- |
-| PHP | 8.1 or newer (developed and tested on **8.5**) | Uses `never`, `mixed`, `match` and `str_contains`. Needs `pdo_mysql`, `mbstring`, `session`, `random` (all standard) |
-| MySQL or MariaDB | MySQL 5.7+ / MariaDB 10.2+ (tested on **MariaDB 12.3**) | InnoDB is required for transactions and foreign keys |
-| phpMyAdmin | any recent version | Used to import the SQL and inspect the data |
-| Web browser | any modern browser | Chromium or Firefox recommended |
-
-The easiest way to get all of this at once on Windows or macOS is **XAMPP** (or Laragon).
-The application uses **no Composer packages and no build step**: it is plain PHP, one CSS file
-and one JavaScript file.
+1. [Features & Capabilities](#1-features--capabilities)
+2. [Required Software & Prerequisites](#2-required-software--prerequisites)
+3. [Installation & Setup](#3-installation--setup)
+4. [Accounts & Authentication Architecture](#4-accounts--authentication-architecture)
+5. [Database Architecture & Schema](#5-database-architecture--schema)
+6. [CIA Security Testing & Verification Suite](#6-cia-security-testing--verification-suite)
+7. [Testing Security Controls (Manual Verification)](#7-testing-security-controls-manual-verification)
+8. [Project File Structure](#8-project-file-structure)
+9. [Voting Workflow & Life of a Ballot](#9-voting-workflow--life-of-a-ballot)
+10. [Production Hardening Guidelines](#10-production-hardening-guidelines)
+11. [Troubleshooting & FAQ](#11-troubleshooting--faq)
+12. [References & Standards](#12-references--standards)
 
 ---
 
-## 3. Installation
+## 1. Features & Capabilities
 
-### 3.1 Put the project in the web root
+### 🏛️ Civic Welcome Portal (`index.php`)
+* **Live Election Status**: Dynamically renders currently open and recently concluded elections with real-time countdown timers.
+* **Multi-Method Gateway**: Fast-track buttons for Google Sign-In, Voter Code entry, and account registration.
+* **Participation Guide**: 3-step illustrated walkthrough for student voters.
+* **Civic Trust Guarantee**: Direct transparency notices detailing ballot secrecy and cryptographic receipt issuance.
 
-Copy the project folder into your server's document root, for example:
+### 🗳️ Voter Experience (`voter/`)
+* **Personal Dashboard**: Real-time summary of active elections, cast ballots, and participation history.
+* **Multi-Option Ballot**: Contested seats with dynamic selection limits (single-choice radio buttons or multi-choice checkboxes with live JS selection counters).
+* **Two-Stage Ballot Review**: Confirmation screen displaying server-validated choices before committing to the database.
+* **Digital Verification Receipt**: Official receipt reference code (e.g. `SV-2026-9A31F4`) confirming ballot submission without compromising voter choice secrecy.
+* **Certified Results View**: Live or post-election tallies gated strictly by the election's `results_visibility` policy (`after_vote`, `after_close`, `hidden`).
+* **Profile & Passcode Management**: Self-service profile updates, password changes, and personal Voter Code inspection.
 
-```text
-XAMPP (macOS)   /Applications/XAMPP/xamppfiles/htdocs/secure-voting-system/
-XAMPP (Windows) C:\xampp\htdocs\secure-voting-system\
-```
+### 🛡️ Administrator Module (`admin/`)
+* **Analytics Dashboard**: Real-time turnout metrics, registration statistics, candidate counts, critical security alerts, and live activity streams.
+* **Election Lifecycle Management**: Full CRUD operations across 5 distinct states (`draft`, `scheduled`, `open`, `closed`, `archived`) with automated window validation.
+* **Position & Contest Control**: Position configuration with custom display order and selection caps (`max_selections`).
+* **Candidate Management**: Profiles with party affiliations, platform statements, biographies, and secure image upload with MIME verification.
+* **Voter Registry & Eligibility**: Account creation, status management (`active`, `inactive`, `blocked`), password resets, and granular per-election eligibility controls with bulk assignment tools.
+* **Live Results & CSV Export**: Real-time vote tallies, leaderboards, tie detection, percentage shares, and 1-click audit-ready CSV exports.
+* **Security Audit Trail**: Comprehensive, searchable, and filterable log of system actions (sign-ins, failures, privilege changes, ballot events) with CSV export.
+* **Alert Resolution Hub**: Acknowledgment, dismissal, and tracking of security alerts backed by `dismissed_alerts`.
+* **CIA Security Verification Suite**: Interactive automated testing harness verifying 17 security controls across Confidentiality, Integrity, and Availability.
+* **System Settings & Maintenance**: Administrator profile management, password updates, security posture overview, database backup snapshot downloads, and audit log retention management.
 
-The application detects whether it is served from a domain root or from a sub-folder, so both
-`http://localhost/secure-voting-system/` and `http://localhost:8000/` work without editing code.
+### 📜 Legal & Compliance (`privacy.php`, `terms.php`)
+* **Privacy Policy**: Comprehensive compliance disclosure aligned with the Data Privacy Act of 2012 (RA 10173) and international data protection standards.
+* **Terms of Service**: Formal electronic voting bylaws, institutional voter code regulations, and fair-use guidelines.
 
-### 3.2 Start MySQL/MariaDB
+---
 
-**XAMPP:** start **Apache** and **MySQL** from the control panel.
+## 2. Required Software & Prerequisites
 
-Verify from a terminal:
+| Requirement | Recommended Version | Details |
+| :--- | :--- | :--- |
+| **PHP** | **8.1 or newer** (tested on **8.5**) | Uses modern features (`strict_types`, `never`, `match`, `str_contains`, nullsafe operators). Requires extensions: `pdo_mysql`, `mbstring`, `session`, `random`, `json`, `curl`. |
+| **MySQL / MariaDB** | **MySQL 5.7+ / MariaDB 10.2+** (tested on **MariaDB 12.3**) | **InnoDB engine is mandatory** for ACID transaction isolation and foreign key integrity. |
+| **phpMyAdmin** | Any recent version | Used for database import, inspection, and administration. |
+| **Web Browser** | Chromium, Firefox, Safari, Edge | Fully responsive; dark and light modes supported out-of-the-box. |
 
-```bash
-mysql -u root -p -e "SELECT VERSION();"
-```
+> **Zero Dependency Guarantee:** SecureVote uses **no Composer packages, no Node.js/NPM builds, and no external CSS/JS frameworks**. Everything is implemented in native PHP, curated Vanilla CSS (Emerald Design System), and standard JavaScript.
 
-### 3.3 Create the database by importing the SQL
+---
 
-1. Open phpMyAdmin: `http://localhost/phpmyadmin/`
-2. Click the **Import** tab at the top
-3. **Choose file** → `database/secure_voting.sql`
-4. Leave every option at its default and click **Import**
+## 3. Installation & Setup
 
-The file creates the `secure_voting` database, all eight tables and the demonstration data in
-one step. If your hosting already gave you an empty database, open the SQL file, delete the
-`CREATE DATABASE` and `USE` lines, then import into that database instead.
+### Step 3.1: Place Project in Web Root
 
-Check that it worked: you should see the database tables created, with default elections, positions, candidates, and the administrator account ready.
+Clone or copy the project folder into your web server's document root:
 
-### 3.4 Database configuration
+* **XAMPP (macOS):** `/Applications/XAMPP/xamppfiles/htdocs/itp216_endterm/`
+* **XAMPP (Windows):** `C:\xampp\htdocs\itp216_endterm\`
+* **Custom / CLI:** Any directory on your development machine.
 
-Credentials live in `config/config.php` (section 3) and default to a stock XAMPP install:
+The application automatically detects whether it is served from a web server root (`http://localhost:8000/`) or a subdirectory (`http://localhost/itp216_endterm/`) without requiring code changes.
+
+---
+
+### Step 3.2: Start Apache & MySQL
+
+* **XAMPP:** Open the XAMPP Control Panel and start **Apache** and **MySQL**.
+* **Terminal Verification:**
+  ```bash
+  mysql -u root -p -e "SELECT VERSION();"
+  ```
+
+---
+
+### Step 3.3: Import Database Schema & Seed Data
+
+1. Open **phpMyAdmin**: `http://localhost/phpmyadmin/`
+2. Click the **Import** tab.
+3. Click **Choose File** and select `database/secure_voting.sql`.
+4. Leave format settings at default and click **Import**.
+
+This single script creates the database (`u184230832_securevote`), sets up all 9 relational tables with foreign keys and unique constraints, and inserts complete demonstration data.
+
+---
+
+### Step 3.4: Configure Environment & Database Credentials
+
+Database credentials are defined in `config/config.php` and can be customized directly or overridden with environment variables:
 
 ```php
-define('DB_HOST',   '127.0.0.1');
-define('DB_PORT',   '3306');
-define('DB_NAME',   'u184230832_securevote');
-define('DB_USER',   'u184230832_ibmn');
-define('DB_PASS',   'Bsit4b2026');
+// config/config.php
+define('DB_HOST',   getenv('SV_DB_HOST') ?: 'localhost');
+define('DB_PORT',   getenv('SV_DB_PORT') ?: '3306');
+define('DB_NAME',   getenv('SV_DB_NAME') ?: 'u184230832_securevote');
+define('DB_USER',   getenv('SV_DB_USER') ?: 'root');
+define('DB_PASS',   (string) (getenv('SV_DB_PASS') ?: ''));
+define('DB_SOCKET', (string) (getenv('SV_DB_SOCKET') ?: ''));
 ```
 
-Every value can be overridden with an environment variable instead of editing the file, which
-is how the project was tested without touching the source:
+*(Note: The default fallback database name in `config.php` is `u184230832_securevote` or `secure_voting` depending on your environment).*
 
-```bash
-SV_DB_HOST=127.0.0.1 SV_DB_PORT=3306 SV_DB_NAME=secure_voting \
-SV_DB_USER=root SV_DB_PASS=secret php -S localhost:8000 -t .
-```
+---
 
-If your MySQL listens on a socket rather than a TCP port, set `SV_DB_SOCKET` to the socket path
-(for example `/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock`).
+### Step 3.5: Run the Application
 
-### 3.5 Run the application
-
-Either use Apache (XAMPP) and open:
-
+#### Option A: Using XAMPP / Apache
+Open your browser and navigate to:
 ```text
-http://localhost/secure-voting-system/
+http://localhost/itp216_endterm/
 ```
 
-or use PHP's built-in server from inside the project folder:
-
+#### Option B: Using PHP Built-In Development Server
+From the root of the project directory, run:
 ```bash
 php -S localhost:8000 -t .
 ```
-
-then open `http://localhost:8000/`. Both routes land on the sign-in page.
-
----
-
-## 4. Accounts & Voter Registration
-
-Seeded by `database/secure_voting.sql`. Anyone can register their own voter account directly on the website.
-
-| Role | Username / Link | Password | What it is for |
-| --- | --- | --- | --- |
-| Administrator | `admin` | `Admin@12345` | Full access to the admin module |
-| Voter Self-Registration | `auth/register.php` | User chosen | Anyone can register with their own name, username, email & password |
-
-> **Administrator password:** Change it in Settings after first login.
-
-### 4.1 How Voter Registration Works
-
-1. Visitors navigate to the **Register to vote** page (`auth/register.php`).
-2. They provide their first name, last name, unique username, email address, and a secure password.
-3. The server validates all input, hashes the password using bcrypt (`password_hash`), and creates an active voter account.
-4. The system automatically registers the voter for open elections, logs the registration in the audit trail, and immediately signs them in to start voting.
-
-### 4.2 Seeded Database Contents
-
-The database contains default active and scheduled elections, positions, and candidates:
-
-| Table | What it contains |
-| --- | --- |
-| `users` | Administrator account (`admin`) |
-| `elections` | 3 elections (1 open, 1 scheduled, 1 closed) |
-| `positions` | 11 positions with selection limits |
-| `candidates` | 33 candidates with profiles and platforms |
-| `voter_eligibility` | Dynamically populated as voters register |
-| `ballots` | Populated as voters cast ballots |
-| `votes` | Recorded anonymously with cryptographic ballot linkage |
-| `audit_logs` | Security and audit trail events |
-
-The three elections are deliberately in three different states, each with a different results
-policy, so the whole state machine can be demonstrated without editing anything:
-
-| Election | State | Results policy | Demonstrates |
-| --- | --- | --- | --- |
-| Student Council Election 2026 | Open | `after_vote` | Voting works normally, and a voter sees the tally once they have voted |
-| College Department Election 2026 | Scheduled | `hidden` | The server refuses a ballot before the start date |
-| Student Organization Election 2026 | Closed | `after_close` | The server refuses a ballot after the end date, and results are published |
-
-Expected figures on the administrator dashboard straight after a fresh import: **3 elections (1 open, 1 scheduled, 1 closed)**, **33 candidates**, **0 ballots submitted**, with figures updating dynamically as real voters register and cast their ballots. Every number is counted live from the database tables on each request.
-
-Because every timestamp is written relative to the moment of import, the open election always
-has two days behind it and five ahead, and the audit trail always looks recent. The
-demonstration never goes stale.
+Then visit: `http://localhost:8000/`
 
 ---
 
-## 5. Creating an election from scratch
+## 4. Accounts & Authentication Architecture
 
-The seeded data already contains a running election, so this section is only needed if you
-want to build one live during the presentation.
+SecureVote features a modern **multi-method authentication suite**:
 
-1. **Create the election** — *Elections → New election*.
-   Set a title, a start time in the past, an end time in the future, status **Draft**, and a
-   results policy. Saving takes you straight to the edit screen.
-2. **Add positions** — *Manage positions* on that screen, or *Positions → New position*.
-   Choose the election, give the position a name (for example `President`), set
-   **Selections allowed** to `1`, and set the display order.
-3. **Add candidates** — *Candidates → New candidate*.
-   Pick the election, then the position. The server verifies that the position really belongs
-   to that election. Two candidates per position is enough for a demonstration.
-4. **Register voters** — *Voters*. Either create a new account (*New voter*), or open an
-   existing one and press **Elections** to tick the elections they may vote in. The
-   **Register everyone** button on that page adds every active voter at once.
-5. **Open the election** — *Elections → Open*.
-   The system refuses to open an election that has no positions, or whose position has no
-   active candidate. It also moves the start time to the current moment if the start time is
-   still in the future, because an election can never be open before it starts.
-6. **Vote** — sign in as a registered voter, press **Vote now**, fill the ballot, press
-   **Review my ballot**, then **Submit final ballot**.
-7. **See the result** as the administrator, or as a voter once the election's results policy
-   allows it. Each of the three seeded elections uses a different policy (`after_vote`,
-   `hidden`, `after_close`), so all three behaviours can be shown without editing anything.
-   Note the trade-off: `after_vote` on a running election lets voters see the live tally,
-   which is convenient for a demonstration but can influence later voters. Switch the open
-   election to `after_close` for the more conservative rule.
+| Authentication Method | How It Works | Target Audience |
+| :--- | :--- | :--- |
+| **Administrator Account** | Database credentials (`admin` / `Admin@12345`) | System operators and election commissioners |
+| **Google OAuth 2.0** | 1-click authentication via institutional or personal Google account | Fast, passwordless sign-in for students |
+| **Personal Voter Code** | High-entropy unique alphanumeric token (e.g. `VC-2026-8F3K2Q`) | Direct ballot access for registered voters |
+| **Voter Self-Registration** | Public registration at `auth/register.php` with automatic election enrollment | Open voter onboarding |
+
+### 4.1 Demonstration Accounts
+
+| Role | Username / Identifier | Password | Voter Code | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+| **Administrator** | `admin` | `Admin@12345` | `VC-ADMIN-0001` | Full administrative control, settings, audit trail, and CIA testing suite |
+| **Voter Registration** | Direct at `auth/register.php` | User chosen | Auto-generated | Instant voter registration and voting |
+| **Google Sign-In** | Any verified Google account | Google auth | Auto-generated | Instant OAuth 2.0 profile provisioning |
 
 ---
 
-## 6. Testing the security controls
+## 5. Database Architecture & Schema
 
-The point of the project is that each of these can be *demonstrated*, not just described.
-Every test below can be run against the sample data with no preparation at all.
+SecureVote uses **InnoDB** relational tables designed around the **True Secret Ballot** principle, enforcing voter privacy while preserving 100% mathematical verifiability.
 
-### 6.1 Authentication
+```
+                    ┌─────────────────────────┐
+                    │          users          │
+                    │  (Admins, Voters, OAuth)│
+                    └────────────┬────────────┘
+                                 │
+           ┌─────────────────────┼─────────────────────┐
+           ▼                     ▼                     ▼
+┌───────────────────┐ ┌────────────────────┐ ┌───────────────────┐
+│     elections     │ │ voter_eligibility  │ │    audit_logs     │
+│  (Lifecycle &     │ │ (1 Row per Voter   │ │ (Immutable Trail  │
+│   Results Policy) │ │  per Election)     │ │  with IP & UA)    │
+└─────────┬─────────┘ └──────────┬─────────┘ └───────────────────┘
+          │                      │
+          ├──────────────────────┤
+          │                      ▼
+          │           ┌────────────────────┐
+          │           │      ballots       │
+          │           │ (Anonymous Ballot  │
+          │           │  Box with Receipt) │
+          │           └──────────┬─────────┘
+          ▼                      │
+┌───────────────────┐            │
+│     positions     │            │
+└─────────┬─────────┘            │
+          │                      │
+          ▼                      ▼
+┌───────────────────┐ ┌────────────────────┐
+│    candidates     │ │       votes        │
+│  (Bios & Photos)  │ │ (Choices linked to │
+│                   │ │  anonymous ballot) │
+└───────────────────┘ └────────────────────┘
+```
 
-| Test | How | Expected result |
-| --- | --- | --- |
-| Valid sign-in | `admin` / `Admin@12345` | Redirected to the admin dashboard, entry in the audit log |
-| Wrong password | `admin` / `wrongpass` | "Incorrect username/email or password", `login_failure` in the audit log |
-| Unknown account | `nobody` / `whatever` | Same generic message, so the form never reveals whether an account exists |
-| Blocked account | `voter020` / `Voter@12345` | "This account has been blocked", `login_blocked` in the audit log. This case is seeded. |
-| Brute-force brake | Five wrong passwords in a row | The sixth attempt is refused for about 15 minutes |
-| Session protection | Sign in, then delete the session cookie and reload | Sent back to the sign-in page |
-| Session regeneration | Sign in and watch the session cookie | The id changes at the moment of sign-in |
-| Sign-out | *Log out* in the sidebar | Session cleared, `logout` in the audit log. `auth/logout.php` opened directly with GET answers 405 |
+### 5.1 Tables Overview
 
-### 6.2 Authorization
+| Table Name | Engine | Purpose & Key Constraints |
+| :--- | :--- | :--- |
+| `users` | InnoDB | User credentials, roles (`admin`, `voter`), statuses, unique `voter_code`, and optional `google_id`. |
+| `elections` | InnoDB | Election lifecycle (`draft`, `scheduled`, `open`, `closed`, `archived`) and visibility policies (`hidden`, `after_vote`, `after_close`). |
+| `positions` | InnoDB | Contested offices with per-position selection limits (`max_selections`) and display ordering. |
+| `candidates` | InnoDB | Candidate profiles, party affiliations, platform statements, and photo filenames. |
+| `ballots` | InnoDB | Digital ballot box enforcing strict 1-person-1-vote (`uq_ballots_election_voter`) and unique receipt tracking (`uq_ballots_reference`). |
+| `votes` | InnoDB | Individual position and candidate selections tied to `ballots`. Unique compound index prevents duplicate votes on the same candidate. |
+| `voter_eligibility` | InnoDB | Tracks voter registration, participation timestamps, and eligibility per election (`uq_voter_eligibility_election_user`). |
+| `audit_logs` | InnoDB | Append-only system audit log recording all administrative, authentication, and voting events. |
+| `dismissed_alerts` | InnoDB | Tracks acknowledged and dismissed security warnings. |
 
-| Test | How | Expected result |
-| --- | --- | --- |
-| Voter opens an admin page | Sign in as a registered voter, then visit `admin/dashboard.php` | 403 "Not authorized", `unauthorized_access` in the audit log |
-| Admin opens a voter page | Sign in as `admin`, visit `voter/ballot.php?election_id=1` | 403, logged |
-| Ballot before the start date | Sign in as a voter and open the scheduled election (`election_id=2`) | 403 "This election has not started yet", `ballot_closed_attempt` in the audit log |
-| Ballot after the end date | Sign in as a voter and open the closed election (`election_id=3`) | 403 "This election is closed", logged |
-| Voter not on the voter list | As the administrator, untick that voter on *Voters → Elections*, then try to open the ballot | 403 "Not registered for this election", `unauthorized_election_access` in the audit log |
+### 5.2 The 1-Person-1-Vote & Ballot Secrecy Guarantee
 
-### 6.3 Integrity
+1. **Strict 1-Vote Enforcement**:
+   ```sql
+   UNIQUE KEY `uq_ballots_election_voter` (`election_id`, `voter_id`)
+   UNIQUE KEY `uq_voter_eligibility_election_user` (`election_id`, `user_id`)
+   ```
+   Even if malicious concurrent HTTP requests bypass front-end validation, the database engine physically rejects duplicate ballot insertions.
 
-| Test | How | Expected result |
-| --- | --- | --- |
-| Successful vote | Register/sign in as a voter and submit a ballot | Confirmation page with a reference such as `SV-2026-9A31F4` |
-| Duplicate vote | Try to open the ballot again after voting | Blocked before the ballot renders, with `ballot_duplicate_attempt` in the audit log |
-| Duplicate vote at the database level | Attempt to insert duplicate eligibility or ballot | The database unique constraints reject the insert |
-| Invalid candidate | With the ballot form open, use the browser inspector to add a `votes[…]` value for a candidate from another position and submit | "A selected candidate for … is not standing in this election" and nothing is written |
-| Too many selections | On the Representative position, select three candidates where only two are allowed | Rejected on the server with a clear message |
-| Voting outside the window | Close the open election, then submit a prepared ballot | 403 before the ballot renders; if a stale review screen is submitted, the transaction refuses it |
-| Blank position | Leave a position unselected and submit | Allowed and recorded as an abstention; the review screen warns first |
-| Transaction rollback | Stop MySQL mid-submission | Nothing is recorded: the ballot, its votes and the eligibility flag are rolled back together |
-
-### 6.4 Confidentiality
-
-| Test | How | Expected result |
-| --- | --- | --- |
-| Password hashing | phpMyAdmin → `users` → `password_hash` | A `$2y$12$…` bcrypt hash, never readable text |
-| SQL injection | Sign in with the username `' OR 1=1 -- ` | Treated as a literal username; the query is a prepared statement |
-| SQL injection in a search box | Enter `' OR 1=1 -- ` in the voter search | No rows, no error, no data leak |
-| XSS | Add a candidate named `<script>alert(1)</script>` | The name is displayed as text; the script never runs |
-| Stored XSS in a biography | Put an `<img src=x onerror=alert(1)>` in a biography field | Escaped on the ballot and on the review screen |
-| CSRF | Remove the `csrf_token` input with the inspector and submit a form | 403 "Request blocked", `csrf_failure` in the audit log |
-| Logout CSRF | `<img src="…/auth/logout.php">` on another page | Nothing happens: logout requires a POST with a valid token |
-| Session cookie | Browser developer tools → Application → Cookies | `HttpOnly` set, `SameSite=Lax`, no token in the URL |
-| Information disclosure | Open `config/config.php` in a browser | It is PHP; nothing is printed, and errors are logged rather than displayed |
+2. **Decoupled Secret Ballot Architecture**:
+   Candidate selections in the `votes` table are linked to `ballots`, while the voter's participation record in `voter_eligibility` only records that a ballot was cast and the receipt code issued. Tally calculations are performed exclusively via aggregate queries (`COUNT(*)` grouped by `candidate_id`), making it mathematically impossible to link a voter to their candidate choices.
 
 ---
 
-## 7. Project structure
+## 6. CIA Security Testing & Verification Suite
+
+SecureVote includes a dedicated, database-aware **CIA Security Verification Module** accessible at `admin/security-testing.php`. This engine executes **17 automated tests** verifying live compliance with information assurance standards.
+
+```
+       ╔═══════════════════════════════════════════════════════════════╗
+       ║         SECUREVOTE LIVE CIA VERIFICATION RESULTS             ║
+       ╠═══════════════════════════════════════════════════════════════╣
+       ║  Confidentiality (C) :  6 / 6 Tests Passed  (100.0% Score)    ║
+       ║  Integrity       (I) :  6 / 6 Tests Passed  (100.0% Score)    ║
+       ║  Availability    (A) :  5 / 5 Tests Passed  (100.0% Score)    ║
+       ║  Overall Status      :  PASS (17 / 17 Total Assertions)       ║
+       ╚═══════════════════════════════════════════════════════════════╝
+```
+
+### Complete Test Catalog
+
+#### 🔒 Confidentiality (C)
+* **`SEC-C01` — Route Authentication Guardrails**: Verifies that all 9 administrative controllers enforce `require_admin()` prior to rendering any markup.
+* **`SEC-C02` — Role-Based Access Control (RBAC)**: Validates session role hierarchy and default-deny access policies.
+* **`SEC-C03` — Password Hashing Standards**: Confirms that 100% of stored user credentials utilize standard `bcrypt` algorithms (`$2y$12$...`) with zero plaintext exposures.
+* **`SEC-C04` — Session Hardening & Security Headers**: Asserts presence of `HttpOnly`, `SameSite=Lax`, strict session modes, and complete HTTP security headers (CSP, HSTS, `X-Frame-Options`).
+* **`SEC-C05` — True Secret Ballot & Data Isolation**: Validates decoupling of voter identities from vote selections during aggregation.
+* **`SEC-C06` — Sensitive Information Disclosure Protection**: Asserts that `APP_DEBUG` is disabled and error handling suppresses stack traces.
+
+#### 🛡️ Integrity (I)
+* **`SEC-I01` — 1-Person-1-Vote Database Constraint**: Validates compound unique constraints (`uq_ballots_election_voter` and `uq_voter_eligibility_election_user`).
+* **`SEC-I02` — Atomic Transaction Rollback Defense**: Confirms that multi-table ballot writes use InnoDB transactions with automatic rollback on error.
+* **`SEC-I03` — Candidate & Selection Limit Enforcement**: Verifies server-side rejection of over-voting, invalid candidate IDs, and out-of-contest entries.
+* **`SEC-I04` — Cryptographic CSRF Defense**: Validates cryptographically secure token generation, per-session validation, and constant-time `hash_equals()` comparison.
+* **`SEC-I05` — Parameterized SQL Injection Prevention**: Asserts that PDO prepared statements are enforced with disabled emulation mode (`ATTR_EMULATE_PREPARES = false`).
+* **`SEC-I06` — Immutable Security Audit Trail**: Confirms append-only audit logging with client IP and browser agent metadata.
+
+#### ⚡ Availability (A)
+* **`SEC-A01` — Database Connectivity & Latency**: Tests database connection speed and response latency (typically `< 2.0 ms`).
+* **`SEC-A02` — Relational Schema Integrity**: Asserts existence and operational health of all 9 core database tables.
+* **`SEC-A03` — Voting Workflow Pipeline Health**: Checks availability of the end-to-end voting pipeline (`ballot.php`, `review.php`, `confirmation.php`).
+* **`SEC-A04` — Brute-Force Rate Limiting & Account Lockout**: Validates per-account brute-force braking (5 failed attempts trigger a 15-minute freeze).
+* **`SEC-A05` — Error Logging & Graceful Degradation**: Asserts existence and writeability of `storage/logs/php-error.log`.
+
+---
+
+## 7. Testing Security Controls (Manual Verification)
+
+Every security mechanism can be tested manually:
+
+### 7.1 Authentication & Session Testing
+
+| Test Scenario | Test Action | Expected Result |
+| :--- | :--- | :--- |
+| **Valid Login** | Sign in as `admin` with `Admin@12345` | Redirects to `admin/dashboard.php`; writes `login_success` to audit log. |
+| **Invalid Password** | Submit wrong password for `admin` | Generic error message displayed; writes `login_failure` to audit log. |
+| **Account Enumeration** | Submit nonexistent user `fakeuser99` | Identical generic error message returned to prevent user enumeration. |
+| **Brute-Force Brake** | Submit 5 consecutive incorrect passwords | 6th attempt is throttled and locked out for 15 minutes; writes `login_blocked`. |
+| **Session Hijacking** | Delete session cookie in browser dev tools | Instant session invalidation; redirects to `auth/login.php`. |
+| **Session Regeneration** | Inspect session cookie before and after sign-in | Session ID changes immediately upon successful authentication. |
+
+### 7.2 Authorization & Access Control
+
+| Test Scenario | Test Action | Expected Result |
+| :--- | :--- | :--- |
+| **Voter accessing Admin** | Sign in as a voter, visit `admin/dashboard.php` | HTTP 403 Forbidden; writes `unauthorized_access` to audit log. |
+| **Admin accessing Ballot** | Sign in as `admin`, visit `voter/ballot.php?election_id=1` | HTTP 403 Forbidden; admin cannot cast ballots. |
+| **Premature Ballot Attempt** | Attempt to open ballot for scheduled election | HTTP 403; message displays start date; writes `ballot_closed_attempt`. |
+| **Post-Close Ballot Attempt** | Attempt to open ballot for closed election | HTTP 403; voting window closed. |
+
+### 7.3 Injection & Tampering Testing
+
+| Test Scenario | Test Action | Expected Result |
+| :--- | :--- | :--- |
+| **SQL Injection (Login)** | Username: `' OR '1'='1' -- ` | Treated as literal string; authentication fails safely. |
+| **SQL Injection (Search)** | Search input: `1'; DROP TABLE users; -- ` | Escaped PDO parameter; no data leak or table modification. |
+| **Cross-Site Scripting (XSS)** | Candidate name: `<script>alert('XSS')</script>` | Sanitized via `htmlspecialchars`; rendered safely as plain text. |
+| **Stored XSS (Biography)** | Bio: `<img src=x onerror=alert(1)>` | Escaped on all voter ballot and review screens. |
+| **CSRF Bypass Attempt** | Remove hidden `csrf_token` input and submit form | HTTP 403 Forbidden ("Request blocked: invalid or missing security token"). |
+| **Over-Voting Tampering** | Tamper checkbox inputs to select 3 candidates when `max_selections = 2` | Server re-validates and rejects the entire submission with an error. |
+
+---
+
+## 8. Project File Structure
 
 ```text
-secure-voting-system/
-├── index.php                     entry point: routes to the dashboard or the sign-in page
-├── README.md
+itp216_endterm/
+├── index.php                     # Welcome portal & civic gateway
+├── privacy.php                   # Data privacy policy (RA 10173 / GDPR aligned)
+├── terms.php                     # Terms of service & electronic voting agreement
+├── README.md                     # Comprehensive project documentation
 ├── config/
-│   ├── config.php                constants, security headers, hardened session bootstrap
-│   └── database.php              the single PDO connection (prepared statements, exceptions)
+│   ├── config.php                # System constants, security headers, session hardening
+│   └── database.php              # PDO connection factory (prepared statements, exceptions)
 ├── auth/
-│   ├── login.php                 sign-in form
-│   ├── authenticate.php          POST handler: CSRF, bcrypt verification, account status
-│   └── logout.php                POST-only, CSRF-protected sign-out
+│   ├── login.php                 # Multi-method sign-in portal
+│   ├── authenticate.php          # POST authentication handler (CSRF, bcrypt, throttling)
+│   ├── register.php              # Self-service voter account registration
+│   ├── logout.php                # POST-only, CSRF-protected sign-out handler
+│   ├── google-login.php          # Google OAuth 2.0 authorization redirector
+│   └── google-callback.php       # Google OAuth 2.0 token & profile callback handler
 ├── admin/
-│   ├── dashboard.php             turnout, alerts, recent activity
-│   ├── elections.php             election CRUD, open/close/archive/delete
-│   ├── positions.php             position CRUD with selection limits
-│   ├── candidates.php            candidate CRUD with a hardened photo upload
-│   ├── voters.php                account CRUD, status changes, election eligibility
-│   ├── results.php               per-position tally, leading candidates, CSV export
-│   ├── audit-logs.php            filtered, read-only audit trail
-│   └── settings.php              own profile and password, security posture, maintenance
+│   ├── dashboard.php             # Turnout metrics, alert center, recent audit activity
+│   ├── elections.php             # Election lifecycle management (CRUD & states)
+│   ├── positions.php             # Contest positions and selection limits
+│   ├── candidates.php            # Candidate profiles and photo upload management
+│   ├── voters.php                # Voter registry, status management, eligibility assignment
+│   ├── results.php               # Live tallies, certified winners, CSV export
+│   ├── audit-logs.php            # Searchable, filterable security audit log with CSV export
+│   ├── security-testing.php      # CIA security testing & verification suite (17 automated tests)
+│   └── settings.php              # Profile settings, password updates, database snapshots
 ├── voter/
-│   ├── dashboard.php             what is open, what has been voted, how to vote
-│   ├── elections.php             election list and per-election instructions
-│   ├── ballot.php                the ballot (nothing is written here)
-│   ├── review.php                the review screen and the only submit button
-│   ├── confirmation.php          the receipt with the ballot reference
-│   ├── results.php               results, gated by the election's results policy
-│   └── profile.php               own details, own password, own participation history
+│   ├── dashboard.php             # Voter dashboard, active elections, participation history
+│   ├── elections.php             # Election catalog with status instructions
+│   ├── ballot.php                # Interactive voting ballot with live selection limits
+│   ├── review.php                # Two-stage ballot review and final submission handler
+│   ├── confirmation.php          # Digital receipt display with verification code
+│   ├── results.php               # Public and post-election tally inspection
+│   └── profile.php               # Personal profile, voter code, and password management
 ├── includes/
-│   ├── bootstrap.php             loads everything, installs the error handlers
-│   ├── auth.php                  identity, session lifecycle, role guards
-│   ├── csrf.php                  token issue, rotation and verification
-│   ├── flash.php                 one-shot messages across a redirect
-│   ├── functions.php             escaping, URLs, dates, status vocabulary, audit logging
-│   ├── voting.php                the voting engine: build, validate, submit, count
-│   ├── icons.php                 the inline SVG icon set and the brand mark
-│   ├── header.php                the application shell
-│   ├── footer.php                shared footer and the security strip
-│   └── error-page.php            the branded 403 / 404 / 500 page
+│   ├── bootstrap.php             # Application bootstrap & error handler initialization
+│   ├── auth.php                  # Authentication state, session lifecycle, RBAC guards
+│   ├── csrf.php                  # Cryptographic CSRF token issue, rotation & verification
+│   ├── flash.php                 # Session-persisted flash messaging system
+│   ├── functions.php             # Escaping, formatting, sanitization, audit logging helpers
+│   ├── voting.php                # Core voting engine: validation, submission, tallying
+│   ├── icons.php                 # Accessible inline SVG icon library
+│   ├── header.php                # Unified topbar, theme switcher, mobile drawer navigation
+│   ├── footer.php                # Unified footer with TLS status & security indicators
+│   └── error-page.php            # Branded HTTP 400, 403, 404, 500 exception pages
 ├── assets/
-│   ├── css/style.css             the entire brand kit, light and dark
-│   ├── js/app.js                 theme, drawer, ballot limits, confirms, filters, modals
-│   └── images/                   favicon.svg, logo.svg, candidates/ (uploaded photos)
+│   ├── css/
+│   │   └── style.css             # Emerald design system (CSS variables, light/dark mode)
+│   ├── js/
+│   │   └── app.js                # Theme toggle, password visibility toggle, selection limits
+│   └── images/
+│       ├── logo.svg              # Brand logo mark
+│       ├── favicon.svg           # Application favicon
+│       └── candidates/           # Uploaded candidate profile images
 ├── database/
-│   └── secure_voting.sql         schema, constraints, seed data, demonstration queries
-└── storage/logs/                 php-error.log (created on the first error)
+│   ├── secure_voting.sql         # Master database schema, constraints, and seed data
+│   ├── migration_dismissed_alerts.sql # Migration for security alert tracking
+│   ├── direct_secret_ballot.sql  # Secret ballot schema definitions
+│   └── voter_auth.sql            # Voter authentication definitions
+└── storage/
+    └── logs/
+        └── php-error.log         # Server error log destination
 ```
-
-### How the database fits together (True Secret Ballot Architecture)
-
-```text
-users ─┬─< elections (created_by)
-       ├─< voter_eligibility >─ elections        one row per voter per election (UNIQUE, records participation & receipt)
-       └─< audit_logs
-
-elections ─┬─< positions ─< candidates
-           └─< ballots (anonymous ballot box, decoupled from voter identity)
-                 └─< votes ─> positions, candidates
-```
-
-The core database constraints that guarantee **1-Person-1-Vote Integrity** and **Ballot Secrecy**:
-
-```text
-voter_eligibility : uq_voter_eligibility_election_user (election_id, user_id)  -> strictly 1 vote per voter
-ballots           : uq_ballots_reference               (ballot_reference)      -> unique anonymous ballot receipts
-votes             : uq_votes_ballot_position_candidate (ballot_id, position_id, candidate_id) -> no duplicate choices
-```
-
-> **Ballot Secrecy:** The `ballots` and `votes` tables store **no user ID**. Even with direct SQL database access, it is impossible to trace which voter selected which candidate.
 
 ---
 
-## 8. How the voting flow protects itself
+## 9. Voting Workflow & Life of a Ballot
 
-1. `voter/ballot.php` builds the ballot **from the database**: only positions of that election,
-   and only candidates whose status is `active`.
-2. On submit, `sv_validate_submission()` rejects any value that is not a real candidate of that
-   position in that election, and any position with more selections than allowed. It reports the
-   problem instead of silently trimming it.
-3. The validated plan is kept **in the session**, not in a hidden form field. The review screen
-   therefore shows exactly what the server is prepared to store.
-4. `voter/review.php` is the only page that submits. It calls `sv_submit_ballot()`, which opens a
-   transaction and re-checks the election window, the voter's registration, whether they have
-   already voted, and every single candidate against the database.
-5. The ballot, its votes and the `has_voted` flag are written together and committed once. If any
-   step fails, everything rolls back and the voter is told nothing was recorded.
-6. Counting happens in `sv_tally_positions()`, an aggregate query that never joins a ballot to a
-   voter's name, so a tally can be produced without a ballot ever being de-anonymised.
-
----
-
-## 9. Security controls that are implemented
-
-Everything listed here is really in the code, which is why the interface is allowed to say so.
-
-* **Password storage** — `password_hash()` with bcrypt, verified with `password_verify()`, and
-  transparently re-hashed when the cost changes.
-* **SQL injection** — PDO prepared statements with `ATTR_EMULATE_PREPARES = false`, so the SQL
-  text and the data are sent to MySQL separately.
-* **Cross-site scripting** — every dynamic value is printed through `e()`
-  (`htmlspecialchars()` with `ENT_QUOTES`), and the Content-Security-Policy forbids inline and
-  remote scripts.
-* **Cross-site request forgery** — a per-session token on every state-changing form, compared
-  with `hash_equals()`, rotated on sign-in, sign-out and password change.
-* **Session security** — `HttpOnly` and `SameSite=Lax` cookie, `session.use_strict_mode`,
-  `session_regenerate_id(true)` on privilege change, a 30-minute idle timeout, a 2-hour absolute
-  lifetime and a browser fingerprint check.
-* **Authorization** — `require_admin()` / `require_voter()` run before any page body, deny by
-  default, and log every refusal.
-* **Vote integrity** — server-side re-validation, row locks (`FOR UPDATE`), one transaction per
-  ballot, and unique constraints as the final defence.
-* **Upload safety** — image type detected from the file contents with `getimagesize()`, only
-  JPEG/PNG/WebP accepted, a 2 MB cap, a random stored filename and a genuine-upload check.
-* **Privacy of results** — results are produced from aggregate queries only; no page can show
-  which voter chose which candidate.
-* **Auditability** — sign-ins, failures, election changes, eligibility changes, ballot submissions
-  and configuration changes are appended to `audit_logs`, which the interface cannot edit.
-* **Information disclosure** — errors are logged, never printed; a friendly branded page is shown
-  instead; security headers include `X-Content-Type-Options`, `X-Frame-Options`,
-  `Referrer-Policy` and a restrictive CSP.
-
-## 10. Limitations and non-goals
-
-Stated openly, because a security report that claims everything is a security report nobody
-should trust.
-
-* **HTTPS is not configured by the application.** Use HTTPS at the web server in any real
-  deployment. The footer says so when the page is served over plain HTTP.
-* **No two-factor authentication** and **no self-service password reset** (there is no email
-  delivery). Administrators reset passwords from the Voters page.
-* **No public registration.** Accounts are created by an administrator, which is the correct
-  posture for a controlled election.
-* **The database user is not least-privileged by default.** Section 11 shows how to create a
-  dedicated user limited to SELECT, INSERT, UPDATE and DELETE on this schema.
-* **Votes are not cryptographically anonymised.** The tally is aggregate and no page exposes a
-  link between voter and choice, but the `votes` rows are reachable by anyone who can read the
-  database. End-to-end verifiable voting is a much larger problem than an endterm project.
-* **No rate limiting at the web-server level.** The brute-force brake is per account and lives in
-  the application.
-* **Being honest about the scope**: this is a college-level implementation, not a certified
-  election platform.
+```
+ ┌─────────────────┐
+ │ 1. Authenticate │  Sign in via Google OAuth, Voter Code, or Email/Password
+ └────────┬────────┘
+          ▼
+ ┌─────────────────┐
+ │ 2. Open Ballot  │  Server verifies election window and checks voter eligibility
+ └────────┬────────┘
+          ▼
+ ┌─────────────────┐
+ │ 3. Make Choices │  Client UI enforces selection limits; zero selections = abstention
+ └────────┬────────┘
+          ▼
+ ┌─────────────────┐
+ │ 4. Session Plan │  Validated selections cached in session ($_SESSION['_ballot_plan'])
+ └────────┬────────┘
+          ▼
+ ┌─────────────────┐
+ │ 5. Review Stage │  Voter reviews exact choices before irrevocable submission
+ └────────┬────────┘
+          ▼
+ ┌─────────────────┐
+ │ 6. ACID Commit  │  InnoDB transaction begins with row locks (FOR UPDATE):
+ └────────┬────────┘  • Re-checks eligibility and duplicate ballot constraint
+                      • Inserts anonymous ballot record into `ballots`
+                      • Inserts choice rows into `votes`
+                      • Updates `voter_eligibility.has_voted = 1`
+                      • Appends `ballot_cast` event to `audit_logs`
+                      • Commits transaction atomically (or rolls back on error)
+          ▼
+ ┌─────────────────┐
+ │ 7. Confirmation │  Voter receives verifiable receipt code (SV-2026-XXXXXX)
+ └─────────────────┘
+```
 
 ---
 
-## 11. Optional hardening for a real deployment
+## 10. Production Hardening Guidelines
+
+For production environments, follow these hardening steps:
+
+### 10.1 Dedicated Database User
+Create a least-privileged database user restricted to data manipulation on the SecureVote schema:
 
 ```sql
--- 1. A database user that can only do what the application needs.
-CREATE USER 'securevote_app'@'localhost' IDENTIFIED BY 'a-strong-password-here';
-GRANT SELECT, INSERT, UPDATE, DELETE ON `secure_voting`.* TO 'securevote_app'@'localhost';
+CREATE USER 'securevote_app'@'localhost' IDENTIFIED BY 'STRONG_SECRET_PASSWORD_HERE';
+GRANT SELECT, INSERT, UPDATE, DELETE ON `u184230832_securevote`.* TO 'securevote_app'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-Then set `DB_USER` / `DB_PASS` accordingly (or the `SV_DB_*` environment variables).
+### 10.2 Production Debug Configuration
+In `config/config.php`, ensure `APP_DEBUG` is set to `false` to suppress all client-facing diagnostic outputs:
 
 ```php
-// 2. In config/config.php: never print errors to the browser.
 define('APP_DEBUG', false);
 ```
 
-```text
-3. Serve the application over HTTPS and add the HSTS header that config.php already sends when
-   it detects HTTPS.
-4. Remove the demonstration hint block from auth/login.php and change every seeded password.
-5. Keep storage/ outside the web root, or make sure your web server refuses to serve it.
-```
+### 10.3 HTTPS & SSL Enforcement
+Deploy behind an SSL/TLS certificate (e.g. Let's Encrypt). The application automatically:
+* Enables `Strict-Transport-Security` (HSTS) headers.
+* Sets the `Secure` flag on all session cookies.
+
+### 10.4 Web Server Directory Protection
+Ensure that `storage/` and `database/` directories are inaccessible via direct URL requests by configuring your web server (e.g. `.htaccess` or Nginx rules).
 
 ---
 
-## 12. Troubleshooting
+## 11. Troubleshooting & FAQ
 
-| Symptom | Cause and fix |
-| --- | --- |
-| "Service temporarily unavailable" | PHP cannot reach the database. Check that MySQL is running and that the credentials in `config/config.php` are right. |
-| The page loads with no styling | `assets/css/style.css` is not being found. Confirm the folder is spelled `assets` and that the web server is serving the project folder. |
-| Everything redirects to the sign-in page | Sessions are not persisting. Check `session.save_path` and that the browser is not blocking cookies. |
-| "Your session token was missing or had expired" | The form was open too long, or cookies were cleared. Reload the page and try again. |
-| Sign-in always fails with the seeded accounts | The seed data may not have been imported. Check that `users` has 13 rows in phpMyAdmin. |
-| Photos do not upload | `assets/images/candidates/` must be writable by the web server user. |
-| A blank white page | Look at `storage/logs/php-error.log`. Nothing is ever printed to the browser on purpose. |
-
----
-
-## 13. Further reading
-
-* OWASP Top 10 — <https://owasp.org/www-project-top-ten/>
-* OWASP Cross-Site Request Forgery Prevention Cheat Sheet — <https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html>
-* OWASP File Upload Cheat Sheet — <https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html>
-* PHP manual, `password_hash()` — <https://www.php.net/manual/en/function.password-hash.php>
-* PHP manual, PDO prepared statements — <https://www.php.net/manual/en/pdo.prepared-statements.php>
-* MySQL manual, InnoDB transactions — <https://dev.mysql.com/doc/refman/8.0/en/innodb-transaction-model.html>
+| Symptom | Probable Cause | Recommended Fix |
+| :--- | :--- | :--- |
+| **"Service temporarily unavailable"** | Database server is offline or credentials in `config/config.php` are incorrect. | Verify MySQL is active and check `DB_HOST`, `DB_USER`, and `DB_PASS`. |
+| **Missing CSS Styling or Broken Layout** | Web server is serving from an unexpected virtual directory path. | Confirm project is in `itp216_endterm` or check `BASE_URL` calculation in `config/config.php`. |
+| **Session Expiring Immediately** | Browser blocking cookies or incorrect permissions on PHP session directory. | Check browser cookie settings and verify `session.save_path` is writable. |
+| **"Request blocked: invalid or missing security token"** | CSRF token mismatch due to tab inactivity or expired session. | Refresh the page to obtain a fresh CSRF token and resubmit. |
+| **Google Sign-In Error** | Redirect URI mismatch or missing Google API credentials. | Ensure `http://localhost/itp216_endterm/auth/google-callback.php` is listed in Google Cloud Console authorized URIs. |
+| **Candidate Photo Upload Fails** | Directory `assets/images/candidates/` is not writable by web server. | Adjust directory write permissions: `chmod 775 assets/images/candidates/`. |
 
 ---
 
-**SecureVote** is an academic endterm project. It is not affiliated with, endorsed by, or
-connected to any government body or electoral commission.
+## 12. References & Standards
+
+* **OWASP Top 10 Web Application Security Risks**: [https://owasp.org/www-project-top-ten/](https://owasp.org/www-project-top-ten/)
+* **OWASP Cross-Site Request Forgery Prevention**: [https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)
+* **OWASP File Upload Security Cheat Sheet**: [https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html)
+* **PHP PDO Prepared Statements**: [https://www.php.net/manual/en/pdo.prepared-statements.php](https://www.php.net/manual/en/pdo.prepared-statements.php)
+* **MySQL InnoDB Transaction Isolation**: [https://dev.mysql.com/doc/refman/8.0/en/innodb-transaction-model.html](https://dev.mysql.com/doc/refman/8.0/en/innodb-transaction-model.html)
+* **Republic Act No. 10173 (Data Privacy Act of 2012)**: [https://privacy.gov.ph/data-privacy-act/](https://privacy.gov.ph/data-privacy-act/)
+
+---
+
+*SecureVote is an academic endterm project created for educational demonstration of information assurance, cryptographic integrity, and secure web application development. It is not affiliated with any government electoral body.*

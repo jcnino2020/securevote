@@ -104,13 +104,10 @@ if ($focus !== null && $focusMaySee) {
  | Header
  * =================================================================== */
 
-$pageTitle    = $focus !== null ? 'Results' : 'Results';
-$pageSubtitle = $focus !== null
-    ? (string) $focus['title']
-    : 'Results for the elections you took part in, when the policy allows it.';
-$activeNav    = 'results.php';
-$breadcrumb   = $focus !== null
-    ? [['label' => 'Results', 'href' => 'voter/results.php'], ['label' => 'Election']]
+$pageTitle  = 'Results';
+$activeNav  = 'results.php';
+$breadcrumb = $focus !== null
+    ? [['label' => 'Results', 'href' => 'voter/results.php'], ['label' => (string) $focus['title']]]
     : [['label' => 'Results', 'href' => 'voter/results.php']];
 
 require __DIR__ . '/../includes/header.php';

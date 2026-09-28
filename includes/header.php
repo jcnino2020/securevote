@@ -9,13 +9,13 @@
  * centered card for authentication, and a civic gateway for the portal).
  *
  * Page variables contract:
- *   $pageTitle    (string)  required - rendered in <title> and topbar <h1>
- *   $pageSubtitle (string)  optional - context description beneath the title
- *   $activeNav    (string)  optional - filename of the active navigation item
- *   $pageActions  (string)  optional - escaped HTML buttons for topbar action area
- *   $layout       (string)  optional - 'app' (default), 'auth', or 'portal'
- *   $bodyClass    (string)  optional - additional CSS class for <body>
- *   $breadcrumb   (array)   optional - [['label' => .., 'href' => ..], ..]
+ *   $pageTitle     (string)  required - rendered in <title> and topbar <h1> (if shown)
+ *   $showPageTitle (bool)    optional - whether to show <h1> in topbar (defaults to false for portal/landing pages)
+ *   $activeNav     (string)  optional - filename of the active navigation item
+ *   $pageActions   (string)  optional - escaped HTML buttons for topbar action area
+ *   $layout        (string)  optional - 'app' (default), 'auth', or 'portal'
+ *   $bodyClass     (string)  optional - additional CSS class for <body>
+ *   $breadcrumb    (array)   optional - [['label' => .., 'href' => ..], ..]
  */
 
 if (!defined('APP_NAME')) {
@@ -25,7 +25,6 @@ if (!defined('APP_NAME')) {
 
 $layout       = $layout       ?? 'app';
 $pageTitle    = $pageTitle    ?? 'SecureVote';
-$pageSubtitle = $pageSubtitle ?? '';
 $activeNav    = $activeNav    ?? '';
 $pageActions  = $pageActions  ?? '';
 $bodyClass    = $bodyClass    ?? '';
@@ -35,6 +34,8 @@ $user         = current_user();
 if ($user === null && $layout === 'app') {
     $layout = 'portal';
 }
+
+$showPageTitle = $showPageTitle ?? ($layout !== 'portal');
 
 $hasSidebar = ($layout === 'app' && $user !== null);
 $shellClass = 'app-shell app-shell--' . ($layout === 'auth' ? 'auth' : ($hasSidebar ? 'app' : 'portal'));
@@ -206,38 +207,34 @@ $flashHtml = ob_get_clean();
         </a>
       <?php endif; ?>
 
-      <div class="topbar__titles">
-        <?php if (count($breadcrumb) > 1): ?>
-          <nav class="breadcrumb" aria-label="Breadcrumb navigation">
-            <ol>
-              <?php foreach ($breadcrumb as $index => $crumb): ?>
-                <li>
-                  <?php if (isset($crumb['href']) && $index < count($breadcrumb) - 1): ?>
-                    <a href="<?= e(url($crumb['href'])) ?>"><?= e($crumb['label']) ?></a>
-                    <span class="breadcrumb__separator" aria-hidden="true"><?= sv_icon('chevron-right', 12) ?></span>
-                  <?php else: ?>
-                    <span aria-current="page"><?= e($crumb['label']) ?></span>
-                  <?php endif; ?>
-                </li>
-              <?php endforeach; ?>
-            </ol>
-          </nav>
-        <?php endif; ?>
+      <?php if ($showPageTitle || count($breadcrumb) > 1): ?>
+        <div class="topbar__titles">
+          <?php if (count($breadcrumb) > 1): ?>
+            <nav class="breadcrumb" aria-label="Breadcrumb navigation">
+              <ol>
+                <?php foreach ($breadcrumb as $index => $crumb): ?>
+                  <li>
+                    <?php if (isset($crumb['href']) && $index < count($breadcrumb) - 1): ?>
+                      <a href="<?= e(url($crumb['href'])) ?>"><?= e($crumb['label']) ?></a>
+                      <span class="breadcrumb__separator" aria-hidden="true"><?= sv_icon('chevron-right', 12) ?></span>
+                    <?php else: ?>
+                      <span aria-current="page"><?= e($crumb['label']) ?></span>
+                    <?php endif; ?>
+                  </li>
+                <?php endforeach; ?>
+              </ol>
+            </nav>
+          <?php endif; ?>
 
-        <h1 class="page-title"><?= e($pageTitle) ?></h1>
-        <?php if ($pageSubtitle !== ''): ?>
-          <p class="page-subtitle"><?= e($pageSubtitle) ?></p>
-        <?php endif; ?>
-      </div>
+          <?php if ($showPageTitle): ?>
+            <h1 class="page-title"><?= e($pageTitle) ?></h1>
+          <?php endif; ?>
+        </div>
+      <?php endif; ?>
     </div>
 
     <div class="topbar__actions">
       <?= $pageActions ?>
-
-      <span class="session-chip" title="Cryptographically verified session">
-        <?= sv_icon('shield-check', 15) ?>
-        <span class="session-chip__text">Protected Session</span>
-      </span>
 
       <button class="icon-btn theme-toggle-btn" type="button" data-theme-toggle
               aria-label="Switch between light and dark appearance" aria-pressed="false"
