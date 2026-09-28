@@ -92,7 +92,7 @@ require __DIR__ . '/includes/header.php';
   </aside>
 
   <!-- Right Side: Detailed Policy Content -->
-  <main style="grid-column: span 2; display: flex; flex-direction: column; gap: var(--sp-6);">
+  <div class="policy-content" style="grid-column: span 2; display: flex; flex-direction: column; gap: var(--sp-6);">
     
     <!-- Section 1: Secret Ballot -->
     <section class="card" id="ballot-secrecy" style="padding: var(--sp-6); border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface);">
@@ -276,7 +276,8 @@ require __DIR__ . '/includes/header.php';
         <p style="margin: 0 0 4px 0; color: var(--text-muted);">Email: <a href="mailto:elections@university.edu.ph" class="link">elections@university.edu.ph</a></p>
         <p style="margin: 0; color: var(--text-muted);">Institution: University Campus Student Electoral Commission</p>
       </div>
-    </main>
+    </section>
+  </div>
 </div>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>

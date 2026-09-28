@@ -96,24 +96,28 @@ require __DIR__ . '/../includes/header.php';
       </div>
 
       <div class="form-field">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <label class="label" for="password">
-            Password
-            <span class="label__required" aria-hidden="true">*</span>
-          </label>
+        <label class="label" for="password">
+          Password
+          <span class="label__required" aria-hidden="true">*</span>
+        </label>
+        <div class="input-password-wrap">
+          <input
+            class="input<?= isset($formFields['password']) ? ' is-invalid' : '' ?>"
+            type="password"
+            id="password"
+            name="password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            required
+            aria-required="true"
+            <?= isset($formFields['password'])
+                ? 'aria-describedby="password-error" aria-invalid="true"'
+                : '' ?>>
+          <button type="button" class="btn-password-toggle" data-toggle-password="#password" aria-label="Show password" aria-pressed="false" title="Show password">
+            <span class="icon-eye"><?= sv_icon('eye', 18) ?></span>
+            <span class="icon-eye-off" hidden><?= sv_icon('eye-off', 18) ?></span>
+          </button>
         </div>
-        <input
-          class="input<?= isset($formFields['password']) ? ' is-invalid' : '' ?>"
-          type="password"
-          id="password"
-          name="password"
-          placeholder="••••••••"
-          autocomplete="current-password"
-          required
-          aria-required="true"
-          <?= isset($formFields['password'])
-              ? 'aria-describedby="password-error" aria-invalid="true"'
-              : '' ?>>
         <?php if (isset($formFields['password'])): ?>
           <p class="field-error" id="password-error">
             <?= sv_icon('alert-triangle', 14) ?>

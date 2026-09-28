@@ -345,20 +345,34 @@ require __DIR__ . '/../includes/header.php';
 
         <div class="form-field">
           <label class="label" for="current_password">Current password <span class="label__required" aria-hidden="true">*</span></label>
-          <input class="input<?= isset($errors['current_password']) ? ' is-invalid' : '' ?>"
-                 type="password" id="current_password" name="current_password"
-                 autocomplete="current-password" required>
+          <div class="input-password-wrap">
+            <input class="input<?= isset($errors['current_password']) ? ' is-invalid' : '' ?>"
+                   type="password" id="current_password" name="current_password"
+                   autocomplete="current-password" required
+                   <?= isset($errors['current_password']) ? 'aria-describedby="current-password-error" aria-invalid="true"' : '' ?>>
+            <button type="button" class="btn-password-toggle" data-toggle-password="current_password" aria-label="Show current password" aria-pressed="false">
+              <span class="icon-eye"><?= sv_icon('eye', 16) ?></span>
+              <span class="icon-eye-off" style="display:none;"><?= sv_icon('eye-off', 16) ?></span>
+            </button>
+          </div>
           <?php if (isset($errors['current_password'])): ?>
-            <p class="field-error"><?= sv_icon('alert-triangle', 14) ?><span><?= e($errors['current_password']) ?></span></p>
+            <p class="field-error" id="current-password-error"><?= sv_icon('alert-triangle', 14) ?><span><?= e($errors['current_password']) ?></span></p>
           <?php endif; ?>
         </div>
 
         <div class="form-field">
           <label class="label" for="password">New password <span class="label__required" aria-hidden="true">*</span></label>
-          <input class="input<?= isset($errors['password']) ? ' is-invalid' : '' ?>"
-                 type="password" id="password" name="password" autocomplete="new-password" required>
+          <div class="input-password-wrap">
+            <input class="input<?= isset($errors['password']) ? ' is-invalid' : '' ?>"
+                   type="password" id="password" name="password" autocomplete="new-password" required
+                   <?= isset($errors['password']) ? 'aria-describedby="password-error" aria-invalid="true"' : '' ?>>
+            <button type="button" class="btn-password-toggle" data-toggle-password="password" aria-label="Show new password" aria-pressed="false">
+              <span class="icon-eye"><?= sv_icon('eye', 16) ?></span>
+              <span class="icon-eye-off" style="display:none;"><?= sv_icon('eye-off', 16) ?></span>
+            </button>
+          </div>
           <?php if (isset($errors['password'])): ?>
-            <p class="field-error"><?= sv_icon('alert-triangle', 14) ?><span><?= e($errors['password']) ?></span></p>
+            <p class="field-error" id="password-error"><?= sv_icon('alert-triangle', 14) ?><span><?= e($errors['password']) ?></span></p>
           <?php else: ?>
             <p class="help">At least 8 characters, with a letter and a number.</p>
           <?php endif; ?>
@@ -366,11 +380,18 @@ require __DIR__ . '/../includes/header.php';
 
         <div class="form-field">
           <label class="label" for="password_confirm">Confirm new password <span class="label__required" aria-hidden="true">*</span></label>
-          <input class="input<?= isset($errors['password_confirm']) ? ' is-invalid' : '' ?>"
-                 type="password" id="password_confirm" name="password_confirm"
-                 autocomplete="new-password" required>
+          <div class="input-password-wrap">
+            <input class="input<?= isset($errors['password_confirm']) ? ' is-invalid' : '' ?>"
+                   type="password" id="password_confirm" name="password_confirm"
+                   autocomplete="new-password" required
+                   <?= isset($errors['password_confirm']) ? 'aria-describedby="confirm-error" aria-invalid="true"' : '' ?>>
+            <button type="button" class="btn-password-toggle" data-toggle-password="password_confirm" aria-label="Show password confirmation" aria-pressed="false">
+              <span class="icon-eye"><?= sv_icon('eye', 16) ?></span>
+              <span class="icon-eye-off" style="display:none;"><?= sv_icon('eye-off', 16) ?></span>
+            </button>
+          </div>
           <?php if (isset($errors['password_confirm'])): ?>
-            <p class="field-error"><?= sv_icon('alert-triangle', 14) ?><span><?= e($errors['password_confirm']) ?></span></p>
+            <p class="field-error" id="confirm-error"><?= sv_icon('alert-triangle', 14) ?><span><?= e($errors['password_confirm']) ?></span></p>
           <?php endif; ?>
         </div>
 

@@ -285,21 +285,29 @@ require __DIR__ . '/../includes/header.php';
           <label class="label" for="password">
             Password <span class="label__required" aria-hidden="true">*</span>
           </label>
-          <input
-            class="input<?= isset($errors['password']) ? ' is-invalid' : '' ?>"
-            type="password"
-            id="password"
-            name="password"
-            autocomplete="new-password"
-            required
-            aria-required="true"
-            placeholder="Min. 8 characters"
-            <?= isset($errors['password']) ? 'aria-describedby="password-error" aria-invalid="true"' : '' ?>>
+          <div class="input-password-wrap">
+            <input
+              class="input<?= isset($errors['password']) ? ' is-invalid' : '' ?>"
+              type="password"
+              id="password"
+              name="password"
+              autocomplete="new-password"
+              required
+              aria-required="true"
+              placeholder="Min. 8 characters"
+              <?= isset($errors['password']) ? 'aria-describedby="password-error" aria-invalid="true"' : '' ?>>
+            <button type="button" class="btn-password-toggle" data-toggle-password="#password" aria-label="Show password" aria-pressed="false" title="Show password">
+              <span class="icon-eye"><?= sv_icon('eye', 18) ?></span>
+              <span class="icon-eye-off" hidden><?= sv_icon('eye-off', 18) ?></span>
+            </button>
+          </div>
           <?php if (isset($errors['password'])): ?>
             <p class="field-error" id="password-error">
               <?= sv_icon('alert-triangle', 14) ?>
               <span><?= e($errors['password']) ?></span>
             </p>
+          <?php else: ?>
+            <p class="help">At least 8 characters with 1 letter & 1 number.</p>
           <?php endif; ?>
         </div>
 
@@ -307,16 +315,22 @@ require __DIR__ . '/../includes/header.php';
           <label class="label" for="password_confirm">
             Confirm password <span class="label__required" aria-hidden="true">*</span>
           </label>
-          <input
-            class="input<?= isset($errors['password_confirm']) ? ' is-invalid' : '' ?>"
-            type="password"
-            id="password_confirm"
-            name="password_confirm"
-            autocomplete="new-password"
-            required
-            aria-required="true"
-            placeholder="Repeat password"
-            <?= isset($errors['password_confirm']) ? 'aria-describedby="password_confirm-error" aria-invalid="true"' : '' ?>>
+          <div class="input-password-wrap">
+            <input
+              class="input<?= isset($errors['password_confirm']) ? ' is-invalid' : '' ?>"
+              type="password"
+              id="password_confirm"
+              name="password_confirm"
+              autocomplete="new-password"
+              required
+              aria-required="true"
+              placeholder="Repeat password"
+              <?= isset($errors['password_confirm']) ? 'aria-describedby="password_confirm-error" aria-invalid="true"' : '' ?>>
+            <button type="button" class="btn-password-toggle" data-toggle-password="#password_confirm" aria-label="Show password confirmation" aria-pressed="false" title="Show password">
+              <span class="icon-eye"><?= sv_icon('eye', 18) ?></span>
+              <span class="icon-eye-off" hidden><?= sv_icon('eye-off', 18) ?></span>
+            </button>
+          </div>
           <?php if (isset($errors['password_confirm'])): ?>
             <p class="field-error" id="password_confirm-error">
               <?= sv_icon('alert-triangle', 14) ?>

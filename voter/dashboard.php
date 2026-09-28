@@ -88,7 +88,7 @@ require __DIR__ . '/../includes/header.php';
           <span class="mono" id="my-voter-code" style="font-size:1.05rem; font-weight:700; color:var(--blue); letter-spacing:0.04em;">
             <?= e((string) ($voter['voter_code'] ?? 'VC-2026-0000')) ?>
           </span>
-          <button class="btn btn--ghost btn--sm" type="button" data-copy="#my-voter-code" style="padding:2px 6px;">
+          <button class="btn btn--ghost btn--sm" type="button" data-copy="#my-voter-code" aria-label="Copy Voter Code" style="padding:2px 6px;">
             <?= sv_icon('copy', 14) ?>
           </button>
         </div>

@@ -254,13 +254,33 @@ require __DIR__ . '/../includes/header.php';
                         <span class="choice__party"><?= e($candidate['party']) ?></span>
                       <?php endif; ?>
                     </span>
-                    <?php if (($candidate['biography'] ?? '') !== ''): ?>
-                      <span class="choice__bio"><?= e(str_limit((string) $candidate['biography'], 180)) ?></span>
-                    <?php endif; ?>
-                    <?php if (($candidate['platform'] ?? '') !== ''): ?>
+                    <?php
+                      $hasBio = !empty($candidate['biography']);
+                      $hasPlatform = !empty($candidate['platform']);
+                      $bioId = 'bio-' . $positionId . '-' . $candidateId;
+                    ?>
+                    <?php if ($hasBio || $hasPlatform): ?>
                       <span class="choice__bio">
-                        <strong>Platform:</strong> <?= e(str_limit((string) $candidate['platform'], 180)) ?>
+                        <?php if ($hasBio): ?>
+                          <?= e(str_limit((string) $candidate['biography'], 120)) ?>
+                        <?php elseif ($hasPlatform): ?>
+                          <strong>Platform:</strong> <?= e(str_limit((string) $candidate['platform'], 120)) ?>
+                        <?php endif; ?>
                       </span>
+                      <?php if (strlen((string) ($candidate['biography'] . $candidate['platform'])) > 120): ?>
+                        <button type="button" class="bio-toggle-btn" data-toggle-bio aria-expanded="false" aria-controls="<?= e($bioId) ?>">
+                          <?= sv_icon('info', 14) ?>
+                          <span class="bio-toggle-label">Read platform &amp; bio</span>
+                        </button>
+                        <div id="<?= e($bioId) ?>" class="candidate-bio-collapse" hidden>
+                          <?php if ($hasBio): ?>
+                            <p class="text-sm"><strong>Biography:</strong> <?= e($candidate['biography']) ?></p>
+                          <?php endif; ?>
+                          <?php if ($hasPlatform): ?>
+                            <p class="text-sm" style="margin-top:var(--sp-1);"><strong>Full Platform:</strong> <?= e($candidate['platform']) ?></p>
+                          <?php endif; ?>
+                        </div>
+                      <?php endif; ?>
                     <?php endif; ?>
                   </span>
 

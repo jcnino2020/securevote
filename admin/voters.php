@@ -710,10 +710,16 @@ if ($isForm) {
                   <span class="label__required" aria-hidden="true">*</span>
                 <?php endif; ?>
               </label>
-              <input class="input<?= isset($errors['password']) ? ' is-invalid' : '' ?>"
-                     type="password" id="password" name="password" autocomplete="new-password"
-                     <?= $isNew ? 'required aria-required="true"' : '' ?>
-                     <?= isset($errors['password']) ? 'aria-describedby="password-error" aria-invalid="true"' : '' ?>>
+              <div class="input-password-wrap">
+                <input class="input<?= isset($errors['password']) ? ' is-invalid' : '' ?>"
+                       type="password" id="password" name="password" autocomplete="new-password"
+                       <?= $isNew ? 'required aria-required="true"' : '' ?>
+                       <?= isset($errors['password']) ? 'aria-describedby="password-error" aria-invalid="true"' : '' ?>>
+                <button type="button" class="btn-password-toggle" data-toggle-password="password" aria-label="Show password" aria-pressed="false">
+                  <span class="icon-eye"><?= sv_icon('eye', 16) ?></span>
+                  <span class="icon-eye-off" style="display:none;"><?= sv_icon('eye-off', 16) ?></span>
+                </button>
+              </div>
               <?php if (isset($errors['password'])): ?>
                 <p class="field-error" id="password-error">
                   <?= sv_icon('alert-triangle', 14) ?><span><?= e($errors['password']) ?></span>
@@ -730,9 +736,15 @@ if ($isForm) {
 
             <div class="form-field">
               <label class="label" for="password_confirm">Confirm password</label>
-              <input class="input<?= isset($errors['password_confirm']) ? ' is-invalid' : '' ?>"
-                     type="password" id="password_confirm" name="password_confirm" autocomplete="new-password"
-                     <?= isset($errors['password_confirm']) ? 'aria-describedby="confirm-error" aria-invalid="true"' : '' ?>>
+              <div class="input-password-wrap">
+                <input class="input<?= isset($errors['password_confirm']) ? ' is-invalid' : '' ?>"
+                       type="password" id="password_confirm" name="password_confirm" autocomplete="new-password"
+                       <?= isset($errors['password_confirm']) ? 'aria-describedby="confirm-error" aria-invalid="true"' : '' ?>>
+                <button type="button" class="btn-password-toggle" data-toggle-password="password_confirm" aria-label="Show password confirmation" aria-pressed="false">
+                  <span class="icon-eye"><?= sv_icon('eye', 16) ?></span>
+                  <span class="icon-eye-off" style="display:none;"><?= sv_icon('eye-off', 16) ?></span>
+                </button>
+              </div>
               <?php if (isset($errors['password_confirm'])): ?>
                 <p class="field-error" id="confirm-error">
                   <?= sv_icon('alert-triangle', 14) ?><span><?= e($errors['password_confirm']) ?></span>

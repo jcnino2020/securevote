@@ -178,7 +178,7 @@ require __DIR__ . '/includes/header.php';
             <a class="btn btn--primary" style="flex: 1;" href="<?= e(url('auth/login.php')) ?>">
               <?= sv_icon('vote', 16, 'btn__icon') ?><span>Sign In to Vote</span>
             </a>
-            <a class="btn btn--secondary" href="<?= e(url('voter/results.php?election_id=' . (int) $election['id'])) ?>" title="View tallies">
+            <a class="btn btn--secondary" href="<?= e(url('voter/results.php?election_id=' . (int) $election['id'])) ?>" title="View tallies" aria-label="View tallies for <?= e($election['title']) ?>">
               <?= sv_icon('results', 16) ?>
             </a>
           </div>
