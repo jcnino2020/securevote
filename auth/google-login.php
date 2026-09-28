@@ -133,8 +133,8 @@ require __DIR__ . '/../includes/header.php';
   </div>
 
   <p class="text-muted text-xs auth-footnote-sub">
-    <a href="<?= e(url('terms.php')) ?>" class="link" style="color:inherit; text-decoration:underline;">Terms of Service</a> &middot; 
-    <a href="<?= e(url('privacy.php')) ?>" class="link" style="color:inherit; text-decoration:underline;">Privacy Policy</a>
+    <a href="<?= e(url('terms.php')) ?>" class="link" target="_blank" rel="noopener noreferrer">Terms of Service</a> &middot; 
+    <a href="<?= e(url('privacy.php')) ?>" class="link" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
   </p>
 </div>
 

@@ -720,17 +720,17 @@ require __DIR__ . '/../includes/header.php';
     <div class="soc-health-grid">
       <?php foreach ($healthChecks as $hc): ?>
         <div class="soc-health-item">
-          <div class="soc-health-item__header">
-            <span class="soc-health-dot <?= $hc['ok'] ? '' : 'soc-health-dot--warning' ?>" aria-hidden="true"></span>
-            <span class="soc-health-item__title"><?= e($hc['label']) ?></span>
-          </div>
-          <div class="soc-health-item__body">
-            <div>
-              <span class="badge badge--<?= $hc['ok'] ? 'teal' : 'warning' ?>">
-                <?= e($hc['status']) ?>
-              </span>
+          <div class="soc-health-item__top">
+            <div class="soc-health-item__header">
+              <span class="soc-health-dot <?= $hc['ok'] ? '' : 'soc-health-dot--warning' ?>" aria-hidden="true"></span>
+              <span class="soc-health-item__title"><?= e($hc['label']) ?></span>
             </div>
-            <span class="soc-health-item__meta mono"><?= e($hc['meta']) ?></span>
+            <span class="badge badge--<?= $hc['ok'] ? 'teal' : 'warning' ?>">
+              <?= e($hc['status']) ?>
+            </span>
+          </div>
+          <div class="soc-health-item__meta">
+            <?= e($hc['meta']) ?>
           </div>
         </div>
       <?php endforeach; ?>
@@ -1013,9 +1013,12 @@ require __DIR__ . '/../includes/header.php';
           <?php foreach ($recentLogins as $login): ?>
             <li class="soc-feed-item">
               <span class="soc-feed-time"><?= e(relative_time($login['created_at'])) ?></span>
-              <span class="soc-feed-actor"><?= e($login['username']) ?> <span class="text-xs text-muted">(<?= e((string) $login['role']) ?>)</span></span>
+              <span class="soc-feed-actor">
+                <span class="soc-feed-user"><?= e($login['username']) ?></span>
+                <span class="soc-feed-role">(<?= e((string) $login['role']) ?>)</span>
+              </span>
               <span class="soc-feed-desc">Signed in successfully via bcrypt/OAuth</span>
-              <span class="soc-feed-ip mono"><?= e((string) ($login['ip_address'] ?? '127.0.0.1')) ?></span>
+              <span class="soc-feed-ip"><?= e((string) ($login['ip_address'] ?? '127.0.0.1')) ?></span>
             </li>
           <?php endforeach; ?>
         </ul>

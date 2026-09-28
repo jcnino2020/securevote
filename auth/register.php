@@ -366,8 +366,8 @@ require __DIR__ . '/../includes/header.php';
   </p>
   <p class="text-muted text-xs text-center auth-footnote-sub">
     By registering, you agree to our 
-    <a href="<?= e(url('terms.php')) ?>" class="link" style="color:inherit; text-decoration:underline;">Terms of Service</a> and 
-    <a href="<?= e(url('privacy.php')) ?>" class="link" style="color:inherit; text-decoration:underline;">Privacy Policy</a>.
+    <a href="<?= e(url('terms.php')) ?>" class="link" target="_blank" rel="noopener noreferrer">Terms of Service</a> and 
+    <a href="<?= e(url('privacy.php')) ?>" class="link" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
   </p>
 </div>
 

@@ -209,7 +209,7 @@ $breadcrumb   = [['label' => 'Settings', 'href' => 'admin/settings.php']];
 require __DIR__ . '/../includes/header.php';
 ?>
 
-<section class="stat-grid" aria-label="Database snapshot">
+<section class="stat-grid stat-grid--4" aria-label="Database snapshot">
   <?php foreach (array_keys($tables) as $table): ?>
     <div class="stat-card">
       <span class="stat-card__icon stat-card__icon--navy"><?= sv_icon('server', 20) ?></span>

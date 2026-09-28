@@ -47,9 +47,9 @@ $transport = $isHttps
       <div class="app-footer__legal">
         <span>&copy; <?= e(date('Y')) ?> <?= e(APP_NAME) ?> &middot; Academic Civic Voting Platform</span>
         <div class="app-footer__links">
-          <a href="<?= e(url('privacy.php')) ?>" class="link">Privacy Policy</a>
+          <a href="<?= e(url('privacy.php')) ?>" class="link" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
           <span aria-hidden="true">&middot;</span>
-          <a href="<?= e(url('terms.php')) ?>" class="link">Terms of Service</a>
+          <a href="<?= e(url('terms.php')) ?>" class="link" target="_blank" rel="noopener noreferrer">Terms of Service</a>
         </div>
       </div>
     </div>

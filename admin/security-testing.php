@@ -1330,6 +1330,7 @@ require __DIR__ . '/../includes/header.php';
   font-size: 0.75rem;
   padding: 2px 8px;
   border-radius: var(--radius-xs);
+  white-space: nowrap;
 }
 
 .pillar-badge--c { background: var(--blue-50); color: var(--blue); }
@@ -1339,6 +1340,22 @@ require __DIR__ . '/../includes/header.php';
 [data-theme="dark"] .pillar-badge--c { background: rgba(37,99,235,0.2); color: #60a5fa; }
 [data-theme="dark"] .pillar-badge--i { background: rgba(13,148,136,0.2); color: #2dd4bf; }
 [data-theme="dark"] .pillar-badge--a { background: rgba(99,102,241,0.2); color: #a5b4fc; }
+
+/* Security Code Badge */
+.sec-code-badge {
+  display: inline-block;
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+  letter-spacing: 0.03em;
+}
 
 /* Summary Checklist Grid */
 .cia-summary-card {
@@ -1580,11 +1597,11 @@ require __DIR__ . '/../includes/header.php';
     <table class="table" id="ciaTestsTable" aria-label="CIA Security Verification Results">
       <thead>
         <tr>
-          <th scope="col" style="width: 130px;">Status</th>
-          <th scope="col" style="width: 100px;">Code</th>
-          <th scope="col" style="width: 80px;">CIA</th>
+          <th scope="col" style="width: 130px; white-space: nowrap;">Status</th>
+          <th scope="col" style="width: 120px; white-space: nowrap;">Code</th>
+          <th scope="col" style="width: 80px; white-space: nowrap;">CIA</th>
           <th scope="col">Security Control & Verification Finding</th>
-          <th scope="col" class="table__actions-col" style="width: 120px;">Details</th>
+          <th scope="col" class="table__actions-col" style="width: 120px; white-space: nowrap;">Details</th>
         </tr>
       </thead>
       <tbody>
@@ -1616,16 +1633,16 @@ require __DIR__ . '/../includes/header.php';
             $detailId = 'test-detail-' . $index;
           ?>
           <tr class="test-row" data-cia="<?= e($t['cia']) ?>" data-status="<?= e($rowStatus) ?>" onclick="toggleTestDetail('<?= e($detailId) ?>', this)">
-            <td>
+            <td style="white-space: nowrap;">
               <span class="status-pill <?= e($statusClass) ?>">
                 <?= sv_icon($statusIcon, 14) ?>
                 <span><?= e($statusLabel) ?></span>
               </span>
             </td>
-            <td>
-              <code style="font-size: 0.8125rem; font-weight: 700; color: var(--text-muted);"><?= e($t['code']) ?></code>
+            <td style="white-space: nowrap;">
+              <code class="sec-code-badge"><?= e($t['code']) ?></code>
             </td>
-            <td>
+            <td style="white-space: nowrap;">
               <span class="pillar-badge <?= e($pillarClass) ?>">
                 <?= e($t['cia']) ?>
               </span>
@@ -1634,7 +1651,7 @@ require __DIR__ . '/../includes/header.php';
               <span class="table__cell-strong"><?= e($t['name']) ?></span>
               <span class="table__cell-sub"><?= e($t['result']) ?></span>
             </td>
-            <td class="table__actions-col">
+            <td class="table__actions-col" style="white-space: nowrap;">
               <button type="button" class="btn btn--secondary btn--xs" aria-expanded="false" aria-controls="<?= e($detailId) ?>" onclick="event.stopPropagation(); toggleTestDetail('<?= e($detailId) ?>', this.closest('.test-row'))">
                 <span>View Details</span>
                 <?= sv_icon('chevron-down', 13) ?>
@@ -1649,7 +1666,7 @@ require __DIR__ . '/../includes/header.php';
                   <div style="display: flex; align-items: center; gap: var(--sp-2);">
                     <span class="pillar-badge <?= e($pillarClass) ?>"><?= e($t['category']) ?> (<?= e($t['cia']) ?>)</span>
                     <strong style="font-size: 0.95rem; color: var(--text);"><?= e($t['name']) ?></strong>
-                    <code style="font-size: 0.775rem; color: var(--text-muted);">(<?= e($t['code']) ?>)</code>
+                    <code class="sec-code-badge" style="font-size: 0.775rem;">(<?= e($t['code']) ?>)</code>
                   </div>
                   <span class="text-sm text-muted">Verified: <?= e(fmt_datetime($t['tested_at'])) ?></span>
                 </div>
