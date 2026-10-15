@@ -439,7 +439,7 @@ if ($viewAction === 'eligibility') {
           </span>
         </div>
 
-        <form class="form" method="post" action="<?= e(url('admin/voters.php')) ?>">
+        <form class="form" method="post" action="<?= e(post_url('admin/voters.php')) ?>">
           <?= csrf_field() ?>
           <input type="hidden" name="action" value="save_eligibility">
           <input type="hidden" name="id" value="<?= e((string) $voter['id']) ?>">
@@ -497,7 +497,7 @@ if ($viewAction === 'eligibility') {
 
       <?php if ($elections !== []): ?>
         <div class="card__footer">
-          <form method="post" action="<?= e(url('admin/voters.php')) ?>"
+          <form method="post" action="<?= e(post_url('admin/voters.php')) ?>"
                 data-confirm="Register every active voter for the selected election?">
             <?= csrf_field() ?>
             <input type="hidden" name="action" value="register_all">
@@ -591,7 +591,7 @@ if ($isForm) {
       </div>
 
       <div class="card__body">
-        <form class="form" method="post" action="<?= e(url('admin/voters.php')) ?>" novalidate autocomplete="off">
+        <form class="form" method="post" action="<?= e(post_url('admin/voters.php')) ?>" novalidate autocomplete="off">
           <?= csrf_field() ?>
           <input type="hidden" name="action" value="save">
           <input type="hidden" name="id" value="<?= e((string) $form['id']) ?>">
@@ -779,7 +779,7 @@ if ($isForm) {
           </div>
         </div>
         <div class="card__body">
-          <form method="post" action="<?= e(url('admin/voters.php')) ?>"
+          <form method="post" action="<?= e(post_url('admin/voters.php')) ?>"
                 data-confirm="Delete the account “<?= e($form['username']) ?>”? This cannot be undone.">
             <?= csrf_field() ?>
             <input type="hidden" name="action" value="delete">
@@ -964,7 +964,7 @@ require __DIR__ . '/../includes/header.php';
                   </a>
 
                   <?php if ($voter['status'] === 'active'): ?>
-                    <form method="post" action="<?= e(url('admin/voters.php')) ?>"
+                    <form method="post" action="<?= e(post_url('admin/voters.php')) ?>"
                           data-confirm="Block “<?= e($voter['username']) ?>”? They will be signed out and cannot sign in again until reactivated.">
                       <?= csrf_field() ?>
                       <input type="hidden" name="action" value="set_status">
@@ -975,7 +975,7 @@ require __DIR__ . '/../includes/header.php';
                       </button>
                     </form>
                   <?php else: ?>
-                    <form method="post" action="<?= e(url('admin/voters.php')) ?>">
+                    <form method="post" action="<?= e(post_url('admin/voters.php')) ?>">
                       <?= csrf_field() ?>
                       <input type="hidden" name="action" value="set_status">
                       <input type="hidden" name="id" value="<?= e((string) $voter['id']) ?>">

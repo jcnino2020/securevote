@@ -93,6 +93,8 @@ $policyNotice    = results_policy_notice($election, false);
 require_once __DIR__ . '/../includes/voting.php';
 
 $positions = sv_tally_positions($electionId);
+$isFinal = in_array($effectiveStatus, ['closed', 'archived'], true);
+$finalSummary = $isFinal ? sv_final_result_summary($positions) : [];
 
 /* =====================================================================
  | CSV export
@@ -245,6 +247,26 @@ require __DIR__ . '/../includes/header.php';
   </div>
 </section>
 
+<?php if ($isFinal): ?>
+  <section class="card" aria-labelledby="final-results-heading">
+    <div class="card__header">
+      <div class="card__headings">
+        <h2 class="card__title" id="final-results-heading">Final election summary</h2>
+        <p class="card__subtitle">Voting closed <?= e(fmt_datetime((string) $election['end_datetime'])) ?>. Outcomes use submitted ballots only.</p>
+      </div>
+    </div>
+    <div class="card__body stack-sm">
+      <?php if ($finalSummary === []): ?>
+        <p class="text-muted">No positions were configured for this election.</p>
+      <?php else: ?>
+        <?php foreach ($finalSummary as $item): ?>
+          <p><strong><?= e($item['position']) ?> — <?= e($item['outcome']) ?>:</strong> <?= e($item['detail']) ?></p>
+        <?php endforeach; ?>
+      <?php endif; ?>
+    </div>
+  </section>
+<?php endif; ?>
+
 <div class="security-note">
   <?= sv_icon('shield-check', 16) ?>
   <span>
@@ -299,9 +321,9 @@ require __DIR__ . '/../includes/header.php';
         <?php if (!$hasAnyVote): ?>
           <div class="empty-state empty-state--inline">
             <span class="empty-state__icon"><?= sv_icon('clock', 24) ?></span>
-            <p class="empty-state__title">No votes recorded for this position yet</p>
+            <p class="empty-state__title">No votes recorded for this position<?= $isFinal ? '' : ' yet' ?></p>
             <p class="empty-state__text">
-              Counts will appear here as soon as ballots are submitted.
+              <?= $isFinal ? 'This election closed without a vote for this position.' : 'Counts will appear here as soon as ballots are submitted.' ?>
             </p>
           </div>
         <?php else: ?>
@@ -340,7 +362,7 @@ require __DIR__ . '/../includes/header.php';
                     <?= e((string) $count) ?> vote<?= $count === 1 ? '' : 's' ?>
                     <span class="result-row__meta">(<?= e((string) $share) ?>%)</span>
                     <?php if ($isLeading): ?>
-                      <span class="badge badge--teal"><?= sv_icon('trophy', 13) ?>Leading</span>
+                      <span class="badge badge--teal"><?= sv_icon('trophy', 13) ?><?= e(sv_result_badge_label($entry, $row, $isFinal)) ?></span>
                     <?php endif; ?>
                   </span>
                 </div>

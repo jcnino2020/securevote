@@ -31,13 +31,17 @@ $badgeClass = match ($code) {
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title><?= e($title) ?> &middot; <?= e(APP_NAME) ?></title>
 <link rel="icon" href="<?= e(asset('images/favicon.svg')) ?>" type="image/svg+xml">
+<link rel="icon" href="<?= e(asset('images/favicon-32.png')) ?>" type="image/png" sizes="32x32">
+<link rel="shortcut icon" href="<?= e(url('favicon.ico')) ?>" type="image/x-icon">
+<link rel="apple-touch-icon" href="<?= e(asset('images/apple-touch-icon.png')) ?>" sizes="180x180">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Figtree:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&display=swap">
 <link rel="stylesheet" href="<?= e(asset('css/style.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('css/redesign.css')) ?>">
 <script src="<?= e(asset('js/app.js')) ?>"></script>
 </head>
-<body class="app-shell app-shell--auth">
+<body class="app-shell app-shell--auth page-error">
   <div class="auth-layout">
     <main class="auth-card" role="alert" aria-labelledby="error-title" style="text-align: center; display: flex; flex-direction: column; align-items: center;">
       <a class="brand brand--lg" href="<?= e(url('index.php')) ?>" style="margin-bottom: var(--sp-4);">
@@ -75,8 +79,8 @@ $badgeClass = match ($code) {
 
       <div class="divider" role="presentation" style="width: 100%;"></div>
 
-      <p class="text-muted text-xs" style="display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0;">
-        <?= sv_icon('shield-check', 14) ?>
+      <p class="error-assurance">
+        <?= sv_icon('shield-check', 22) ?>
         <span>Confidentiality Protected &middot; No sensitive internal paths or stack traces disclosed.</span>
       </p>
     </main>

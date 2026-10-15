@@ -27,6 +27,16 @@ $bodyClass    = 'page-login';
 require __DIR__ . '/../includes/header.php';
 ?>
 
+<section class="auth-story" aria-labelledby="auth-story-title">
+  <a class="brand auth-story__brand" href="<?= e(url('index.php')) ?>"><?= sv_logo_mark(34) ?><span class="brand__word">Secure<span>Vote</span></span></a>
+  <div class="auth-story__content">
+    <h2 id="auth-story-title">Your voice belongs here.</h2>
+    <p>Sign in, see the elections open to you, and make your choices with confidence.</p>
+    <div class="auth-story__steps"><span>Explore elections</span><span>Choose candidates</span><span>Keep your receipt</span></div>
+  </div>
+  <div class="auth-story__mark" aria-hidden="true"><?= sv_icon('vote', 86) ?></div>
+</section>
+
 <div class="auth-main">
   <div class="auth-card">
     <div class="auth-card__head">
@@ -34,9 +44,9 @@ require __DIR__ . '/../includes/header.php';
         <?= sv_logo_mark(32) ?>
         <span class="brand__word">Secure<span>Vote</span></span>
       </a>
-      <h1 class="auth-card__title">Sign in to vote</h1>
+      <h1 class="auth-card__title">Welcome back</h1>
       <p class="auth-card__text">
-        Use your Google Account, Voter Code, or Email/Password.
+        Sign in to see your elections and get your ballot.
       </p>
     </div>
 
@@ -62,12 +72,12 @@ require __DIR__ . '/../includes/header.php';
     </div>
 
     <!-- Credentials Form -->
-    <form class="form" method="post" action="<?= e(url('auth/authenticate.php')) ?>" novalidate>
+    <form class="form" method="post" action="<?= e(post_url('auth/authenticate.php')) ?>" novalidate>
       <?= csrf_field() ?>
 
       <div class="form-field">
         <label class="label" for="identifier">
-          Email, Username, or Voter Code
+          Email, username, or voter code
           <span class="label__required" aria-hidden="true">*</span>
         </label>
         <div class="input-with-icon">
@@ -77,7 +87,7 @@ require __DIR__ . '/../includes/header.php';
             id="identifier"
             name="identifier"
             value="<?= e($loginIdentifier) ?>"
-            placeholder="e.g. user@univ.edu, username, or VC-2026-XXXX"
+            placeholder="Email, username, or voter code"
             autocomplete="username"
             spellcheck="false"
             autocapitalize="none"

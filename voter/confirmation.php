@@ -103,16 +103,24 @@ $breadcrumb   = [
 require __DIR__ . '/../includes/header.php';
 ?>
 
+<nav class="vote-progress" aria-label="Voting progress">
+  <ol>
+    <li class="is-complete"><span><?= sv_icon('check', 15) ?></span> Choose</li>
+    <li class="is-complete"><span><?= sv_icon('check', 15) ?></span> Review</li>
+    <li class="is-current" aria-current="step"><span>3</span> Receipt</li>
+  </ol>
+</nav>
+
 <section class="confirmation" aria-labelledby="confirmation-title" style="max-width: 600px; margin: 0 auto; text-align: center;">
   <div class="confirmation__icon">
     <?= sv_icon('check-circle', 36) ?>
   </div>
 
   <h1 class="confirmation__title" id="confirmation-title">
-    Ballot Recorded Successfully
+    Your vote is in!
   </h1>
   <p class="confirmation__text">
-    Your ballot has been officially recorded in the digital ballot box and verified for 1-person-1-vote compliance.
+    Your ballot has been recorded. Save the receipt code below for your records.
   </p>
 
   <div class="card" style="text-align: left; width: 100%; margin-bottom: var(--sp-6);">

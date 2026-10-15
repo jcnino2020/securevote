@@ -193,6 +193,8 @@ function sv_end_user_session(string $flashMessage = '', string $auditReason = ''
 
     session_regenerate_id(true);
 
+    unset($_SESSION['_traffic_visitor_key']);
+
     if ($flashMessage !== '') {
         flash_warning($flashMessage);
     }
@@ -416,6 +418,7 @@ function sv_login_or_register_google_user(array $profile): array
 function login_user(array $user): void
 {
     session_regenerate_id(true);
+    unset($_SESSION['_traffic_visitor_key']);
 
     $_SESSION['user_id']       = (int) $user['id'];
     $_SESSION['user_role']     = (string) $user['role'];
@@ -449,6 +452,7 @@ function logout_user(): void
     );
 
     session_regenerate_id(true);
+    unset($_SESSION['_traffic_visitor_key']);
     csrf_rotate();
 
     flash_success('You have been signed out. Your ballot, if submitted, is safely recorded.');

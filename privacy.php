@@ -32,7 +32,7 @@ require __DIR__ . '/includes/header.php';
       SecureVote Privacy Policy
     </h1>
     <p class="text-muted" style="font-size: 0.95rem; max-width: 70ch; line-height: 1.6;">
-      Last updated: <strong>September 2026</strong> &middot; Applies to all authorized students, faculty, and election participants using the SecureVote online voting platform.
+      Last updated: <strong>October 2026</strong> &middot; Applies to all authorized students, faculty, and election participants using the SecureVote online voting platform.
     </p>
   </div>
 </section>
@@ -133,7 +133,10 @@ require __DIR__ . '/includes/header.php';
           <strong>Participation Records:</strong> The election ID, submission timestamp, ballot reference token, and registration status.
         </li>
         <li>
-          <strong>Security & Audit Logs:</strong> Client IP address (stored in masked format for user protection), browser User-Agent string, and security-relevant event timestamps (such as login attempts, password updates, and session terminations) to protect against brute-force attacks and session hijacking.
+          <strong>Security & Audit Logs:</strong> Client IP address, browser User-Agent string, and security-relevant event timestamps (such as login attempts, password updates, and session terminations) to protect against brute-force attacks and session hijacking.
+        </li>
+        <li>
+          <strong>Site Traffic:</strong> SecureVote records pages opened and links clicked, the time, a random browser-session identifier, IP address, device type, browser, and operating system. When you are signed in, events are associated with your account. Administrators can inspect these records to understand usage and investigate problems. URL query strings, form entries, ballot choices, and receipt codes are not recorded in traffic events.
         </li>
       </ul>
     </section>
@@ -189,6 +192,7 @@ require __DIR__ . '/includes/header.php';
         <li><strong>Receipt Issuance & Verification:</strong> Providing you with verifiable confirmation of participation.</li>
         <li><strong>Security & Abuse Prevention:</strong> Detecting brute-force login attempts, cross-site request forgery (CSRF), and unauthorized admin access.</li>
         <li><strong>Auditing & Election Certification:</strong> Producing anonymized turnout statistics for election inspectors and committees.</li>
+        <li><strong>Site Operations:</strong> Understanding navigation through the site and diagnosing broken or confusing pages and links.</li>
       </ol>
     </section>
 

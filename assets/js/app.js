@@ -138,14 +138,25 @@
     var closers = document.querySelectorAll('[data-sidebar-close]');
     var lastFocusedElement = null;
 
+    function setSidebarAccess(open) {
+      var mobile = window.innerWidth <= 900;
+      sidebar.inert = mobile && !open;
+      if (mobile && !open) sidebar.setAttribute('aria-hidden', 'true');
+      else sidebar.removeAttribute('aria-hidden');
+    }
+
+    setSidebarAccess(false);
+
     function openSidebar() {
       lastFocusedElement = document.activeElement;
       sidebar.classList.add('is-open');
+      setSidebarAccess(true);
       if (backdrop) backdrop.hidden = false;
       document.body.style.overflow = 'hidden';
 
       Array.prototype.forEach.call(toggles, function (btn) {
         btn.setAttribute('aria-expanded', 'true');
+        btn.setAttribute('aria-label', 'Close navigation menu');
       });
 
       var closeBtn = sidebar.querySelector('.sidebar__close');
@@ -153,43 +164,66 @@
       announce('Navigation menu opened');
     }
 
-    function closeSidebar() {
+    function closeSidebar(returnFocus) {
       sidebar.classList.remove('is-open');
       if (backdrop) backdrop.hidden = true;
       document.body.style.overflow = '';
 
       Array.prototype.forEach.call(toggles, function (btn) {
         btn.setAttribute('aria-expanded', 'false');
+        btn.setAttribute('aria-label', 'Open navigation menu');
       });
 
-      if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+      if (returnFocus && lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
         lastFocusedElement.focus();
       }
+      setSidebarAccess(false);
       announce('Navigation menu closed');
     }
 
     Array.prototype.forEach.call(toggles, function (btn) {
       btn.addEventListener('click', function () {
         var isOpen = sidebar.classList.contains('is-open');
-        if (isOpen) closeSidebar();
+        if (isOpen) closeSidebar(true);
         else openSidebar();
       });
     });
 
     Array.prototype.forEach.call(closers, function (btn) {
-      btn.addEventListener('click', closeSidebar);
+      btn.addEventListener('click', function () { closeSidebar(true); });
+    });
+
+    sidebar.querySelectorAll('.nav a').forEach(function (link) {
+      link.addEventListener('click', function () {
+        if (sidebar.classList.contains('is-open')) closeSidebar(false);
+      });
     });
 
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && sidebar.classList.contains('is-open')) {
-        closeSidebar();
+        closeSidebar(true);
+      }
+      if (e.key === 'Tab' && sidebar.classList.contains('is-open')) {
+        var focusable = Array.prototype.slice.call(sidebar.querySelectorAll('a, button:not([disabled])'))
+          .filter(function (element) { return element.getClientRects().length > 0; });
+        if (!focusable.length) return;
+        var first = focusable[0];
+        var last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       }
     });
 
     window.addEventListener('resize', function () {
       if (window.innerWidth > 900 && sidebar.classList.contains('is-open')) {
-        closeSidebar();
+        closeSidebar(false);
       }
+      setSidebarAccess(sidebar.classList.contains('is-open'));
     });
   }
 

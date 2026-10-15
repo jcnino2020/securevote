@@ -115,7 +115,11 @@ The application automatically detects whether it is served from a web server roo
 3. Click **Choose File** and select `database/secure_voting.sql`.
 4. Leave format settings at default and click **Import**.
 
-This single script creates the database (`u184230832_securevote`), sets up all 9 relational tables with foreign keys and unique constraints, and inserts complete demonstration data.
+This single script creates the database (`u184230832_securevote`), sets up the application tables, and inserts demonstration data.
+
+For an existing installation, import `database/migration_site_traffic.sql` once to enable site-wide traffic records. The application also tries to create this table automatically if the database account has `CREATE TABLE` permission; the migration is the reliable route for restricted production accounts.
+
+Administrators can review page views, link clicks, device summaries, and visitor journeys under **Site Traffic**. Traffic records include route paths, destination paths or external hostnames, browser/device details, IP, and the signed-in account when available. Query strings, form fields, ballot selections, and receipts are excluded. The page does not provide city, country, or ISP data without a local geolocation database.
 
 ---
 

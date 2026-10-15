@@ -101,8 +101,9 @@ foreach ($ballot as $entry) {
  | Header
  * =================================================================== */
 
-$pageTitle   = $election['title'];
+$pageTitle   = 'Your ballot';
 $activeNav   = 'elections.php';
+$bodyClass   = 'page-voter-ballot';
 $pageActions  = '<a class="btn btn--secondary btn--sm" href="' . e(url('voter/elections.php')) . '">'
     . sv_icon('arrow-left', 16, 'btn__icon') . '<span>Leave without voting</span></a>';
 $breadcrumb   = [
@@ -112,6 +113,10 @@ $breadcrumb   = [
 
 require __DIR__ . '/../includes/header.php';
 ?>
+
+<a class="ballot-mobile-exit" href="<?= e(url('voter/elections.php')) ?>">
+  <?= sv_icon('arrow-left', 18) ?><span>Leave ballot</span>
+</a>
 
 <?php if ($errors !== []): ?>
   <div class="alert alert--danger" role="alert">
@@ -127,34 +132,20 @@ require __DIR__ . '/../includes/header.php';
   </div>
 <?php endif; ?>
 
-<section class="card" style="margin-bottom: var(--sp-6);">
-  <div class="card__header">
-    <div class="card__headings">
-      <h2 class="card__title"><?= e($election['title']) ?></h2>
-      <p class="card__subtitle">Official University Ballot &middot; Voter: <strong><?= e(user_full_name($voter)) ?></strong> (<span class="mono"><?= e((string) $voter['voter_code']) ?></span>)</p>
-    </div>
-    <?= election_badge($effective) ?>
+<nav class="vote-progress" aria-label="Voting progress">
+  <ol>
+    <li class="is-current" aria-current="step"><span>1</span> Choose</li>
+    <li><span>2</span> Review</li>
+    <li><span>3</span> Receipt</li>
+  </ol>
+</nav>
+
+<section class="vote-intro" aria-labelledby="vote-intro-title">
+  <div>
+    <h2 id="vote-intro-title">Choose your candidates</h2>
+    <p><?= e($election['title']) ?>. Select up to the number allowed for each position. You can review everything before you submit.</p>
   </div>
-  <div class="card__body stack-sm">
-    <p class="text-sm text-muted">
-      Voting is active from <?= e(fmt_datetime($election['start_datetime'])) ?>
-      until <?= e(fmt_datetime($election['end_datetime'])) ?>.
-    </p>
-    <ul class="stack-sm">
-      <li class="text-sm">
-        <?= sv_icon('check', 14) ?>
-        Each position specifies the maximum number of candidates you may choose.
-      </li>
-      <li class="text-sm">
-        <?= sv_icon('check', 14) ?>
-        You will see a review screen to verify your choices before final submission.
-      </li>
-      <li class="text-sm">
-        <?= sv_icon('shield-check', 14) ?>
-        1-person-1-vote integrity is strictly enforced. You will receive an official receipt code upon submission.
-      </li>
-    </ul>
-  </div>
+  <div class="vote-intro__time"><?= sv_icon('clock', 18) ?><span>Voting closes<br><strong><?= e(fmt_datetime($election['end_datetime'])) ?></strong></span></div>
 </section>
 
 <?php if ($ballot === []): ?>
@@ -169,7 +160,7 @@ require __DIR__ . '/../includes/header.php';
     </div>
   </section>
 <?php else: ?>
-  <form class="form" method="post" action="<?= e(url('voter/ballot.php?election_id=' . $electionId)) ?>" id="ballot-form">
+  <form class="form" method="post" action="<?= e(post_url('voter/ballot.php?election_id=' . $electionId)) ?>" id="ballot-form">
     <?= csrf_field() ?>
     <input type="hidden" name="election_id" value="<?= e((string) $electionId) ?>">
 
@@ -224,9 +215,9 @@ require __DIR__ . '/../includes/header.php';
                          name="votes[<?= e((string) $positionId) ?>][]" value=""
                          <?= ($selected[$positionId] ?? []) === [] ? 'checked' : '' ?>>
                   <span class="choice__body">
-                    <span class="choice__name">No selection (abstain)</span>
+                    <span class="choice__name">Skip this position</span>
                     <span class="choice__bio">
-                      Leave this position blank. Your other choices are still counted.
+                      You can leave this one blank and still vote for other positions.
                     </span>
                   </span>
                   <span class="choice__tick" aria-hidden="true"><?= sv_icon('check', 14) ?></span>
@@ -292,7 +283,7 @@ require __DIR__ . '/../includes/header.php';
       <?php endforeach; ?>
     </div>
 
-    <!-- Sticky / Clean Bottom Action Bar -->
+    <!-- Review controls follow the ballot on narrow screens. -->
     <div class="ballot__foot" style="background:var(--bg-card); border-radius:12px; box-shadow:var(--shadow-md); border:1px solid var(--border-color); padding:var(--sp-4);">
       <p class="ballot__foot-note">
         <?= sv_icon('info', 14) ?>

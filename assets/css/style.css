@@ -3620,7 +3620,7 @@ dialog.modal::backdrop {
 }
 
 /* ==========================================================================
-   14. Footer & Security Trust Strip
+   14. Footer
    ========================================================================== */
 
 .app-footer {
@@ -3667,38 +3667,6 @@ dialog.modal::backdrop {
   border-radius: var(--radius-sm);
 }
 
-.security-strip {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--sp-4);
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.security-strip__item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-.security-strip__item svg {
-  color: var(--primary);
-  flex-shrink: 0;
-}
-
-.security-strip__item--ok svg {
-  color: var(--success);
-}
-
-.security-strip__item--warn svg {
-  color: var(--warning);
-}
-
 .app-footer__legal {
   display: flex;
   align-items: center;
@@ -3732,9 +3700,6 @@ dialog.modal::backdrop {
     gap: var(--sp-3);
   }
 
-  .security-strip {
-    gap: var(--sp-2) var(--sp-4);
-  }
 }
 
 /* ==========================================================================

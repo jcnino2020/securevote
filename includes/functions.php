@@ -42,6 +42,17 @@ function url(string $path = ''): string
     return BASE_URL . ($path === '' ? '/' : '/' . $path);
 }
 
+/** Use the current host's canonical route for POSTs so a 301 cannot change them to GETs. */
+function post_url(string $path): string
+{
+    $requestPath = (string) (parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH) ?: '');
+    if ($requestPath === '' || str_ends_with(strtolower($requestPath), '.php')) {
+        return url($path);
+    }
+
+    return url((string) preg_replace('/\.php(?=[?#]|$)/i', '', $path, 1));
+}
+
 /** Build a URL inside assets/ with automatic cache-busting. */
 function asset(string $path): string
 {
@@ -467,7 +478,7 @@ function election_effective_status(array $election): string
     if ($start !== null && $now < $start) {
         return 'scheduled';
     }
-    if ($end !== null && $now > $end) {
+    if ($end !== null && $now >= $end) {
         return 'closed';
     }
 

@@ -428,7 +428,7 @@ if ($isForm):
       </div>
 
       <div class="card__body">
-        <form class="form" method="post" action="<?= e(url('admin/elections.php')) ?>" novalidate>
+        <form class="form" method="post" action="<?= e(post_url('admin/elections.php')) ?>" novalidate>
           <?= csrf_field() ?>
           <input type="hidden" name="action" value="save">
           <input type="hidden" name="id" value="<?= e((string) $form['id']) ?>">
@@ -577,7 +577,7 @@ if ($isForm):
               <?php if ($target === $currentStatus) { continue; } ?>
               <?php if ($target === 'archived' && $currentStatus !== 'closed') { continue; } ?>
               <?php if ($target === 'open' && !in_array($currentStatus, ['draft', 'scheduled', 'closed'], true)) { continue; } ?>
-              <form method="post" action="<?= e(url('admin/elections.php')) ?>"
+              <form method="post" action="<?= e(post_url('admin/elections.php')) ?>"
                     data-confirm="<?= e($meta['confirm']) ?>">
                 <?= csrf_field() ?>
                 <input type="hidden" name="action" value="set_status">
@@ -592,7 +592,7 @@ if ($isForm):
 
           <div class="divider" role="presentation"></div>
 
-          <form method="post" action="<?= e(url('admin/elections.php')) ?>"
+          <form method="post" action="<?= e(post_url('admin/elections.php')) ?>"
                 data-confirm="Delete this election permanently? Positions, candidates and eligibility records are removed too. This cannot be undone.">
             <?= csrf_field() ?>
             <input type="hidden" name="action" value="delete">
@@ -632,7 +632,8 @@ if ($search !== '') {
     $params[':q_desc']  = '%' . $search . '%';
 }
 if ($statusFilter !== '' && isset($statusOptions[$statusFilter])) {
-    $where[]            = 'e.status = :status';
+    // Stored open/scheduled states can age into closed without an admin click.
+    $where[]            = "(CASE WHEN e.status IN ('draft', 'closed', 'archived') THEN e.status WHEN e.start_datetime > NOW() THEN 'scheduled' WHEN e.end_datetime <= NOW() THEN 'closed' ELSE 'open' END) = :status";
     $params[':status']  = $statusFilter;
 }
 
@@ -772,7 +773,7 @@ $elections = $listStmt->fetchAll();
                     <?= sv_icon('results', 14, 'btn__icon') ?><span>Results</span>
                   </a>
                                 <?php if (in_array($election['status'], ['draft', 'scheduled'], true)): ?>
-                    <form method="post" action="<?= e(url('admin/elections.php')) ?>"
+                    <form method="post" action="<?= e(post_url('admin/elections.php')) ?>"
                           data-confirm="Open “<?= e($election['title']) ?>” for voting now?">
                       <?= csrf_field() ?>
                       <input type="hidden" name="action" value="set_status">
@@ -783,7 +784,7 @@ $elections = $listStmt->fetchAll();
                       </button>
                     </form>
                   <?php elseif ($election['status'] === 'open'): ?>
-                    <form method="post" action="<?= e(url('admin/elections.php')) ?>"
+                    <form method="post" action="<?= e(post_url('admin/elections.php')) ?>"
                           data-confirm="Close “<?= e($election['title']) ?>”? No further ballots will be accepted.">
                       <?= csrf_field() ?>
                       <input type="hidden" name="action" value="set_status">

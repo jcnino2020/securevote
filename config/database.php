@@ -22,9 +22,10 @@ declare(strict_types=1);
 require_once __DIR__ . '/config.php';
 
 /**
- * Return the shared PDO connection, opening it on first use.
+ * Return the shared PDO connection, opening it on first use. Optional callers
+ * such as traffic logging can request null instead of interrupting the page.
  */
-function db(): PDO
+function db(bool $required = true): ?PDO
 {
     static $pdo = null;
 
@@ -66,8 +67,11 @@ function db(): PDO
             $pdo->exec("SET time_zone = '+08:00'");
         } catch (PDOException $e2) {
             error_log('DB connection failed: ' . $e->getMessage() . ' | Fallback error: ' . $e2->getMessage());
-            sv_render_database_error();
-            exit;
+            if ($required) {
+                sv_render_database_error();
+                exit;
+            }
+            return null;
         }
     }
 

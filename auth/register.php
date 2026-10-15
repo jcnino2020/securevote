@@ -142,6 +142,16 @@ $bodyClass = 'page-register';
 require __DIR__ . '/../includes/header.php';
 ?>
 
+<section class="auth-story" aria-labelledby="auth-story-title">
+  <a class="brand auth-story__brand" href="<?= e(url('index.php')) ?>"><?= sv_logo_mark(34) ?><span class="brand__word">Secure<span>Vote</span></span></a>
+  <div class="auth-story__content">
+    <h2 id="auth-story-title">Be part of what comes next.</h2>
+    <p>Create your account so you are ready when an election opens on campus.</p>
+    <div class="auth-story__steps"><span>Explore elections</span><span>Choose candidates</span><span>Keep your receipt</span></div>
+  </div>
+  <div class="auth-story__mark" aria-hidden="true"><?= sv_icon('vote', 86) ?></div>
+</section>
+
 <div class="auth-main">
   <div class="auth-card">
     <div class="auth-card__head">
@@ -149,9 +159,9 @@ require __DIR__ . '/../includes/header.php';
         <?= sv_logo_mark(32) ?>
         <span class="brand__word">Secure<span>Vote</span></span>
       </a>
-      <h1 class="auth-card__title">Create voter account</h1>
+      <h1 class="auth-card__title">Join SecureVote</h1>
       <p class="auth-card__text">
-        Register with Google in 1-click or fill in your student details.
+        Use Google or fill in your details to create a voter account.
       </p>
     </div>
 
@@ -176,7 +186,7 @@ require __DIR__ . '/../includes/header.php';
       <span>or register with email</span>
     </div>
 
-    <form class="form" method="post" action="<?= e(url('auth/register.php')) ?>" novalidate>
+    <form class="form" method="post" action="<?= e(post_url('auth/register.php')) ?>" novalidate>
       <?= csrf_field() ?>
 
       <div class="form-grid">

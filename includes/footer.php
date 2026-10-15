@@ -4,18 +4,28 @@
  * =====================================================================
  * includes/footer.php
  *
- * Closes the application shell and prints the modern 2026 security strip
- * and footer navigation.
+ * Closes the application shell and prints the footer navigation.
  */
 
 $user      = current_user();
-$isHttps   = sv_is_https();
-$transport = $isHttps
-    ? ['icon' => 'lock',          'label' => 'Encrypted TLS/HTTPS Active']
-    : ['icon' => 'alert-triangle','label' => 'Local Environment (HTTP) — Deploy with HTTPS for Production'];
 ?>
 <?php if (($layout ?? 'app') !== 'auth'): ?>
   </main>
+
+  <?php if (($layout ?? '') === 'app' && ($user['role'] ?? '') === 'voter'): ?>
+    <nav class="voter-dock" aria-label="Voter quick navigation">
+      <?php foreach ([
+          ['dashboard.php', 'Home', 'dashboard'],
+          ['elections.php', 'Elections', 'vote'],
+          ['results.php', 'Results', 'results'],
+          ['profile.php', 'Profile', 'user'],
+      ] as [$file, $label, $icon]): ?>
+        <a href="<?= e(url('voter/' . $file)) ?>" <?= ($activeNav ?? '') === $file ? 'aria-current="page"' : '' ?>>
+          <?= sv_icon($icon, 19) ?><span><?= e($label) ?></span>
+        </a>
+      <?php endforeach; ?>
+    </nav>
+  <?php endif; ?>
 
   <footer class="app-footer" role="contentinfo">
     <div class="app-footer__row">
@@ -24,25 +34,6 @@ $transport = $isHttps
         <span class="app-footer__title"><?= e(APP_NAME) ?></span>
         <span class="app-footer__ver">v<?= e(APP_VERSION) ?></span>
       </div>
-
-      <ul class="security-strip" aria-label="Security controls active on this system">
-        <li class="security-strip__item security-strip__item--<?= $isHttps ? 'ok' : 'warn' ?>">
-          <?= sv_icon($transport['icon'], 14) ?>
-          <span><?= e($transport['label']) ?></span>
-        </li>
-        <li class="security-strip__item">
-          <?= sv_icon('key', 14) ?>
-          <span>Bcrypt Password Hashing</span>
-        </li>
-        <li class="security-strip__item">
-          <?= sv_icon('database', 14) ?>
-          <span>Parameterized PDO Statements</span>
-        </li>
-        <li class="security-strip__item">
-          <?= sv_icon('shield-check', 14) ?>
-          <span>Secret Ballot Transaction Integrity</span>
-        </li>
-      </ul>
 
       <div class="app-footer__legal">
         <span>&copy; <?= e(date('Y')) ?> <?= e(APP_NAME) ?> &middot; Academic Civic Voting Platform</span>

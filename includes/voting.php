@@ -870,3 +870,72 @@ function sv_tally_positions(int $electionId): array
 
     return $tally;
 }
+
+/**
+ * A closed contest has a winner only when its recorded votes determine one.
+ * Ties at the final seat and contests with no votes need an explicit summary.
+ *
+ * @param array<int, array{position: array, rows: array, total_selections: int, leading: array<int,bool>}> $tally
+ * @return array<int, array{position: string, outcome: string, detail: string}>
+ */
+function sv_final_result_summary(array $tally): array
+{
+    $summary = [];
+
+    foreach ($tally as $entry) {
+        $position = $entry['position'];
+        $seats = max(1, (int) $position['max_selections']);
+        $leaders = array_values(array_filter(
+            $entry['rows'],
+            static fn (array $row): bool => isset($entry['leading'][(int) $row['id']])
+        ));
+
+        if ((int) $entry['total_selections'] === 0 || $leaders === []) {
+            $outcome = 'No winner';
+            $detail = 'No votes were recorded for this position.';
+        } elseif (count($leaders) > $seats) {
+            $outcome = 'Tie at the cutoff';
+            $cutoffVotes = (int) $entry['rows'][$seats - 1]['vote_count'];
+            $tiedNames = array_map(
+                static fn (array $row): string => $row['first_name'] . ' ' . $row['last_name'],
+                array_values(array_filter($leaders, static fn (array $row): bool => (int) $row['vote_count'] === $cutoffVotes))
+            );
+            $detail = implode(' and ', $tiedNames) . ' are tied for a seat. Review the tally before declaring that seat.';
+        } else {
+            $outcome = $seats === 1 ? 'Winner' : 'Elected';
+            $detail = implode(', ', array_map(
+                static fn (array $row): string => $row['first_name'] . ' ' . $row['last_name'],
+                $leaders
+            ));
+        }
+
+        $summary[] = [
+            'position' => (string) $position['name'],
+            'outcome' => $outcome,
+            'detail' => $detail,
+        ];
+    }
+
+    return $summary;
+}
+
+/** Badge wording for a candidate in a live or final tally. */
+function sv_result_badge_label(array $entry, array $row, bool $isFinal): string
+{
+    if (!isset($entry['leading'][(int) $row['id']])) {
+        return '';
+    }
+    if (!$isFinal) {
+        return 'Leading';
+    }
+
+    $seats = max(1, (int) $entry['position']['max_selections']);
+    if (count($entry['leading']) > $seats) {
+        $cutoffVotes = (int) $entry['rows'][$seats - 1]['vote_count'];
+        if ((int) $row['vote_count'] === $cutoffVotes) {
+            return 'Tied';
+        }
+    }
+
+    return $seats === 1 ? 'Winner' : 'Elected';
+}

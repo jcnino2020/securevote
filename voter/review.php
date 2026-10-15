@@ -117,23 +117,20 @@ $breadcrumb   = [
 require __DIR__ . '/../includes/header.php';
 ?>
 
-<section class="card" style="margin-bottom: var(--sp-6);">
-  <div class="card__header">
-    <div class="card__headings">
-      <h2 class="card__title">Review your selections before submitting</h2>
-      <p class="card__subtitle">
-        <?= e($election['title']) ?> &middot;
-        Voter: <strong><?= e(user_full_name($voter)) ?></strong> (<span class="mono"><?= e((string) $voter['voter_code']) ?></span>)
-      </p>
-    </div>
-    <span class="badge badge--success"><?= sv_icon('shield-check', 14) ?> Ready to submit</span>
+<nav class="vote-progress" aria-label="Voting progress">
+  <ol>
+    <li class="is-complete"><span><?= sv_icon('check', 15) ?></span> Choose</li>
+    <li class="is-current" aria-current="step"><span>2</span> Review</li>
+    <li><span>3</span> Receipt</li>
+  </ol>
+</nav>
+
+<section class="vote-intro" aria-labelledby="vote-intro-title">
+  <div>
+    <h2 id="vote-intro-title">Take one last look</h2>
+    <p>Review your choices for <?= e($election['title']) ?>. You can go back and change them before submitting. After submission, your ballot cannot be changed.</p>
   </div>
-  <div class="card__body stack-sm">
-    <p class="text-sm text-muted">
-      This is your opportunity to review your candidate selections. Once you click
-      <strong>"Confirm and submit my ballot"</strong>, your ballot will be officially counted and locked.
-    </p>
-  </div>
+  <span class="badge badge--success"><?= sv_icon('shield-check', 14) ?> Ready to submit</span>
 </section>
 
 <div class="review-summary" style="margin-bottom: var(--sp-6);">
@@ -206,7 +203,7 @@ require __DIR__ . '/../includes/header.php';
 
 <div class="card">
   <div class="card__body">
-    <form class="form" method="post" action="<?= e(url('voter/review.php?election_id=' . $electionId)) ?>">
+    <form class="form" method="post" action="<?= e(post_url('voter/review.php?election_id=' . $electionId)) ?>">
       <?= csrf_field() ?>
 
       <div class="flex flex--between flex--middle flex--wrap gap-md">

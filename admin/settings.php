@@ -262,7 +262,7 @@ require __DIR__ . '/../includes/header.php';
       <span class="badge badge--info"><?= sv_icon('user', 14) ?>Administrator</span>
     </div>
     <div class="card__body">
-      <form class="form" method="post" action="<?= e(url('admin/settings.php')) ?>" novalidate>
+      <form class="form" method="post" action="<?= e(post_url('admin/settings.php')) ?>" novalidate>
         <?= csrf_field() ?>
         <input type="hidden" name="action" value="save_profile">
 
@@ -338,7 +338,7 @@ require __DIR__ . '/../includes/header.php';
       <span class="badge badge--neutral"><?= sv_icon('key', 14) ?><?= e($hashLabel) ?></span>
     </div>
     <div class="card__body">
-      <form class="form" method="post" action="<?= e(url('admin/settings.php')) ?>" novalidate autocomplete="off">
+      <form class="form" method="post" action="<?= e(post_url('admin/settings.php')) ?>" novalidate autocomplete="off">
         <?= csrf_field() ?>
         <input type="hidden" name="action" value="change_password">
 
@@ -455,7 +455,7 @@ require __DIR__ . '/../includes/header.php';
         </span>
       </div>
 
-      <form class="form" method="post" action="<?= e(url('admin/settings.php')) ?>"
+      <form class="form" method="post" action="<?= e(post_url('admin/settings.php')) ?>"
             data-confirm="Permanently delete audit entries older than the chosen window?">
         <?= csrf_field() ?>
         <input type="hidden" name="action" value="purge_audit">

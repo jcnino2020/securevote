@@ -1,0 +1,7 @@
+{
+  "title": "SecureVote",
+  "description": "Student council voting and election verification portal with verifiable ballot receipts and role-based administration.",
+  "badge": "Active Election",
+  "accent": "#38bdf8",
+  "tags": ["PHP 8.2", "MySQL", "Authentication", "Voter Portal", "Admin Suite"]
+}

@@ -39,6 +39,9 @@ $showPageTitle = $showPageTitle ?? ($layout !== 'portal');
 
 $hasSidebar = ($layout === 'app' && $user !== null);
 $shellClass = 'app-shell app-shell--' . ($layout === 'auth' ? 'auth' : ($hasSidebar ? 'app' : 'portal'));
+if ($hasSidebar && ($user['role'] ?? '') === 'admin') {
+    $shellClass .= ' app-shell--admin';
+}
 
 /* ---------------------------------------------------------------------
  | Sidebar Navigation Specification
@@ -47,13 +50,13 @@ $navGroups = [];
 
 if ($user !== null && ($user['role'] ?? '') === 'admin') {
     $navGroups[] = [
-        'label' => 'Overview',
+        'label' => 'Command',
         'items' => [
-            ['file' => 'dashboard.php', 'label' => 'SOC Dashboard', 'icon' => 'dashboard', 'href' => 'admin/dashboard.php'],
+            ['file' => 'dashboard.php', 'label' => 'Operations center', 'icon' => 'dashboard', 'href' => 'admin/dashboard.php'],
         ],
     ];
     $navGroups[] = [
-        'label' => 'Election Setup',
+        'label' => 'Election operations',
         'items' => [
             ['file' => 'elections.php',  'label' => 'Elections',  'icon' => 'vote',       'href' => 'admin/elections.php'],
             ['file' => 'positions.php',  'label' => 'Positions',  'icon' => 'positions',  'href' => 'admin/positions.php'],
@@ -61,33 +64,34 @@ if ($user !== null && ($user['role'] ?? '') === 'admin') {
         ],
     ];
     $navGroups[] = [
-        'label' => 'Voters & Results',
+        'label' => 'People & evidence',
         'items' => [
             ['file' => 'voters.php',     'label' => 'Voter Registry', 'icon' => 'user-check', 'href' => 'admin/voters.php'],
             ['file' => 'results.php',    'label' => 'Certified Tallies', 'icon' => 'results', 'href' => 'admin/results.php'],
             ['file' => 'audit-logs.php', 'label' => 'Audit Trail',    'icon' => 'audit',      'href' => 'admin/audit-logs.php'],
+            ['file' => 'traffic.php',    'label' => 'Site Traffic',   'icon' => 'chart',      'href' => 'admin/traffic.php'],
         ],
     ];
     $navGroups[] = [
-        'label' => 'System & Security',
+        'label' => 'Assurance',
         'items' => [
-            ['file' => 'security-testing.php', 'label' => 'CIA Security Suite', 'icon' => 'shield-check', 'href' => 'admin/security-testing.php'],
+            ['file' => 'security-testing.php', 'label' => 'Security Checks', 'icon' => 'shield-check', 'href' => 'admin/security-testing.php'],
             ['file' => 'settings.php',         'label' => 'System Settings',    'icon' => 'settings',     'href' => 'admin/settings.php'],
         ],
     ];
 } elseif ($user !== null) {
     $navGroups[] = [
-        'label' => 'Voting Portal',
+        'label' => 'Your voting space',
         'items' => [
-            ['file' => 'dashboard.php', 'label' => 'My Dashboard', 'icon' => 'dashboard', 'href' => 'voter/dashboard.php'],
-            ['file' => 'elections.php', 'label' => 'Active Elections', 'icon' => 'vote',  'href' => 'voter/elections.php'],
-            ['file' => 'results.php',   'label' => 'Election Results', 'icon' => 'results', 'href' => 'voter/results.php'],
+            ['file' => 'dashboard.php', 'label' => 'Home', 'icon' => 'dashboard', 'href' => 'voter/dashboard.php'],
+            ['file' => 'elections.php', 'label' => 'Elections', 'icon' => 'vote',  'href' => 'voter/elections.php'],
+            ['file' => 'results.php',   'label' => 'Results', 'icon' => 'results', 'href' => 'voter/results.php'],
         ],
     ];
     $navGroups[] = [
-        'label' => 'Voter Account',
+        'label' => 'Account',
         'items' => [
-            ['file' => 'profile.php', 'label' => 'Identity & History', 'icon' => 'user', 'href' => 'voter/profile.php'],
+            ['file' => 'profile.php', 'label' => 'My profile', 'icon' => 'user', 'href' => 'voter/profile.php'],
         ],
     ];
 }
@@ -120,16 +124,24 @@ $flashHtml = ob_get_clean();
 <title><?= e($pageTitle) ?> &middot; <?= e(APP_NAME) ?></title>
 <meta name="description" content="<?= e(APP_TAGLINE) ?>">
 <meta name="color-scheme" content="light dark">
-<meta name="theme-color" content="#059669" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0b0d12" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f7ff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131a38" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="<?= e(asset('images/favicon.svg')) ?>" type="image/svg+xml">
+<link rel="icon" href="<?= e(asset('images/favicon-32.png')) ?>" type="image/png" sizes="32x32">
+<link rel="shortcut icon" href="<?= e(url('favicon.ico')) ?>" type="image/x-icon">
+<link rel="apple-touch-icon" href="<?= e(asset('images/apple-touch-icon.png')) ?>" sizes="180x180">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Figtree:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&display=swap">
 <link rel="stylesheet" href="<?= e(asset('css/style.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('css/redesign.css')) ?>">
+<?php if ($bodyClass === 'page-admin-traffic'): ?><link rel="stylesheet" href="<?= e(asset('css/traffic.css')) ?>"><?php endif; ?>
 <script src="<?= e(asset('js/app.js')) ?>"></script>
+<script src="<?= e(asset('js/navigation.js')) ?>" defer></script>
+<script src="<?= e(asset('js/traffic.js')) ?>" defer></script>
 </head>
 <body class="<?= e($shellClass . ($bodyClass !== '' ? ' ' . $bodyClass : '')) ?>">
+<div id="traffic-config" data-endpoint="<?= e(post_url('includes/traffic-event.php')) ?>" data-token="<?= e(csrf_token()) ?>" hidden></div>
 
 <a class="skip-link" href="#main-content">Skip to main content</a>
 
@@ -146,6 +158,8 @@ $flashHtml = ob_get_clean();
     </a>
     <button class="icon-btn sidebar__close" type="button" data-sidebar-close
             aria-label="Close navigation" title="Close navigation"><?= sv_icon('x', 18) ?></button>
+    <button class="icon-btn sidebar__collapse" type="button" data-sidebar-collapse
+            aria-controls="sidebar" aria-expanded="true" aria-label="Collapse navigation" title="Collapse navigation"><?= sv_icon('chevron-left', 18) ?></button>
   </div>
 
   <nav class="nav" aria-label="Application sections">
@@ -160,6 +174,8 @@ $flashHtml = ob_get_clean();
           <li>
             <a class="nav__item<?= $isActive ? ' is-active' : '' ?>"
                href="<?= e(url($item['href'])) ?>"
+               aria-label="<?= e($item['label']) ?>"
+               title="<?= e($item['label']) ?>"
                <?= $isActive ? 'aria-current="page"' : '' ?>>
               <?= sv_icon($item['icon'], 18, 'nav__icon') ?>
               <span class="nav__label"><?= e($item['label']) ?></span>
@@ -181,7 +197,7 @@ $flashHtml = ob_get_clean();
         </span>
       </span>
     </div>
-    <form method="post" action="<?= e(url('auth/logout.php')) ?>" class="logout-form">
+    <form method="post" action="<?= e(post_url('auth/logout.php')) ?>" class="logout-form">
       <?= csrf_field() ?>
       <button class="nav__item nav__item--button" type="submit" title="Sign out of your session">
         <?= sv_icon('logout', 18, 'nav__icon') ?>
@@ -197,7 +213,7 @@ $flashHtml = ob_get_clean();
     <div class="topbar__left">
       <?php if ($hasSidebar): ?>
         <button class="icon-btn topbar__menu" type="button" data-sidebar-toggle
-                aria-controls="sidebar" aria-expanded="false" aria-label="Toggle navigation menu">
+                aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation menu">
           <?= sv_icon('menu', 20) ?>
         </button>
       <?php else: ?>
@@ -205,10 +221,18 @@ $flashHtml = ob_get_clean();
           <?= sv_logo_mark(30) ?>
           <span class="brand__word">Secure<span>Vote</span></span>
         </a>
+        <nav class="public-nav" aria-label="Explore SecureVote">
+          <a href="<?= e($bodyClass === 'page-home' ? '#open-elections' : url('index.php') . '#open-elections') ?>">Elections</a>
+          <a href="<?= e($bodyClass === 'page-home' ? '#how-it-works' : url('index.php') . '#how-it-works') ?>">How it works</a>
+          <a href="<?= e(url('privacy.php')) ?>">Privacy</a>
+        </nav>
       <?php endif; ?>
 
       <?php if ($showPageTitle || count($breadcrumb) > 1): ?>
         <div class="topbar__titles">
+          <?php if ($hasSidebar && ($user['role'] ?? '') === 'admin'): ?>
+            <span class="admin-topbar__eyebrow">SECUREVOTE / ADMIN OPERATIONS</span>
+          <?php endif; ?>
           <?php if (count($breadcrumb) > 1): ?>
             <nav class="breadcrumb" aria-label="Breadcrumb navigation">
               <ol>
@@ -234,6 +258,21 @@ $flashHtml = ob_get_clean();
     </div>
 
     <div class="topbar__actions">
+      <?php if (!$hasSidebar): ?>
+        <div class="public-menu" data-public-menu>
+          <button class="public-menu__toggle" type="button" data-public-menu-toggle
+                  aria-label="Open navigation menu" aria-controls="public-menu-panel" aria-expanded="false">
+            <?= sv_icon('menu', 19, 'public-menu__icon--open') ?>
+            <?= sv_icon('x', 19, 'public-menu__icon--close') ?>
+            <span>Menu</span>
+          </button>
+          <nav class="public-menu__panel" id="public-menu-panel" aria-label="Explore SecureVote on mobile" hidden>
+            <a href="<?= e($bodyClass === 'page-home' ? '#open-elections' : url('index.php') . '#open-elections') ?>">Elections</a>
+            <a href="<?= e($bodyClass === 'page-home' ? '#how-it-works' : url('index.php') . '#how-it-works') ?>">How it works</a>
+            <a href="<?= e(url('privacy.php')) ?>">Privacy</a>
+          </nav>
+        </div>
+      <?php endif; ?>
       <?= $pageActions ?>
 
       <button class="icon-btn theme-toggle-btn" type="button" data-theme-toggle

@@ -496,7 +496,7 @@ if ($isForm):
 
         <div class="card__body">
           <form class="form" method="post" enctype="multipart/form-data"
-                action="<?= e(url('admin/candidates.php')) ?>" novalidate>
+                action="<?= e(post_url('admin/candidates.php')) ?>" novalidate>
             <?= csrf_field() ?>
             <input type="hidden" name="action" value="save">
             <input type="hidden" name="id" value="<?= e((string) $form['id']) ?>">
@@ -681,7 +681,7 @@ if ($isForm):
             </div>
           </div>
           <div class="card__body">
-            <form method="post" action="<?= e(url('admin/candidates.php')) ?>"
+            <form method="post" action="<?= e(post_url('admin/candidates.php')) ?>"
                   data-confirm="Delete “<?= e($form['first_name'] . ' ' . $form['last_name']) ?>”? This cannot be undone.">
               <?= csrf_field() ?>
               <input type="hidden" name="action" value="delete">

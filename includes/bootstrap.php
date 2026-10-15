@@ -22,6 +22,7 @@ require_once __DIR__ . '/flash.php';
 require_once __DIR__ . '/csrf.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/icons.php';
+require_once __DIR__ . '/traffic.php';
 
 // Any uncaught exception or fatal error becomes a calm, branded page and
 // a line in storage/logs/php-error.log, never a stack trace on screen.
@@ -32,4 +33,5 @@ register_shutdown_function('sv_handle_shutdown');
 // the page body runs, so no page can forget them.
 if (PHP_SAPI !== 'cli') {
     sv_enforce_session_security();
+    sv_track_page_request();
 }

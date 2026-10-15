@@ -1,0 +1,7 @@
+{
+  "title": "AIMS Portal",
+  "description": "Academic Information Management System for student records, enrollment tracking, curriculum evaluation, and grade submissions.",
+  "badge": "Academic Hub",
+  "accent": "#10b981",
+  "tags": ["Academic", "Student Records", "PHP", "Database", "Faculty"]
+}

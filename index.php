@@ -30,7 +30,9 @@ $openStmt = $pdo->query(
             (SELECT COUNT(*) FROM candidates c WHERE c.election_id = e.id AND c.status = 'active') AS candidate_count,
             (SELECT COUNT(*) FROM ballots b WHERE b.election_id = e.id AND b.status = 'submitted') AS ballot_count
        FROM elections e
-      WHERE e.status = 'open'
+      WHERE e.status IN ('open', 'scheduled')
+        AND e.start_datetime <= NOW()
+        AND e.end_datetime > NOW()
       ORDER BY e.start_datetime DESC"
 );
 $openElections = $openStmt->fetchAll();
@@ -42,7 +44,8 @@ $closedStmt = $pdo->query(
             (SELECT COUNT(*) FROM candidates c WHERE c.election_id = e.id AND c.status = 'active') AS candidate_count,
             (SELECT COUNT(*) FROM ballots b WHERE b.election_id = e.id AND b.status = 'submitted') AS ballot_count
        FROM elections e
-      WHERE e.status = 'closed'
+      WHERE e.status IN ('closed', 'archived')
+         OR (e.status IN ('open', 'scheduled') AND e.end_datetime <= NOW())
       ORDER BY e.end_datetime DESC
       LIMIT 6"
 );
@@ -52,6 +55,7 @@ $pageTitle   = 'Welcome to SecureVote';
 $activeNav   = '';
 $breadcrumb  = [];
 $layout      = 'portal';
+$bodyClass   = 'page-home';
 $pageActions  = '<a class="btn btn--sm btn--primary" href="' . e(url('auth/login.php')) . '">'
     . sv_icon('lock', 16, 'btn__icon') . '<span>Sign In</span></a>'
     . '<a class="btn btn--sm btn--secondary topbar__register-btn" href="' . e(url('auth/register.php')) . '">'
@@ -60,204 +64,123 @@ $pageActions  = '<a class="btn btn--sm btn--primary" href="' . e(url('auth/login
 require __DIR__ . '/includes/header.php';
 ?>
 
-<!-- Hero Application Panel (2026 Wide Modern Surface) -->
-<section class="card hero-card">
-  <div class="card__body hero-card__body">
-    <div class="hero-grid">
-      <div class="hero-main">
-        <h1 class="hero-title">
-          University Student Council Online Voting
-        </h1>
-        <p class="hero-desc">
-          Authenticate securely with your <strong>Google Account</strong>, <strong>Personal Voter Code</strong>, or <strong>Email/Password</strong>. Ballots are recorded with cryptographic isolation, strict 1-person-1-vote constraints, and verifiable digital receipts.
-        </p>
-        
-        <!-- Multi-Method Action Buttons (Curved Squares) -->
-        <div class="hero-actions">
-          <a class="btn btn--google btn--lg" href="<?= e(url('auth/google-login.php')) ?>" id="btn-hero-google">
-            <?= sv_icon('google', 20, 'btn__icon') ?>
-            <span>Continue with Google</span>
-          </a>
-          <a class="btn btn--primary btn--lg" href="<?= e(url('auth/login.php')) ?>">
-            <?= sv_icon('lock', 18, 'btn__icon') ?>
-            <span>Sign In to Vote</span>
-          </a>
-          <a class="btn btn--secondary btn--lg" href="<?= e(url('auth/register.php')) ?>">
-            <?= sv_icon('user-plus', 18, 'btn__icon') ?>
-            <span>Register Account</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- Quick Security Pillars (Curved Panel) -->
-      <div class="hero-pillars">
-        <h2 class="hero-pillars__title">
-          Voting Integrity Pillars
-        </h2>
-        <ul class="hero-pillars__list">
-          <li>
-            <span class="hero-pillars__icon" style="color: var(--primary);"><?= sv_icon('google', 18) ?></span>
-            <span><strong>Google OAuth 2.0:</strong> Fast 1-click institutional verification.</span>
-          </li>
-          <li>
-            <span class="hero-pillars__icon" style="color: var(--accent);"><?= sv_icon('key', 18) ?></span>
-            <span><strong>Personal Voter Code:</strong> Unique passcode issued to every registered voter.</span>
-          </li>
-          <li>
-            <span class="hero-pillars__icon" style="color: var(--success);"><?= sv_icon('shield-check', 18) ?></span>
-            <span><strong>1 Person, 1 Vote:</strong> Database-enforced unique ballot constraints.</span>
-          </li>
-          <li>
-            <span class="hero-pillars__icon" style="color: var(--primary);"><?= sv_icon('copy', 18) ?></span>
-            <span><strong>Digital Receipts:</strong> Cryptographic token to verify your ballot was counted.</span>
-          </li>
-        </ul>
-      </div>
+<section class="campus-hero" aria-labelledby="campus-hero-title">
+  <div class="campus-hero__copy">
+    <h1 id="campus-hero-title">Your campus.<br><span>Your say.</span></h1>
+    <p>Choose the students who will represent you. SecureVote makes it easy to explore an election, make your choices, and keep a receipt after you vote.</p>
+    <div class="campus-hero__actions">
+      <a class="btn btn--primary btn--lg" href="<?= e(url('auth/login.php')) ?>">
+        <?= sv_icon('vote', 18, 'btn__icon') ?><span>Sign in to vote</span>
+      </a>
+      <a class="btn btn--secondary btn--lg" href="#open-elections">Explore elections <?= sv_icon('arrow-right', 17) ?></a>
     </div>
+    <p class="campus-hero__join">New to SecureVote? <a href="<?= e(url('auth/register.php')) ?>">Create your voter account</a></p>
+  </div>
+  <div class="campus-hero__art" aria-hidden="true">
+    <div class="campus-hero__orbit campus-hero__orbit--one"></div>
+    <div class="campus-hero__orbit campus-hero__orbit--two"></div>
+    <div class="ballot-illustration">
+      <div class="ballot-illustration__head">
+        <?= sv_logo_mark(28) ?>
+        <span>YOUR VOTE</span>
+      </div>
+      <div class="ballot-illustration__title"></div>
+      <div class="ballot-illustration__line ballot-illustration__line--short"></div>
+      <div class="ballot-illustration__option"><i></i><b></b></div>
+      <div class="ballot-illustration__option is-selected"><i><?= sv_icon('check', 16) ?></i><b></b></div>
+      <div class="ballot-illustration__option"><i></i><b></b></div>
+      <div class="ballot-illustration__foot"><span></span><span></span></div>
+    </div>
+    <div class="campus-hero__sticker"><?= sv_icon('check-circle', 22) ?><span>Choice made!</span></div>
   </div>
 </section>
 
-<!-- Active Elections -->
-<section style="margin-bottom: var(--sp-8);">
-  <div class="section-heading-row">
+<div class="student-steps" id="how-it-works" aria-label="How SecureVote works">
+  <div><span>1</span><div><strong>Explore</strong><small>See what is on the ballot</small></div></div>
+  <div><span>2</span><div><strong>Choose</strong><small>Pick your candidates</small></div></div>
+  <div><span>3</span><div><strong>Confirm</strong><small>Review and get a receipt</small></div></div>
+</div>
+
+<section class="home-section" id="open-elections" aria-labelledby="open-elections-heading">
+  <div class="home-section__head">
     <div>
-      <h2 style="font-size: 1.35rem; font-weight: 800; margin: 0; letter-spacing: -0.02em;">Active Elections (Open for Voting)</h2>
-      <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 3px;">Sign in to cast your verified ballot in open university elections.</p>
+      <h2 id="open-elections-heading">Elections open now</h2>
+      <p>Explore what is happening and sign in when you are ready to vote.</p>
     </div>
-    <span class="badge badge--success" style="font-size: 0.84rem; padding: 5px 12px;"><?= count($openElections) ?> Open</span>
+    <span class="home-count"><?= e((string) count($openElections)) ?> open</span>
   </div>
 
   <?php if ($openElections === []): ?>
-    <div class="card">
-      <div class="empty-state">
-        <span class="empty-state__icon"><?= sv_icon('clock', 30) ?></span>
-        <h3 class="empty-state__title">No elections currently open for voting</h3>
-        <p class="empty-state__text">Check back soon or view finalized results from past elections below.</p>
+    <div class="home-empty">
+      <span class="home-empty__icon" aria-hidden="true"><?= sv_icon('clock', 28) ?></span>
+      <div>
+        <h3>No election is open right now</h3>
+        <p>When voting starts, you will find the election here. You can still create an account ahead of time.</p>
       </div>
+      <a class="btn btn--secondary" href="<?= e(url('auth/register.php')) ?>">Create an account</a>
     </div>
   <?php else: ?>
-    <div class="grid-3">
+    <div class="election-grid">
       <?php foreach ($openElections as $election): ?>
-        <div class="card card--interactive" style="display: flex; flex-direction: column; justify-content: space-between;">
-          <div class="card__header">
-            <div class="card__headings">
-              <h3 class="card__title" style="font-size: 1.1rem;"><?= e($election['title']) ?></h3>
-              <p class="card__subtitle"><?= e(fmt_range($election['start_datetime'], $election['end_datetime'])) ?></p>
-            </div>
-            <span class="badge badge--success"><?= sv_icon('vote', 12) ?> Open</span>
+        <article class="election-tile">
+          <div class="election-tile__top">
+            <span class="badge badge--success"><?= sv_icon('vote', 13) ?> Voting open</span>
+            <span class="election-tile__countdown"><?= e(countdown_text($election)) ?></span>
           </div>
-
-          <div class="card__body">
-            <?php if (!empty($election['description'])): ?>
-              <p class="text-sm text-muted" style="margin-bottom: var(--sp-4); line-height: 1.55;">
-                <?= e(str_limit((string) $election['description'], 160)) ?>
-              </p>
-            <?php endif; ?>
-
-            <dl class="kv" style="font-size: 0.85rem;">
-              <div class="kv__row">
-                <dt class="kv__key text-muted">Contested Seats</dt>
-                <dd class="kv__value" style="font-weight: 600;"><?= e((string) $election['position_count']) ?> Positions</dd>
-              </div>
-              <div class="kv__row">
-                <dt class="kv__key text-muted">Active Candidates</dt>
-                <dd class="kv__value" style="font-weight: 600;"><?= e((string) $election['candidate_count']) ?> Candidates</dd>
-              </div>
-              <div class="kv__row">
-                <dt class="kv__key text-muted">Closes In</dt>
-                <dd class="kv__value" style="color: var(--warning); font-weight: 700;"><?= e(countdown_text($election)) ?></dd>
-              </div>
-            </dl>
+          <h3><?= e($election['title']) ?></h3>
+          <p class="election-tile__date"><?= e(fmt_range($election['start_datetime'], $election['end_datetime'])) ?></p>
+          <?php if (!empty($election['description'])): ?>
+            <p class="election-tile__description"><?= e(str_limit((string) $election['description'], 160)) ?></p>
+          <?php endif; ?>
+          <div class="election-tile__facts">
+            <span><?= e((string) $election['position_count']) ?> positions</span>
+            <span><?= e((string) $election['candidate_count']) ?> candidates</span>
           </div>
-
-          <div class="card__footer" style="display: flex; gap: var(--sp-3);">
-            <a class="btn btn--primary" style="flex: 1;" href="<?= e(url('auth/login.php')) ?>">
-              <?= sv_icon('vote', 16, 'btn__icon') ?><span>Sign In to Vote</span>
-            </a>
-            <a class="btn btn--secondary" href="<?= e(url('voter/results.php?election_id=' . (int) $election['id'])) ?>" title="View tallies" aria-label="View tallies for <?= e($election['title']) ?>">
-              <?= sv_icon('results', 16) ?>
-            </a>
+          <div class="election-tile__actions">
+            <a class="btn btn--primary" href="<?= e(url('auth/login.php')) ?>">Sign in to vote <?= sv_icon('arrow-right', 16) ?></a>
+            <a class="btn btn--ghost" href="<?= e(url('voter/results.php?election_id=' . (int) $election['id'])) ?>" aria-label="View results for <?= e($election['title']) ?>">Results</a>
           </div>
-        </div>
+        </article>
       <?php endforeach; ?>
     </div>
   <?php endif; ?>
 </section>
 
-<!-- Concluded Elections & Results -->
 <?php if ($closedElections !== []): ?>
-  <section style="margin-bottom: var(--sp-8);">
-    <div class="section-heading-row">
-      <div>
-        <h2 style="font-size: 1.35rem; font-weight: 800; margin: 0; letter-spacing: -0.02em;">Concluded Elections & Results</h2>
-        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 3px;">Public tallies and certified winners.</p>
-      </div>
-    </div>
-
-    <div class="grid-3">
-      <?php foreach ($closedElections as $election): ?>
-        <div class="card">
-          <div class="card__header">
-            <div class="card__headings">
-              <h3 class="card__title" style="font-size: 1.05rem;"><?= e($election['title']) ?></h3>
-              <p class="card__subtitle">Ended on <?= e(fmt_datetime($election['end_datetime'])) ?></p>
-            </div>
-            <span class="badge badge--neutral"><?= sv_icon('check-circle', 12) ?> Closed</span>
-          </div>
-          <div class="card__body">
-            <p class="text-sm text-muted">
-              Total ballots certified: <strong style="color: var(--text);"><?= e((string) $election['ballot_count']) ?> votes</strong>
-            </p>
-          </div>
-          <div class="card__footer">
-            <a class="btn btn--secondary btn--sm btn--block" href="<?= e(url('voter/results.php?election_id=' . (int) $election['id'])) ?>">
-              <?= sv_icon('results', 14, 'btn__icon') ?><span>View Certified Results</span>
-            </a>
-          </div>
-        </div>
-      <?php endforeach; ?>
-    </div>
-  </section>
-<?php endif; ?>
-
-<!-- 3-Step Guide to Voting (Curved Rectangles) -->
-<section class="card" style="margin-bottom: var(--sp-6);">
-  <div class="card__header">
-    <div class="card__headings">
-      <h2 class="card__title">How to Cast Your Ballot</h2>
-      <p class="card__subtitle">3 simple steps to participate in university elections</p>
+<section class="home-section" aria-labelledby="past-elections-heading">
+  <div class="home-section__head">
+    <div>
+      <h2 id="past-elections-heading">Past elections</h2>
+      <p>Look back at completed elections and published results.</p>
     </div>
   </div>
-  <div class="card__body">
-    <div class="grid-3">
-      <div class="step-guide-card">
-        <div class="step-guide-num">01</div>
-        <h3 class="step-guide-title">Sign In</h3>
-        <p class="text-sm text-muted" style="line-height: 1.55;">Use 1-click Google OAuth, your university Email/Password, or your personal Voter Code (<code>VC-2026-XXXX</code>).</p>
-      </div>
+  <div class="past-election-list">
+    <?php foreach ($closedElections as $election): ?>
+      <article class="past-election">
+        <div>
+          <h3><?= e($election['title']) ?></h3>
+          <p>Ended <?= e(fmt_datetime($election['end_datetime'])) ?> &middot; <?= e((string) $election['ballot_count']) ?> ballots</p>
+        </div>
+        <a class="btn btn--secondary btn--sm" href="<?= e(url('voter/results.php?election_id=' . (int) $election['id'])) ?>">View results <?= sv_icon('arrow-right', 15) ?></a>
+      </article>
+    <?php endforeach; ?>
+  </div>
+</section>
+<?php endif; ?>
 
-      <div class="step-guide-card">
-        <div class="step-guide-num">02</div>
-        <h3 class="step-guide-title">Select Candidates</h3>
-        <p class="text-sm text-muted" style="line-height: 1.55;">Review candidate platforms, inspect biographies, and select candidates with real-time selection limits.</p>
-      </div>
-
-      <div class="step-guide-card">
-        <div class="step-guide-num">03</div>
-        <h3 class="step-guide-title">Get Digital Receipt</h3>
-        <p class="text-sm text-muted" style="line-height: 1.55;">Submit your ballot and receive an official verification token (<code>SV-2026-XXXXXX</code>) to prove your ballot was counted.</p>
-      </div>
+<section class="home-help" aria-labelledby="home-help-heading">
+  <div>
+    <h2 id="home-help-heading">New to voting here?</h2>
+    <p>Sign in with Google, a voter code, or your account details. Read about candidates, make your selections, and review everything before submitting.</p>
+    <a href="<?= e(url('auth/register.php')) ?>" class="btn btn--secondary">Get started <?= sv_icon('arrow-right', 16) ?></a>
+  </div>
+  <div class="home-help__trust">
+    <?= sv_icon('shield-check', 24) ?>
+    <div>
+      <strong>Your choices stay private</strong>
+      <p>SecureVote records your participation separately from your candidate selections. After you vote, you receive a receipt code for your records.</p>
     </div>
   </div>
 </section>
-
-<!-- Verification Guarantee Callout -->
-<div class="security-note" style="margin-bottom: var(--sp-6);">
-  <?= sv_icon('shield-check', 20) ?>
-  <div>
-    <strong>Civic Trust &amp; Secret Ballot Guarantee:</strong>
-    SecureVote uses database-level decoupling to ensure true ballot secrecy. Your candidate selections are stored anonymously in the digital ballot box, while your eligibility record confirms that you participated.
-  </div>
-</div>
 
 <?php require __DIR__ . '/includes/footer.php'; ?>

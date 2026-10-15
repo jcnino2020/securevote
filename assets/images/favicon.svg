@@ -1,9 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SecureVote">
   <title>SecureVote</title>
-  <rect width="64" height="64" rx="14" fill="#0B0D12"/>
-  <g transform="translate(6 6) scale(1.625)">
-    <path d="M16 2.75 5.5 6.5v9.1c0 6.6 4.4 11.9 10.5 13.65C22.1 27.5 26.5 22.2 26.5 15.6V6.5Z" fill="#059669"/>
-    <path d="m11.4 16.2 3.2 3.2 6-6.6" fill="none" stroke="#FFFFFF" stroke-width="2.6"
-          stroke-linecap="round" stroke-linejoin="round"/>
-  </g>
+  <rect width="64" height="64" rx="14" fill="#1c285e"/>
+  <path d="M32 9 14 15v16c0 12 7 21 18 25 11-4 18-13 18-25V15L32 9Z" fill="#ffbd96"/>
+  <path d="M21 31 29 39 43 23 47 27 29 46 17 35Z" fill="#1c285e"/>
 </svg>

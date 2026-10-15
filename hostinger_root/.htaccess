@@ -1,0 +1,17 @@
+# =========================================================================
+# Hostinger LiteSpeed / Apache Configuration
+# =========================================================================
+
+# Ensure default.php and index.php are recognized as root entrypoints
+DirectoryIndex default.php index.php
+
+# UTF-8 Encoding
+AddDefaultCharset UTF-8
+
+# Security & Directory Listing Protection
+Options -Indexes
+
+# Enable LiteSpeed / Gzip Compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css application/javascript application/json
+</IfModule>

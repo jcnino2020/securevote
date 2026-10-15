@@ -1544,7 +1544,7 @@ require __DIR__ . '/../includes/header.php';
   </div>
 
   <div class="cia-hub__actions">
-    <form method="post" action="<?= e(url('admin/security-testing.php')) ?>">
+    <form method="post" action="<?= e(post_url('admin/security-testing.php')) ?>">
       <?= csrf_field() ?>
       <input type="hidden" name="action" value="run_tests">
       <button type="submit" class="btn--run-tests">

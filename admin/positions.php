@@ -295,7 +295,7 @@ if ($isForm):
         </div>
 
         <div class="card__body">
-          <form class="form" method="post" action="<?= e(url('admin/positions.php')) ?>" novalidate>
+          <form class="form" method="post" action="<?= e(post_url('admin/positions.php')) ?>" novalidate>
             <?= csrf_field() ?>
             <input type="hidden" name="action" value="save">
             <input type="hidden" name="id" value="<?= e((string) $form['id']) ?>">
@@ -413,7 +413,7 @@ if ($isForm):
             </div>
           </div>
           <div class="card__body">
-            <form method="post" action="<?= e(url('admin/positions.php')) ?>"
+            <form method="post" action="<?= e(post_url('admin/positions.php')) ?>"
                   data-confirm="Delete “<?= e($form['name']) ?>” and all of its candidates? This cannot be undone.">
               <?= csrf_field() ?>
               <input type="hidden" name="action" value="delete">

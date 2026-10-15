@@ -47,163 +47,106 @@ foreach ($elections as $election) {
     }
 }
 
-$pageTitle  = 'Welcome, ' . (string) $voter['first_name'];
+$pageTitle  = 'Your dashboard';
 $activeNav  = 'dashboard.php';
 $breadcrumb = [['label' => 'Dashboard', 'href' => 'voter/dashboard.php']];
 
 require __DIR__ . '/../includes/header.php';
 ?>
 
-<!-- Voter Identity Card (2026 Refined Surface) -->
-<section class="card" style="margin-bottom: var(--sp-6);">
-  <div class="card__body" style="padding: var(--sp-5);">
-    <div style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:var(--sp-4);">
-      <div style="display:flex; align-items:center; gap:var(--sp-4);">
-        <span class="avatar avatar--lg" aria-hidden="true">
-          <?= initials($voter['first_name'], $voter['last_name']) ?>
-        </span>
-        <div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <h2 style="font-size:1.25rem; font-weight:700; margin:0; letter-spacing:-0.015em;"><?= e(user_full_name($voter)) ?></h2>
-            <span class="badge badge--success">Verified Voter</span>
-            <?php if (!empty($voter['google_id'])): ?>
-              <span class="badge badge--primary" style="display:inline-flex; align-items:center; gap:4px;">
-                <?= sv_icon('google', 12) ?> Google Linked
-              </span>
-            <?php endif; ?>
-          </div>
-          <p class="text-sm text-muted" style="margin:3px 0 0 0;">
-            <span class="mono">@<?= e($voter['username']) ?></span> &middot; <?= e($voter['email']) ?>
-          </p>
-        </div>
-      </div>
-
-      <!-- Voter Code Display -->
-      <div style="background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:var(--sp-2) var(--sp-4); text-align:right;">
-        <div style="font-size:0.725rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em;">
-          Your Personal Voter Code
-        </div>
-        <div style="display:flex; align-items:center; gap:8px; margin-top:2px;">
-          <span class="mono" id="my-voter-code" style="font-size:1.05rem; font-weight:700; color:var(--blue); letter-spacing:0.04em;">
-            <?= e((string) ($voter['voter_code'] ?? 'VC-2026-0000')) ?>
-          </span>
-          <button class="btn btn--ghost btn--sm" type="button" data-copy="#my-voter-code" aria-label="Copy Voter Code" style="padding:2px 6px;">
-            <?= sv_icon('copy', 14) ?>
-          </button>
-        </div>
-      </div>
+<section class="voter-welcome" aria-labelledby="voter-welcome-title">
+  <div class="voter-welcome__main">
+    <h2 id="voter-welcome-title">Hi, <?= e((string) $voter['first_name']) ?>! <span>Your vote starts here.</span></h2>
+    <p>
+      <?php if ($awaiting !== []): ?>
+        <?= e((string) count($awaiting)) ?> election<?= count($awaiting) === 1 ? ' is' : 's are' ?> ready for your vote. Take a look and choose when you are ready.
+      <?php else: ?>
+        You are all caught up for now. Explore elections or check the receipts from ballots you have submitted.
+      <?php endif; ?>
+    </p>
+    <div class="voter-welcome__actions">
+      <?php if ($awaiting !== []): ?>
+        <a class="btn btn--primary" href="#ready-to-vote">See open elections <?= sv_icon('arrow-right', 16) ?></a>
+      <?php else: ?>
+        <a class="btn btn--primary" href="<?= e(url('voter/elections.php')) ?>">Explore elections <?= sv_icon('arrow-right', 16) ?></a>
+      <?php endif; ?>
+      <a class="btn btn--secondary" href="<?= e(url('voter/profile.php')) ?>">My profile</a>
     </div>
+  </div>
+  <div class="voter-pass">
+    <div class="voter-pass__top">
+      <span>Voter pass</span>
+      <?= sv_logo_mark(28) ?>
+    </div>
+    <div class="voter-pass__identity">
+      <span class="avatar avatar--lg" aria-hidden="true"><?= e(initials($voter['first_name'], $voter['last_name'])) ?></span>
+      <div><strong><?= e(user_full_name($voter)) ?></strong><small>@<?= e($voter['username']) ?></small></div>
+    </div>
+    <div class="voter-pass__code">
+      <div><small>Your voter code</small><strong class="mono" id="my-voter-code"><?= e((string) ($voter['voter_code'] ?? '')) ?></strong></div>
+      <button class="icon-btn" type="button" data-copy="#my-voter-code" aria-label="Copy voter code"><?= sv_icon('copy', 17) ?></button>
+    </div>
+    <span class="voter-pass__verified"><?= sv_icon('check-circle', 15) ?> Verified voter</span>
   </div>
 </section>
 
-<!-- Stats Grid -->
-<section class="stat-grid" aria-label="Your voting summary" style="margin-bottom: var(--sp-6);">
-  <div class="stat-card">
-    <span class="stat-card__icon stat-card__icon--navy"><?= sv_icon('vote', 20) ?></span>
-    <div class="stat-card__body">
-      <p class="stat-card__label">Available Elections</p>
-      <p class="stat-card__value"><?= e((string) count($elections)) ?></p>
-      <p class="stat-card__meta">Active on university registry</p>
-    </div>
-  </div>
+<div class="voter-snapshot" aria-label="Your voting summary">
+  <div><strong><?= e((string) count($awaiting)) ?></strong><span>Ready for your vote</span></div>
+  <div><strong><?= e((string) count($voted)) ?></strong><span>Ballots submitted</span></div>
+  <div><strong><?= e((string) count($elections)) ?></strong><span>Elections in your account</span></div>
+</div>
 
-  <div class="stat-card">
-    <span class="stat-card__icon stat-card__icon--warning"><?= sv_icon('clock', 20) ?></span>
-    <div class="stat-card__body">
-      <p class="stat-card__label">Waiting For Your Ballot</p>
-      <p class="stat-card__value"><?= e((string) count($awaiting)) ?></p>
-      <p class="stat-card__meta">Open right now</p>
+<section class="student-section" id="ready-to-vote" aria-labelledby="ready-to-vote-heading">
+  <div class="student-section__heading">
+    <div>
+      <h2 id="ready-to-vote-heading">Ready for your vote</h2>
+      <p>See what is open and cast your ballot when you are ready.</p>
     </div>
+    <?php if ($awaiting !== []): ?><span class="badge badge--success"><?= count($awaiting) ?> open</span><?php endif; ?>
   </div>
-
-  <div class="stat-card">
-    <span class="stat-card__icon stat-card__icon--teal"><?= sv_icon('check-circle', 20) ?></span>
-    <div class="stat-card__body">
-      <p class="stat-card__label">Ballots Submitted</p>
-      <p class="stat-card__value"><?= e((string) count($voted)) ?></p>
-      <p class="stat-card__meta">Verified with digital receipts</p>
+  <?php if ($awaiting === []): ?>
+    <div class="student-empty">
+      <span aria-hidden="true"><?= sv_icon('check-circle', 28) ?></span>
+      <div><h3>Nothing waiting for your vote</h3><p>New elections will appear here when they open.</p></div>
+      <a class="btn btn--secondary" href="<?= e(url('voter/elections.php')) ?>">All elections</a>
     </div>
-  </div>
-</section>
-
-<?php if ($awaiting !== []): ?>
-  <section class="card" aria-labelledby="awaiting-heading" style="margin-bottom: var(--sp-6);">
-    <div class="card__header">
-      <div class="card__headings">
-        <h2 class="card__title" id="awaiting-heading">Open for your vote</h2>
-        <p class="card__subtitle">These elections are accepting ballots right now.</p>
-      </div>
-      <span class="badge badge--success"><?= sv_icon('vote', 14) ?> Open</span>
-    </div>
-    <div class="card__body stack">
+  <?php else: ?>
+    <div class="voter-election-list">
       <?php foreach ($awaiting as $election): ?>
-        <article class="review-item" style="padding:var(--sp-4); border-radius:10px; background:var(--bg-card); border:1px solid var(--border-color);">
-          <div class="row row--between" style="align-items:center;">
-            <div>
-              <span class="review-item__choice" style="font-size:1.1rem; font-weight:700;"><?= e($election['title']) ?></span>
-              <span class="review-item__meta" style="display:block; margin-top:4px;">
-                <?= e(fmt_range($election['start_datetime'], $election['end_datetime'])) ?>
-                &middot; <strong style="color:#d97706;"><?= e(countdown_text($election)) ?></strong>
-                &middot; <?= e((string) $election['position_count']) ?> positions
-              </span>
-            </div>
-            <div class="btn-group">
-              <a class="btn btn--secondary btn--sm"
-                 href="<?= e(url('voter/elections.php?election_id=' . (int) $election['id'])) ?>">
-                <?= sv_icon('info', 14) ?> <span>Details</span>
-              </a>
-              <a class="btn btn--primary"
-                 href="<?= e(url('voter/ballot.php?election_id=' . (int) $election['id'])) ?>">
-                <?= sv_icon('vote', 16, 'btn__icon') ?><span>Vote Now</span>
-              </a>
-            </div>
+        <article class="voter-election">
+          <div class="voter-election__body">
+            <span class="badge badge--success"><?= sv_icon('vote', 13) ?> Voting open</span>
+            <h3><?= e($election['title']) ?></h3>
+            <p><?= e(fmt_range($election['start_datetime'], $election['end_datetime'])) ?></p>
+            <span class="voter-election__meta"><?= e((string) $election['position_count']) ?> positions &middot; <?= e(countdown_text($election)) ?></span>
+          </div>
+          <div class="voter-election__actions">
+            <a class="btn btn--primary" href="<?= e(url('voter/ballot.php?election_id=' . (int) $election['id'])) ?>">Open ballot <?= sv_icon('arrow-right', 16) ?></a>
+            <a class="btn btn--ghost" href="<?= e(url('voter/elections.php?election_id=' . (int) $election['id'])) ?>">Election details</a>
           </div>
         </article>
       <?php endforeach; ?>
     </div>
-  </section>
-<?php endif; ?>
+  <?php endif; ?>
+</section>
 
 <?php if ($voted !== []): ?>
-  <section class="card" aria-labelledby="voted-heading" style="margin-bottom: var(--sp-6);">
-    <div class="card__header">
-      <div class="card__headings">
-        <h2 class="card__title" id="voted-heading">Your cast ballots & receipts</h2>
-        <p class="card__subtitle">Your participation is confirmed with official verification tokens.</p>
-      </div>
-      <span class="badge badge--teal"><?= sv_icon('check-circle', 14) ?> Recorded</span>
-    </div>
-    <div class="table-wrap">
-      <table class="table">
-        <thead>
-          <tr>
-            <th scope="col">Election</th>
-            <th scope="col">Receipt Token</th>
-            <th scope="col">Submitted At</th>
-            <th scope="col" class="table__actions-col">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($voted as $election): ?>
-            <tr>
-              <td class="table__cell-strong"><?= e($election['title']) ?></td>
-              <td>
-                <span class="reference-code reference-code--sm">
-                  <?= e((string) $election['ballot_reference']) ?>
-                </span>
-              </td>
-              <td><?= e(fmt_datetime((string) $election['ballot_submitted_at'])) ?></td>
-              <td class="table__actions-col">
-                <a class="btn btn--secondary btn--sm" href="<?= e(url('voter/results.php?election_id=' . (int) $election['id'])) ?>">
-                  <?= sv_icon('results', 14, 'btn__icon') ?><span>View Results</span>
-                </a>
-              </td>
-            </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
-  </section>
+<section class="student-section" aria-labelledby="voted-heading">
+  <div class="student-section__heading"><div><h2 id="voted-heading">Your past votes</h2><p>Keep these receipt codes for your records.</p></div></div>
+  <div class="receipt-list">
+    <?php foreach ($voted as $election): ?>
+      <article class="receipt-item">
+        <span class="receipt-item__icon" aria-hidden="true"><?= sv_icon('check-circle', 22) ?></span>
+        <div class="receipt-item__main">
+          <h3><?= e($election['title']) ?></h3>
+          <p>Submitted <?= e(fmt_datetime((string) $election['ballot_submitted_at'])) ?></p>
+          <code><?= e((string) $election['ballot_reference']) ?></code>
+        </div>
+        <a class="btn btn--secondary btn--sm" href="<?= e(url('voter/results.php?election_id=' . (int) $election['id'])) ?>">View results</a>
+      </article>
+    <?php endforeach; ?>
+  </div>
+</section>
 <?php endif; ?>
 
 <?php require __DIR__ . '/../includes/footer.php'; ?>

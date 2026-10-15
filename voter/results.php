@@ -92,12 +92,14 @@ if ($electionId > 0) {
 
 $focusVoted  = $focus !== null && ((int) ($focus['has_voted'] ?? 0) === 1 || !empty($focus['ballot_reference']));
 $focusMaySee = $focus !== null && may_view_results($focus, $voter, $focusVoted);
+$focusFinal  = $focus !== null && in_array(election_effective_status($focus), ['closed', 'archived'], true);
 
 // The tally is only computed when it may be shown or summarised.
 $tally = [];
 if ($focus !== null && $focusMaySee) {
     $tally = sv_tally_positions((int) $focus['id']);
 }
+$finalSummary = $focusFinal && $focusMaySee ? sv_final_result_summary($tally) : [];
 
 
 /* =====================================================================
@@ -252,6 +254,26 @@ require __DIR__ . '/../includes/header.php';
     </div>
   </section>
 
+  <?php if ($focusFinal): ?>
+    <section class="card" aria-labelledby="final-results-heading">
+      <div class="card__header">
+        <div class="card__headings">
+          <h2 class="card__title" id="final-results-heading">Final election summary</h2>
+          <p class="card__subtitle">Voting closed <?= e(fmt_datetime((string) $focus['end_datetime'])) ?>. Outcomes below use recorded ballots only.</p>
+        </div>
+      </div>
+      <div class="card__body stack-sm">
+        <?php if ($finalSummary === []): ?>
+          <p class="text-muted">No positions were configured for this election.</p>
+        <?php else: ?>
+          <?php foreach ($finalSummary as $item): ?>
+            <p><strong><?= e($item['position']) ?> — <?= e($item['outcome']) ?>:</strong> <?= e($item['detail']) ?></p>
+          <?php endforeach; ?>
+        <?php endif; ?>
+      </div>
+    </section>
+  <?php endif; ?>
+
   <div class="security-note">
     <?= sv_icon('shield-check', 16) ?>
     <span>
@@ -317,7 +339,7 @@ require __DIR__ . '/../includes/header.php';
                       <span class="result-row__name">
                         <?= e($row['first_name'] . ' ' . $row['last_name']) ?>
                         <?php if ($isLeading): ?>
-                          <span class="badge badge--teal"><?= sv_icon('trophy', 13) ?>Leading</span>
+                          <span class="badge badge--teal"><?= sv_icon('trophy', 13) ?><?= e(sv_result_badge_label($entry, $row, $focusFinal)) ?></span>
                         <?php endif; ?>
                       </span>
                       <span class="result-row__meta"><?= e($row['party'] ?: 'No party listed') ?></span>
@@ -352,8 +374,11 @@ require __DIR__ . '/../includes/header.php';
     <div class="card__body">
       <div class="row row--between">
         <p class="text-sm text-muted">
-          <strong>Leading</strong> shows who is ahead at this moment. Counting continues while the
-          election is open, so these numbers can change until it closes.
+          <?php if ($focusFinal): ?>
+            Final results reflect submitted ballots. A tie at the cutoff needs an administrator's review before a winner can be declared.
+          <?php else: ?>
+            <strong>Leading</strong> shows who is ahead at this moment. Counting continues while the election is open, so these numbers can change until it closes.
+          <?php endif; ?>
         </p>
         <a class="btn btn--secondary btn--sm" href="<?= e(url('voter/results.php')) ?>">
           <?= sv_icon('arrow-left', 14, 'btn__icon') ?><span>All elections</span>

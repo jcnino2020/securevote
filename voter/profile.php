@@ -203,7 +203,7 @@ require __DIR__ . '/../includes/header.php';
     </div>
 
     <div class="card__body">
-      <form class="form" method="post" action="<?= e(url('voter/profile.php')) ?>" novalidate autocomplete="off">
+      <form class="form" method="post" action="<?= e(post_url('voter/profile.php')) ?>" novalidate autocomplete="off">
         <?= csrf_field() ?>
         <input type="hidden" name="action" value="change_password">
 
