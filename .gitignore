@@ -10,3 +10,9 @@ storage/
 Thumbs.db
 .vscode/
 .idea/
+
+# Private credentials
+.env
+.env.*
+!.env.example
+*.private.php

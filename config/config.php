@@ -26,6 +26,20 @@ ini_set('display_errors', APP_DEBUG ? '1' : '0');
 ini_set('log_errors', '1');
 
 define('APP_ROOT', dirname(__DIR__));
+
+// Keep production credentials outside public_html; environment variables take precedence.
+$svPrivateConfig = getenv('SV_CONFIG_FILE') ?: dirname(__DIR__, 3) . '/securevote.private.php';
+$svSettings = is_file($svPrivateConfig) ? require $svPrivateConfig : [];
+if (!is_array($svSettings)) {
+    throw new RuntimeException('Invalid private configuration.');
+}
+function sv_config(string $name, string $default = ''): string
+{
+    global $svSettings;
+    $value = getenv($name);
+    return $value !== false ? $value : (string) ($svSettings[$name] ?? $default);
+}
+
 define('LOG_DIR', APP_ROOT . '/storage/logs');
 if (is_dir(LOG_DIR) && is_writable(LOG_DIR)) {
     ini_set('error_log', LOG_DIR . '/php-error.log');
@@ -52,12 +66,12 @@ date_default_timezone_set(APP_TIMEZONE);
  |   SV_DB_SOCKET  (set to a socket path to ignore host/port, e.g.
  |                  /Applications/XAMPP/xamppfiles/var/mysql/mysql.sock)
  * ------------------------------------------------------------------- */
-define('DB_HOST',   getenv('SV_DB_HOST') ?: 'localhost');
-define('DB_PORT',   getenv('SV_DB_PORT') ?: '3306');
-define('DB_NAME',   getenv('SV_DB_NAME') ?: 'u184230832_securevote');
-define('DB_USER',   getenv('SV_DB_USER') ?: 'u184230832_ibmn');
-define('DB_PASS',   (string) (getenv('SV_DB_PASS') ?: 'Bsit4b2026'));
-define('DB_SOCKET', (string) (getenv('SV_DB_SOCKET') ?: ''));
+define('DB_HOST', sv_config('SV_DB_HOST', 'localhost'));
+define('DB_PORT', sv_config('SV_DB_PORT', '3306'));
+define('DB_NAME', sv_config('SV_DB_NAME', 'securevote'));
+define('DB_USER', sv_config('SV_DB_USER', 'root'));
+define('DB_PASS', sv_config('SV_DB_PASS', ''));
+define('DB_SOCKET', sv_config('SV_DB_SOCKET', ''));
 define('DB_CHARSET', 'utf8mb4');
 
 /* ---------------------------------------------------------------------
@@ -98,9 +112,9 @@ unset($svDocRoot, $svAppRoot, $svBase);
  |
  | Production Google OAuth 2.0 Credentials configured for SecureVote.
  * ------------------------------------------------------------------- */
-define('GOOGLE_CLIENT_ID',     (string) (getenv('GOOGLE_CLIENT_ID') ?: '325756328134-pis0eimshrnjs2iqtvv2j6ht0g87ih99.apps.googleusercontent.com'));
-define('GOOGLE_CLIENT_SECRET', (string) (getenv('GOOGLE_CLIENT_SECRET') ?: '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'));
-define('GOOGLE_OAUTH_ENABLED', true);
+define('GOOGLE_CLIENT_ID', sv_config('GOOGLE_CLIENT_ID', ''));
+define('GOOGLE_CLIENT_SECRET', sv_config('GOOGLE_CLIENT_SECRET', ''));
+define('GOOGLE_OAUTH_ENABLED', GOOGLE_CLIENT_ID !== '' && GOOGLE_CLIENT_SECRET !== '');
 
 
 /* ---------------------------------------------------------------------
