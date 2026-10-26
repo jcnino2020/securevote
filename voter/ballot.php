@@ -105,24 +105,25 @@ $pageTitle   = 'Your ballot';
 $activeNav   = 'elections.php';
 $bodyClass   = 'page-voter-ballot';
 $pageActions  = '<a class="btn btn--secondary btn--sm" href="' . e(url('voter/elections.php')) . '">'
-    . sv_icon('arrow-left', 16, 'btn__icon') . '<span>Leave without voting</span></a>';
+    . sv_icon('arrow-left', 16, 'btn__icon') . '<span>' . e(sv_t('Leave without voting')) . '</span></a>';
 $breadcrumb   = [
     ['label' => 'Elections', 'href' => 'voter/elections.php'],
     ['label' => 'Ballot'],
 ];
 
 require __DIR__ . '/../includes/header.php';
+echo '<aside class="notice"><div><strong>'.e(sv_t('Voting instructions')).'</strong><p>'.e(sv_t('Choose your candidates, review your ballot, then submit once. Your final submission cannot be changed.')).'</p></div></aside>';
 ?>
 
 <a class="ballot-mobile-exit" href="<?= e(url('voter/elections.php')) ?>">
-  <?= sv_icon('arrow-left', 18) ?><span>Leave ballot</span>
+  <?= sv_icon('arrow-left', 18) ?><span><?= e(sv_t("Leave ballot")) ?></span>
 </a>
 
 <?php if ($errors !== []): ?>
   <div class="alert alert--danger" role="alert">
     <span class="alert__icon" aria-hidden="true"><?= sv_icon('x-circle', 18) ?></span>
     <div>
-      <p class="alert__text">Your selections need correction. Nothing has been recorded yet.</p>
+      <p class="alert__text"><?= e(sv_t("Your selections need correction. Nothing has been recorded yet.")) ?></p>
       <ul class="stack-sm" style="margin-top:var(--sp-2)">
         <?php foreach ($errors as $message): ?>
           <li class="text-sm">&bull; <?= e($message) ?></li>
@@ -134,25 +135,25 @@ require __DIR__ . '/../includes/header.php';
 
 <nav class="vote-progress" aria-label="Voting progress">
   <ol>
-    <li class="is-current" aria-current="step"><span>1</span> Choose</li>
-    <li><span>2</span> Review</li>
-    <li><span>3</span> Receipt</li>
+    <li class="is-current" aria-current="step"><span>1</span> <?= e(sv_t("Choose")) ?></li>
+    <li><span>2</span> <?= e(sv_t("Review")) ?></li>
+    <li><span>3</span> <?= e(sv_t("Receipt")) ?></li>
   </ol>
 </nav>
 
 <section class="vote-intro" aria-labelledby="vote-intro-title">
   <div>
-    <h2 id="vote-intro-title">Choose your candidates</h2>
-    <p><?= e($election['title']) ?>. Select up to the number allowed for each position. You can review everything before you submit.</p>
+    <h2 id="vote-intro-title"><?= e(sv_t("Choose your candidates")) ?></h2>
+    <p><?= e($election['title']) ?>. <?= e(sv_t('Select up to the number allowed for each position. You can review everything before you submit.')) ?></p>
   </div>
-  <div class="vote-intro__time"><?= sv_icon('clock', 18) ?><span>Voting closes<br><strong><?= e(fmt_datetime($election['end_datetime'])) ?></strong></span></div>
+  <div class="vote-intro__time"><?= sv_icon('clock', 18) ?><span><?= e(sv_t("Voting closes")) ?><br><strong><?= e(fmt_datetime($election['end_datetime'])) ?></strong></span></div>
 </section>
 
 <?php if ($ballot === []): ?>
   <section class="card">
     <div class="empty-state">
       <span class="empty-state__icon"><?= sv_icon('positions', 26) ?></span>
-      <p class="empty-state__title">This election has no positions yet</p>
+      <p class="empty-state__title"><?= e(sv_t("This election has no positions yet")) ?></p>
       <p class="empty-state__text">
         An administrator has not added active positions or candidates yet.
       </p>
@@ -183,8 +184,8 @@ require __DIR__ . '/../includes/header.php';
               </h2>
               <p class="ballot__hint">
                 <?= $single
-                    ? 'Select 1 candidate.'
-                    : 'Select up to ' . $max . ' candidates.' ?>
+                    ? e(sv_t('Select 1 candidate.'))
+                    : e(sprintf(sv_t('Select up to %d candidates.'), $max)) ?>
                 <?php if (($position['description'] ?? '') !== ''): ?>
                   &middot; <?= e($position['description']) ?>
                 <?php endif; ?>
@@ -201,9 +202,9 @@ require __DIR__ . '/../includes/header.php';
           <?php if ($entry['candidates'] === []): ?>
             <div class="empty-state empty-state--inline">
               <span class="empty-state__icon"><?= sv_icon('users', 22) ?></span>
-              <p class="empty-state__title">No active candidates for this position</p>
+              <p class="empty-state__title"><?= e(sv_t("No active candidates for this position")) ?></p>
               <p class="empty-state__text">
-                You can leave this position blank and still submit your other votes.
+                <?= e(sv_t("You can leave this position blank and still submit your other votes.")) ?>
               </p>
             </div>
           <?php else: ?>
@@ -215,9 +216,9 @@ require __DIR__ . '/../includes/header.php';
                          name="votes[<?= e((string) $positionId) ?>][]" value=""
                          <?= ($selected[$positionId] ?? []) === [] ? 'checked' : '' ?>>
                   <span class="choice__body">
-                    <span class="choice__name">Skip this position</span>
+                    <span class="choice__name"><?= e(sv_t("Skip this position")) ?></span>
                     <span class="choice__bio">
-                      You can leave this one blank and still vote for other positions.
+                      <?= e(sv_t("You can leave this one blank and still vote for other positions.")) ?>
                     </span>
                   </span>
                   <span class="choice__tick" aria-hidden="true"><?= sv_icon('check', 14) ?></span>
@@ -260,14 +261,14 @@ require __DIR__ . '/../includes/header.php';
                       <?php if (strlen((string) ($candidate['biography'] . $candidate['platform'])) > 120): ?>
                         <button type="button" class="bio-toggle-btn" data-toggle-bio aria-expanded="false" aria-controls="<?= e($bioId) ?>">
                           <?= sv_icon('info', 14) ?>
-                          <span class="bio-toggle-label">Read platform &amp; bio</span>
+                          <span class="bio-toggle-label"><?= e(sv_t("Read platform & bio")) ?></span>
                         </button>
                         <div id="<?= e($bioId) ?>" class="candidate-bio-collapse" hidden>
                           <?php if ($hasBio): ?>
-                            <p class="text-sm"><strong>Biography:</strong> <?= e($candidate['biography']) ?></p>
+                            <p class="text-sm"><strong><?= e(sv_t("Biography:")) ?></strong> <?= e($candidate['biography']) ?></p>
                           <?php endif; ?>
                           <?php if ($hasPlatform): ?>
-                            <p class="text-sm" style="margin-top:var(--sp-1);"><strong>Full Platform:</strong> <?= e($candidate['platform']) ?></p>
+                            <p class="text-sm" style="margin-top:var(--sp-1);"><strong><?= e(sv_t("Full Platform:")) ?></strong> <?= e($candidate['platform']) ?></p>
                           <?php endif; ?>
                         </div>
                       <?php endif; ?>
@@ -294,7 +295,7 @@ require __DIR__ . '/../includes/header.php';
         <button class="btn btn--primary btn--lg" type="submit" data-submit-once
                 data-submitting-label="Checking your selections…">
           <?= sv_icon('check-circle', 18, 'btn__icon') ?>
-          <span>Review my ballot</span>
+          <span><?= e(sv_t("Review my ballot")) ?></span>
         </button>
       </div>
     </div>

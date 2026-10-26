@@ -106,15 +106,23 @@ if (is_post()) {
         }
 
         if ($errors === []) {
-            $update = $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
-            $update->execute([password_hash($password, PASSWORD_DEFAULT), (int) $admin['id']]);
+            $pdo->beginTransaction();
+            try {
+                $update = $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
+                $update->execute([password_hash($password, PASSWORD_DEFAULT), (int) $admin['id']]);
+                $version = sv_rotate_security_version($pdo, (int) $admin['id']);
+                $pdo->commit();
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                throw $e;
+            }
 
-            // A credential change invalidates the token issued for the old state.
+            $_SESSION['security_version'] = $version;
             csrf_rotate();
 
             audit_log('password_changed', 'Administrator changed their own password.');
 
-            flash_success('Your password was changed. Other sessions keep working until they expire.');
+            flash_success('Your password was changed. Other sessions have been signed out.');
             redirect('admin/settings.php');
         }
     }

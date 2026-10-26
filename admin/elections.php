@@ -20,6 +20,7 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 
 $admin = require_admin();
 $pdo   = db();
+require_once __DIR__.'/../includes/engagement.php'; sv_engagement_db(); sv_seed_change_baselines();
 
 /* ---------------------------------------------------------------------
  | Local helpers for <input type="datetime-local">
@@ -54,7 +55,7 @@ function sv_parse_datetime_local(string $value): ?string
 }
 
 $statusOptions    = election_status_options();
-$visibilityOptions = results_visibility_options();
+
 
 $errors = [];
 $form   = [
@@ -64,7 +65,7 @@ $form   = [
     'start_datetime'     => '',
     'end_datetime'       => '',
     'status'             => 'draft',
-    'results_visibility' => 'after_close',
+    'results_visibility' => 'after_vote',
 ];
 
 /* =====================================================================
@@ -87,7 +88,7 @@ if (is_post()) {
             'start_datetime'     => (string) input('start_datetime', ''),
             'end_datetime'       => (string) input('end_datetime', ''),
             'status'             => (string) input('status', 'draft'),
-            'results_visibility' => (string) input('results_visibility', 'after_close'),
+            'results_visibility' => 'after_vote',
         ];
 
         $title = trim($form['title']);
@@ -101,8 +102,8 @@ if (is_post()) {
         if (!isset($statusOptions[$form['status']])) {
             $errors['status'] = 'Choose a valid status.';
         }
-        if (!isset($visibilityOptions[$form['results_visibility']])) {
-            $errors['results_visibility'] = 'Choose how results should be published.';
+        if ($form['id'] === 0 && $form['status'] === 'open') {
+            $errors['status'] = 'Create the election first, then use Open for voting after adding positions and candidates.';
         }
 
         $start = sv_parse_datetime_local($form['start_datetime']);
@@ -124,12 +125,14 @@ if (is_post()) {
             $signature = $start . ' -> ' . $end;
 
             if ($form['id'] > 0) {
-                $exists = $pdo->prepare('SELECT id, title FROM elections WHERE id = ? LIMIT 1');
+                $exists = $pdo->prepare('SELECT id, title, status FROM elections WHERE id = ? LIMIT 1');
                 $exists->execute([$form['id']]);
                 $current = $exists->fetch();
 
                 if (!$current) {
                     $errors['form'] = 'That election no longer exists.';
+                } elseif ($form['status'] === 'open' && $current['status'] !== 'open') {
+                    $errors['status'] = 'Save the election first, then use Open for voting so readiness and voter assignment are checked.';
                 } else {
                     $update = $pdo->prepare(
                         'UPDATE elections
@@ -151,6 +154,7 @@ if (is_post()) {
                     audit_log('election_updated', 'Updated election #' . $form['id'] . ' "' . $title
                         . '" (' . $signature . ', status ' . $form['status'] . ').');
 
+                    sv_record_election_change((int)$form['id']);
                     flash_success('Election "' . $title . '" was updated.');
                     redirect('admin/elections.php');
                 }
@@ -174,6 +178,7 @@ if (is_post()) {
                 audit_log('election_created', 'Created election #' . $newId . ' "' . $title
                     . '" (' . $signature . ').');
 
+                sv_record_election_change($newId);
                 flash_success('Election "' . $title . '" was created. Add positions and candidates next.');
                 redirect('admin/elections.php?action=edit&id=' . $newId);
             }
@@ -243,18 +248,18 @@ if (is_post()) {
             $startDt = to_datetime($election['start_datetime']);
             $nowDt   = new DateTimeImmutable('now', new DateTimeZone(APP_TIMEZONE));
 
+            $endDt = to_datetime($election['end_datetime']);
+            if ($endDt !== null && $endDt <= $nowDt) {
+                flash_error('The end date has already passed. Edit the election and set a future end date first.');
+                redirect('admin/elections.php?action=edit&id=' . $id);
+            }
+
             if ($startDt !== null && $startDt > $nowDt) {
                 $setStart = $pdo->prepare('UPDATE elections SET start_datetime = NOW() WHERE id = ?');
                 $setStart->execute([$id]);
                 $startNote = ' The start time was moved to now because it was still in the future.';
                 audit_log('election_start_adjusted', 'Election #' . $id
                     . ' start time moved to now when it was opened.');
-            }
-
-            $endDt = to_datetime($election['end_datetime']);
-            if ($endDt !== null && $endDt <= $nowDt) {
-                flash_error('The end date has already passed. Edit the election and set a future end date first.');
-                redirect('admin/elections.php?action=edit&id=' . $id);
             }
         }
 
@@ -284,6 +289,7 @@ if (is_post()) {
             default    => 'Election status updated.',
         };
 
+        sv_record_election_change($id);
         flash_success($message . $startNote);
         redirect('admin/elections.php');
     }
@@ -399,6 +405,9 @@ if ($isForm) {
 }
 
 require __DIR__ . '/../includes/header.php';
+?>
+<div class="feature-shortcuts"><a class="btn btn--secondary" href="<?= e(url('admin/readiness.php')) ?>">Election readiness checklist</a><a class="btn btn--secondary" href="<?= e(url('admin/announcements.php')) ?>">Manage announcements</a></div>
+<?php
 
 /* =====================================================================
  | View: create / edit form
@@ -499,6 +508,7 @@ if ($isForm):
               <select class="select<?= isset($errors['status']) ? ' is-invalid' : '' ?>"
                       id="status" name="status">
                 <?php foreach ($statusOptions as $value => $label): ?>
+                  <?php if ($value === 'open' && $form['status'] !== 'open') continue; ?>
                   <option value="<?= e($value) ?>" <?= $form['status'] === $value ? 'selected' : '' ?>>
                     <?= e($label) ?>
                   </option>
@@ -508,27 +518,14 @@ if ($isForm):
                 <p class="field-error"><?= sv_icon('alert-triangle', 14) ?><span><?= e($errors['status']) ?></span></p>
               <?php endif; ?>
               <p class="help">
-                Draft and scheduled elections are not votable. Opening an election
-                requires positions with active candidates.
+                Draft and scheduled elections are not votable. Save the election,
+                then use Open for voting after adding positions and active candidates.
               </p>
             </div>
 
             <div class="form-field">
-              <label class="label" for="results_visibility">Results policy</label>
-              <select class="select<?= isset($errors['results_visibility']) ? ' is-invalid' : '' ?>"
-                      id="results_visibility" name="results_visibility">
-                <?php foreach ($visibilityOptions as $value => $label): ?>
-                  <option value="<?= e($value) ?>" <?= $form['results_visibility'] === $value ? 'selected' : '' ?>>
-                    <?= e($label) ?>
-                  </option>
-                <?php endforeach; ?>
-              </select>
-              <?php if (isset($errors['results_visibility'])): ?>
-                <p class="field-error">
-                  <?= sv_icon('alert-triangle', 14) ?><span><?= e($errors['results_visibility']) ?></span>
-                </p>
-              <?php endif; ?>
-              <p class="help">Decides when voters may see the tally. Administrators always can.</p>
+              <p class="label">Results access</p>
+              <p class="help">Students can see the live aggregate tally after submitting their ballot. Final outcomes appear when voting closes.</p>
             </div>
           </div>
 
@@ -760,7 +757,7 @@ $elections = $listStmt->fetchAll();
               </td>
               <td>
                 <span class="table__cell-strong"><?= e((string) $voted) ?> / <?= e((string) $eligible) ?></span>
-                <span class="table__cell-sub"><?= e((string) $turnout) ?>% &middot; <?= e((string) $election['results_visibility']) ?> results</span>
+                <span class="table__cell-sub"><?= e((string) $turnout) ?>% &middot; Results after voting</span>
               </td>
               <td class="table__actions-col">
                 <div class="table__actions">

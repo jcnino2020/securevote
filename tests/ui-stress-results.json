@@ -1,0 +1,9 @@
+{
+  "route": "index.php",
+  "actualWidth": 320,
+  "textSize": "200%",
+  "overflowPixels": 1,
+  "allowedRoundingPixels": 1,
+  "headerOffset": "139px",
+  "result": "pass"
+}

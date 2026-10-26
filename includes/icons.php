@@ -145,7 +145,7 @@ function sv_logo_mark(int $size = 32, string $class = 'brand__mark'): string
         . ' viewBox="0 0 32 32" role="img" aria-label="' . e(APP_NAME) . ' shield logo">'
         . '<path d="M16 2.75 5.5 6.5v9.1c0 6.6 4.4 11.9 10.5 13.65C22.1 27.5 26.5 22.2 26.5 15.6V6.5Z"'
         . ' fill="currentColor"/>'
-        . '<path d="m11.4 16.2 3.2 3.2 6-6.6" fill="none" stroke="var(--surface)" stroke-width="2.6"'
+        . '<path d="m11.4 16.2 3.2 3.2 6-6.6" fill="none" stroke="#ffffff" stroke-width="2.6"'
         . ' stroke-linecap="round" stroke-linejoin="round"/>'
         . '</svg>';
 }

@@ -1,0 +1,326 @@
+[
+  {
+    "route": "index.php",
+    "width": 320,
+    "actualWidth": 320,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 1
+  },
+  {
+    "route": "index.php",
+    "width": 360,
+    "actualWidth": 360,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "index.php",
+    "width": 375,
+    "actualWidth": 375,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "index.php",
+    "width": 390,
+    "actualWidth": 390,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "index.php",
+    "width": 414,
+    "actualWidth": 414,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "index.php",
+    "width": 430,
+    "actualWidth": 430,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "index.php",
+    "width": 768,
+    "actualWidth": 768,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "index.php",
+    "width": 1024,
+    "actualWidth": 1024,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "index.php",
+    "width": 1440,
+    "actualWidth": 1440,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "auth/login.php",
+    "width": 320,
+    "actualWidth": 320,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "auth/login.php",
+    "width": 360,
+    "actualWidth": 360,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "auth/login.php",
+    "width": 375,
+    "actualWidth": 375,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "auth/login.php",
+    "width": 390,
+    "actualWidth": 390,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "auth/login.php",
+    "width": 414,
+    "actualWidth": 414,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "auth/login.php",
+    "width": 430,
+    "actualWidth": 430,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "auth/login.php",
+    "width": 768,
+    "actualWidth": 768,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "auth/login.php",
+    "width": 1024,
+    "actualWidth": 1024,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "auth/login.php",
+    "width": 1440,
+    "actualWidth": 1440,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "privacy.php",
+    "width": 320,
+    "actualWidth": 320,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "privacy.php",
+    "width": 360,
+    "actualWidth": 360,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "privacy.php",
+    "width": 375,
+    "actualWidth": 375,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "privacy.php",
+    "width": 390,
+    "actualWidth": 390,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "privacy.php",
+    "width": 414,
+    "actualWidth": 414,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "privacy.php",
+    "width": 430,
+    "actualWidth": 430,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "privacy.php",
+    "width": 768,
+    "actualWidth": 768,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "privacy.php",
+    "width": 1024,
+    "actualWidth": 1024,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "privacy.php",
+    "width": 1440,
+    "actualWidth": 1440,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "guide.php",
+    "width": 320,
+    "actualWidth": 320,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "guide.php",
+    "width": 360,
+    "actualWidth": 360,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "guide.php",
+    "width": 375,
+    "actualWidth": 375,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "guide.php",
+    "width": 390,
+    "actualWidth": 390,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "guide.php",
+    "width": 414,
+    "actualWidth": 414,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "guide.php",
+    "width": 430,
+    "actualWidth": 430,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "guide.php",
+    "width": 768,
+    "actualWidth": 768,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "guide.php",
+    "width": 1024,
+    "actualWidth": 1024,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  },
+  {
+    "route": "guide.php",
+    "width": 1440,
+    "actualWidth": 1440,
+    "externalFonts": 0,
+    "headings": 1,
+    "main": 1,
+    "overflow": 0
+  }
+]

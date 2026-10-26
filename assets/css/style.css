@@ -1827,8 +1827,22 @@ button {
   word-break: keep-all !important;
 }
 
-.table tr:last-child td {
-  border-bottom: none;
+/* Draw a divider once per row so every column ends at the same height. */
+.table:not(.profile-history-table):not(.voter-results-list-table) tbody tr {
+  border-bottom: 1px solid var(--border);
+}
+
+.table:not(.profile-history-table):not(.voter-results-list-table) tbody tr:last-child {
+  border-bottom: 0;
+}
+
+.table:not(.profile-history-table):not(.voter-results-list-table) tbody td {
+  border-bottom: 0;
+}
+
+/* Keep legacy strong-text cells in the table grid while pages transition to inner spans. */
+.table td.table__cell-strong {
+  display: table-cell;
 }
 
 .table tr:hover td {

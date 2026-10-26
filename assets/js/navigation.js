@@ -3,6 +3,27 @@
   'use strict';
 
   document.addEventListener('DOMContentLoaded', function () {
+    // On compact login screens, anchor preferences beside the card's logo.
+    var loginPreferences = document.querySelector('.page-login .auth-layout > .display-settings');
+    var loginHead = document.querySelector('.page-login .auth-card__head');
+    var loginBrand = loginHead && loginHead.querySelector('.brand');
+    if (loginPreferences && loginBrand) {
+      var preferencesHome = document.createComment('Login preferences position');
+      loginPreferences.parentNode.insertBefore(preferencesHome, loginPreferences);
+      var logoRow = document.createElement('div');
+      logoRow.className = 'auth-card__brand-row';
+      loginHead.insertBefore(logoRow, loginBrand);
+      logoRow.appendChild(loginBrand);
+      var compactLogin = window.matchMedia('(max-width: 720px)');
+      function placeLoginPreferences() {
+        loginPreferences.open = false;
+        if (compactLogin.matches) logoRow.appendChild(loginPreferences);
+        else preferencesHome.parentNode.insertBefore(loginPreferences, preferencesHome.nextSibling);
+      }
+      placeLoginPreferences();
+      compactLogin.addEventListener('change', placeLoginPreferences);
+    }
+
     var collapse = document.querySelector('[data-sidebar-collapse]');
     if (collapse) {
       var key = 'securevote.sidebar.collapsed';
@@ -34,11 +55,18 @@
         menuToggle.setAttribute('aria-expanded', String(open));
         menuToggle.setAttribute('aria-label', open ? 'Close navigation menu' : 'Open navigation menu');
         publicMenu.classList.toggle('is-open', open);
+        if (open) {
+          var settings = document.querySelector('.display-settings[open]');
+          if (settings) settings.open = false;
+        }
         if (returnFocus) menuToggle.focus();
       }
 
       menuToggle.addEventListener('click', function () {
         setMenuOpen(menuPanel.hidden);
+      });
+      menuPanel.addEventListener('focusout', function (event) {
+        if (event.relatedTarget && !publicMenu.contains(event.relatedTarget)) setMenuOpen(false);
       });
       menuPanel.addEventListener('click', function (event) {
         if (event.target.closest('a')) setMenuOpen(false);
@@ -52,7 +80,7 @@
         }
       });
       window.addEventListener('resize', function () {
-        if (window.innerWidth > 1100 && !menuPanel.hidden) setMenuOpen(false);
+        if (window.innerWidth >= 1300 && !menuPanel.hidden) setMenuOpen(false);
       });
     }
 
@@ -68,7 +96,7 @@
     var selected = 'all';
 
     function update() {
-      var query = search.value.trim().toLocaleLowerCase();
+      var query = search ? search.value.trim().toLocaleLowerCase() : '';
       var visible = 0;
       cards.forEach(function (card) {
         var status = card.getAttribute('data-status');
@@ -78,7 +106,7 @@
         card.hidden = !(matchesStatus && matchesSearch);
         if (!card.hidden) visible++;
       });
-      count.textContent = visible + ' of ' + cards.length + ' election' + (cards.length === 1 ? '' : 's') + ' shown';
+      if (count) count.textContent = visible + ' of ' + cards.length + ' election' + (cards.length === 1 ? '' : 's') + ' shown';
       if (empty) empty.hidden = visible !== 0;
     }
 
@@ -91,11 +119,11 @@
         update();
       });
     });
-    search.addEventListener('input', update);
+    if (search) search.addEventListener('input', update);
     if (reset) reset.addEventListener('click', function () {
-      search.value = '';
+      if (search) search.value = '';
       buttons[0].click();
-      search.focus();
+      if (search) search.focus();
     });
     update();
   });

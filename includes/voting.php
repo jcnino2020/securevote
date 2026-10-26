@@ -104,10 +104,12 @@ function sv_validate_submission(array $ballot, mixed $submitted): array
 
     $plan   = [];
     $errors = [];
+    $validPositions = [];
 
     foreach ($ballot as $entry) {
         $position = $entry['position'];
         $positionId = (int) $position['id'];
+        $validPositions[$positionId] = true;
         $max        = max(1, (int) $position['max_selections']);
 
         // The candidates this position is actually allowed to offer.
@@ -123,13 +125,17 @@ function sv_validate_submission(array $ballot, mixed $submitted): array
 
         $chosen = [];
         foreach ($raw as $value) {
-            if (!is_scalar($value)) {
+            if ($value === '') {
+                continue; // The explicit "skip this position" option.
+            }
+            if ((!is_string($value) && !is_int($value)) || !ctype_digit((string) $value)) {
                 $errors[] = 'A selection sent for ' . $position['name'] . ' was not a valid value.';
                 continue;
             }
 
             $candidateId = (int) $value;
             if ($candidateId <= 0) {
+                $errors[] = 'A selection sent for ' . $position['name'] . ' was not a valid candidate.';
                 continue;
             }
 
@@ -148,6 +154,13 @@ function sv_validate_submission(array $ballot, mixed $submitted): array
         }
 
         $plan[$positionId] = array_keys($chosen);
+    }
+
+    foreach (array_keys($submitted) as $positionId) {
+        if (!isset($validPositions[$positionId])) {
+            $errors[] = 'A selection was sent for a position outside this ballot.';
+            break;
+        }
     }
 
     return [

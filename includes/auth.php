@@ -69,6 +69,10 @@ function current_user(): ?array
         return $cached = null;
     }
 
+    if (function_exists('sv_security_version') && !hash_equals(sv_security_version((int)$row['id']), (string)($_SESSION['security_version'] ?? ''))) {
+        sv_end_user_session('Your password changed. Sign in again.', 'session_password_reset');
+        return $cached = null;
+    }
     return $cached = $row;
 }
 
@@ -186,6 +190,7 @@ function sv_end_user_session(string $flashMessage = '', string $auditReason = ''
     unset(
         $_SESSION['user_id'],
         $_SESSION['user_role'],
+        $_SESSION['security_version'],
         $_SESSION['fingerprint'],
         $_SESSION['created_at'],
         $_SESSION['last_activity']
@@ -283,7 +288,7 @@ function attempt_login(string $identifier, string $password): array
         }
     } else {
         // OAuth-only account or passcode-only account
-        if (strtoupper($identifier) !== strtoupper((string) $user['voter_code']) && $password === '') {
+        if (strtoupper($identifier) !== strtoupper((string) $user['voter_code'])) {
             return ['ok' => false, 'error' => 'This account uses Google Sign-In or a password. Please sign in with Google.'];
         }
     }
@@ -410,7 +415,7 @@ function sv_login_or_register_google_user(array $profile): array
     } catch (PDOException $e) {
         error_log('Google registration failed: ' . $e->getMessage());
 
-        return ['ok' => false, 'error' => 'Could not create account with Google: ' . $e->getMessage(), 'user' => []];
+        return ['ok' => false, 'error' => 'Could not create your account with Google. Please try again or contact the election administrator.', 'user' => []];
     }
 }
 
@@ -422,6 +427,7 @@ function login_user(array $user): void
 
     $_SESSION['user_id']       = (int) $user['id'];
     $_SESSION['user_role']     = (string) $user['role'];
+    $_SESSION['security_version'] = sv_security_version((int)$user['id']);
     $_SESSION['fingerprint']   = sv_fingerprint();
     $_SESSION['created_at']    = time();
     $_SESSION['last_activity'] = time();
@@ -446,6 +452,7 @@ function logout_user(): void
     unset(
         $_SESSION['user_id'],
         $_SESSION['user_role'],
+        $_SESSION['security_version'],
         $_SESSION['fingerprint'],
         $_SESSION['created_at'],
         $_SESSION['last_activity']

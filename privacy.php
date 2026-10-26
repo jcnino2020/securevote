@@ -49,10 +49,6 @@ require __DIR__ . '/includes/header.php';
         <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--sp-3); font-size: 0.875rem;">
           <li style="display: flex; gap: var(--sp-2); align-items: flex-start;">
             <span style="color: var(--success); flex-shrink: 0; margin-top: 2px;"><?= sv_icon('check-circle', 16) ?></span>
-            <span><strong>Secret Ballot Guaranteed:</strong> Who voted is strictly separated from how you voted in counting queries.</span>
-          </li>
-          <li style="display: flex; gap: var(--sp-2); align-items: flex-start;">
-            <span style="color: var(--success); flex-shrink: 0; margin-top: 2px;"><?= sv_icon('check-circle', 16) ?></span>
             <span><strong>Minimal Data:</strong> Only institutional identity details required for election verification are processed.</span>
           </li>
           <li style="display: flex; gap: var(--sp-2); align-items: flex-start;">
@@ -61,7 +57,7 @@ require __DIR__ . '/includes/header.php';
           </li>
           <li style="display: flex; gap: var(--sp-2); align-items: flex-start;">
             <span style="color: var(--success); flex-shrink: 0; margin-top: 2px;"><?= sv_icon('check-circle', 16) ?></span>
-            <span><strong>Digital Receipts:</strong> Unique anonymous receipt tokens allow you to audit that your vote was cast.</span>
+            <span><strong>Digital Receipts:</strong> Each accepted ballot receives a receipt code.</span>
           </li>
         </ul>
       </div>
@@ -74,7 +70,7 @@ require __DIR__ . '/includes/header.php';
       </div>
       <div class="card__body" style="padding: var(--sp-3) var(--sp-5);">
         <nav style="display: flex; flex-direction: column; gap: 8px; font-size: 0.875rem;">
-          <a href="#ballot-secrecy" class="link" style="text-decoration: none;">1. Secret Ballot Principle</a>
+          <a href="#ballot-secrecy" class="link" style="text-decoration: none;">1. Voting Records and Receipts</a>
           <a href="#information-collected" class="link" style="text-decoration: none;">2. Information We Collect</a>
           <a href="#google-data" class="link" style="text-decoration: none;">3. Google OAuth 2.0 User Data</a>
           <a href="#how-we-use" class="link" style="text-decoration: none;">4. How We Use Information</a>
@@ -96,18 +92,13 @@ require __DIR__ . '/includes/header.php';
         <span style="padding: 8px; border-radius: var(--radius-sm); background: rgba(37,99,235,0.1); color: var(--blue);">
           <?= sv_icon('shield', 20) ?>
         </span>
-        <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0; color: var(--text);">1. The Secret Ballot Principle</h2>
+        <h2 style="font-size: 1.25rem; font-weight: 700; margin: 0; color: var(--text);">1. Voting Records and Receipts</h2>
       </div>
       <p style="color: var(--text-secondary); line-height: 1.65; margin-bottom: var(--sp-4);">
-        SecureVote is engineered with privacy-by-design at the database layer. In civic and university elections, ballot secrecy is an inviolable constitutional principle:
+        SecureVote records ballot submissions and provides a receipt for each accepted ballot.
       </p>
-      <div style="background: var(--surface-2); border-left: 4px solid var(--blue); padding: var(--sp-4); border-radius: var(--radius-xs); margin-bottom: var(--sp-4);">
-        <p style="margin: 0; font-size: 0.9375rem; color: var(--text); line-height: 1.6;">
-          <strong>Separation of Identity and Ballot Content:</strong> When you cast a ballot, the system verifies your eligibility and flags your account as having voted to prevent duplicate voting (1-person-1-vote). However, election tallying queries are aggregate-only. The system never publishes, links in results, or reconstructs which voter selected which candidate.
-        </p>
-      </div>
       <p style="color: var(--text-secondary); line-height: 1.65; font-size: 0.9375rem;">
-        You receive an anonymous digital verification receipt (e.g. <code>SV-2026-000001</code>). This receipt confirms that a ballot was accepted into the digital ballot box without disclosing the candidates selected.
+        The receipt code (e.g. <code>SV-2026-000001</code>) confirms that a ballot was accepted.
       </p>
     </section>
 
@@ -131,6 +122,9 @@ require __DIR__ . '/includes/header.php';
         </li>
         <li>
           <strong>Participation Records:</strong> The election ID, submission timestamp, ballot reference token, and registration status.
+        </li>
+        <li>
+          <strong>Support Reports:</strong> If you request help, we store your contact email, issue category, subject, message, status, and administrator reply. Signed-in reports are linked to your account and visible to you and administrators. Guest reports are accessible to administrators. Do not submit passwords, voter codes, receipts, or ballot choices. Reports are retained until removed by the site operator; request removal through your institution’s election administrator.
         </li>
         <li>
           <strong>Security & Audit Logs:</strong> Client IP address, browser User-Agent string, and security-relevant event timestamps (such as login attempts, password updates, and session terminations) to protect against brute-force attacks and session hijacking.

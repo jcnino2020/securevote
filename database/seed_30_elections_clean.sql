@@ -44,147 +44,147 @@ WHERE current_title.id IS NULL AND e.title IN (
 
 -- Closed, open, and scheduled contests. Effective status also follows the date window in PHP.
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Library Advisory Board Election', 'Student election for library advisory board.', NOW() - INTERVAL 80 DAY, NOW() - INTERVAL 75 DAY, 'closed', 'after_close',
+SELECT 'Library Advisory Board Election', 'Student election for library advisory board.', NOW() - INTERVAL 80 DAY, NOW() - INTERVAL 75 DAY, 'closed', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 80 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Library Advisory Board Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Campus Sustainability Council Election', 'Student election for campus sustainability council.', NOW() - INTERVAL 72 DAY, NOW() - INTERVAL 66 DAY, 'closed', 'after_close',
+SELECT 'Campus Sustainability Council Election', 'Student election for campus sustainability council.', NOW() - INTERVAL 72 DAY, NOW() - INTERVAL 66 DAY, 'closed', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 72 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Campus Sustainability Council Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Student Wellness Committee Election', 'Student election for student wellness committee.', NOW() - INTERVAL 62 DAY, NOW() - INTERVAL 57 DAY, 'closed', 'after_close',
+SELECT 'Student Wellness Committee Election', 'Student election for student wellness committee.', NOW() - INTERVAL 62 DAY, NOW() - INTERVAL 57 DAY, 'closed', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 62 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Student Wellness Committee Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Arts and Culture Council Election', 'Student election for arts and culture council.', NOW() - INTERVAL 54 DAY, NOW() - INTERVAL 48 DAY, 'closed', 'after_close',
+SELECT 'Arts and Culture Council Election', 'Student election for arts and culture council.', NOW() - INTERVAL 54 DAY, NOW() - INTERVAL 48 DAY, 'closed', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 54 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Arts and Culture Council Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Athletics Student Board Election', 'Student election for athletics student board.', NOW() - INTERVAL 45 DAY, NOW() - INTERVAL 39 DAY, 'closed', 'after_close',
+SELECT 'Athletics Student Board Election', 'Student election for athletics student board.', NOW() - INTERVAL 45 DAY, NOW() - INTERVAL 39 DAY, 'closed', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 45 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Athletics Student Board Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Dormitory Community Council Election', 'Student election for dormitory community council.', NOW() - INTERVAL 37 DAY, NOW() - INTERVAL 30 DAY, 'closed', 'after_close',
+SELECT 'Dormitory Community Council Election', 'Student election for dormitory community council.', NOW() - INTERVAL 37 DAY, NOW() - INTERVAL 30 DAY, 'closed', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 37 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Dormitory Community Council Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'School of Business Council Election', 'Student election for school of business council.', NOW() - INTERVAL 28 DAY, NOW() - INTERVAL 22 DAY, 'closed', 'after_close',
+SELECT 'School of Business Council Election', 'Student election for school of business council.', NOW() - INTERVAL 28 DAY, NOW() - INTERVAL 22 DAY, 'closed', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 28 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'School of Business Council Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Engineering Student Forum Election', 'Student election for engineering student forum.', NOW() - INTERVAL 21 DAY, NOW() - INTERVAL 17 DAY, 'closed', 'after_close',
+SELECT 'Engineering Student Forum Election', 'Student election for engineering student forum.', NOW() - INTERVAL 21 DAY, NOW() - INTERVAL 17 DAY, 'closed', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 21 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Engineering Student Forum Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Health Sciences Council Election', 'Student election for health sciences council.', NOW() - INTERVAL 16 DAY, NOW() - INTERVAL 12 DAY, 'closed', 'after_close',
+SELECT 'Health Sciences Council Election', 'Student election for health sciences council.', NOW() - INTERVAL 16 DAY, NOW() - INTERVAL 12 DAY, 'closed', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 16 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Health Sciences Council Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Education Student Council Election', 'Student election for education student council.', NOW() - INTERVAL 11 DAY, NOW() - INTERVAL 8 DAY, 'closed', 'after_close',
+SELECT 'Education Student Council Election', 'Student election for education student council.', NOW() - INTERVAL 11 DAY, NOW() - INTERVAL 8 DAY, 'closed', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 11 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Education Student Council Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'First Year Student Assembly Election', 'Student election for first year student assembly.', NOW() - INTERVAL 7 DAY, NOW() - INTERVAL 5 DAY, 'closed', 'after_close',
+SELECT 'First Year Student Assembly Election', 'Student election for first year student assembly.', NOW() - INTERVAL 7 DAY, NOW() - INTERVAL 5 DAY, 'closed', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 7 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'First Year Student Assembly Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Graduate Student Council Election', 'Student election for graduate student council.', NOW() - INTERVAL 5 DAY, NOW() - INTERVAL 3 DAY, 'closed', 'after_close',
+SELECT 'Graduate Student Council Election', 'Student election for graduate student council.', NOW() - INTERVAL 5 DAY, NOW() - INTERVAL 3 DAY, 'closed', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 5 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Graduate Student Council Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Campus Food Advisory Board Election', 'Student election for campus food advisory board.', NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 2 DAY, 'closed', 'after_close',
+SELECT 'Campus Food Advisory Board Election', 'Student election for campus food advisory board.', NOW() - INTERVAL 3 DAY, NOW() - INTERVAL 2 DAY, 'closed', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 3 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Campus Food Advisory Board Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Community Outreach Council Election', 'Student election for community outreach council.', NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 1 DAY, 'closed', 'after_close',
+SELECT 'Community Outreach Council Election', 'Student election for community outreach council.', NOW() - INTERVAL 2 DAY, NOW() - INTERVAL 1 DAY, 'closed', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 2 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Community Outreach Council Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Computer Studies Student Council Election', 'Student election for computer studies student council.', NOW() - INTERVAL 6 DAY, NOW() + INTERVAL 4 HOUR, 'open', 'after_close',
+SELECT 'Computer Studies Student Council Election', 'Student election for computer studies student council.', NOW() - INTERVAL 6 DAY, NOW() + INTERVAL 4 HOUR, 'open', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 6 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Computer Studies Student Council Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Student Media Board Election', 'Student election for student media board.', NOW() - INTERVAL 5 DAY, NOW() + INTERVAL 2 DAY, 'open', 'after_close',
+SELECT 'Student Media Board Election', 'Student election for student media board.', NOW() - INTERVAL 5 DAY, NOW() + INTERVAL 2 DAY, 'open', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 5 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Student Media Board Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Academic Integrity Committee Election', 'Student election for academic integrity committee.', NOW() - INTERVAL 4 DAY, NOW() + INTERVAL 3 DAY, 'open', 'after_close',
+SELECT 'Academic Integrity Committee Election', 'Student election for academic integrity committee.', NOW() - INTERVAL 4 DAY, NOW() + INTERVAL 3 DAY, 'open', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 4 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Academic Integrity Committee Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Campus Accessibility Council Election', 'Student election for campus accessibility council.', NOW() - INTERVAL 3 DAY, NOW() + INTERVAL 4 DAY, 'open', 'after_close',
+SELECT 'Campus Accessibility Council Election', 'Student election for campus accessibility council.', NOW() - INTERVAL 3 DAY, NOW() + INTERVAL 4 DAY, 'open', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 3 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Campus Accessibility Council Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Research and Innovation Council Election', 'Student election for research and innovation council.', NOW() - INTERVAL 2 DAY, NOW() + INTERVAL 5 DAY, 'open', 'after_close',
+SELECT 'Research and Innovation Council Election', 'Student election for research and innovation council.', NOW() - INTERVAL 2 DAY, NOW() + INTERVAL 5 DAY, 'open', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 2 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Research and Innovation Council Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'International Student Forum Election', 'Student election for international student forum.', NOW() - INTERVAL 1 DAY, NOW() + INTERVAL 7 DAY, 'open', 'after_close',
+SELECT 'International Student Forum Election', 'Student election for international student forum.', NOW() - INTERVAL 1 DAY, NOW() + INTERVAL 7 DAY, 'open', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 1 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'International Student Forum Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Student Activities Board Election', 'Student election for student activities board.', NOW(), NOW() + INTERVAL 9 DAY, 'open', 'after_close',
+SELECT 'Student Activities Board Election', 'Student election for student activities board.', NOW(), NOW() + INTERVAL 9 DAY, 'open', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Student Activities Board Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'University Events Committee Election', 'Student election for university events committee.', NOW(), NOW() + INTERVAL 14 DAY, 'open', 'after_close',
+SELECT 'University Events Committee Election', 'Student election for university events committee.', NOW(), NOW() + INTERVAL 14 DAY, 'open', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'University Events Committee Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Environmental Action Council Election', 'Student election for environmental action council.', NOW() + INTERVAL 1 DAY, NOW() + INTERVAL 6 DAY, 'scheduled', 'after_close',
+SELECT 'Environmental Action Council Election', 'Student election for environmental action council.', NOW() + INTERVAL 1 DAY, NOW() + INTERVAL 6 DAY, 'scheduled', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() + INTERVAL 1 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Environmental Action Council Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Student Housing Board Election', 'Student election for student housing board.', NOW() + INTERVAL 2 DAY, NOW() + INTERVAL 7 DAY, 'scheduled', 'after_close',
+SELECT 'Student Housing Board Election', 'Student election for student housing board.', NOW() + INTERVAL 2 DAY, NOW() + INTERVAL 7 DAY, 'scheduled', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() + INTERVAL 2 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Student Housing Board Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Digital Learning Committee Election', 'Student election for digital learning committee.', NOW() + INTERVAL 3 DAY, NOW() + INTERVAL 8 DAY, 'scheduled', 'after_close',
+SELECT 'Digital Learning Committee Election', 'Student election for digital learning committee.', NOW() + INTERVAL 3 DAY, NOW() + INTERVAL 8 DAY, 'scheduled', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() + INTERVAL 3 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Digital Learning Committee Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Volunteer Leadership Council Election', 'Student election for volunteer leadership council.', NOW() + INTERVAL 5 DAY, NOW() + INTERVAL 10 DAY, 'scheduled', 'after_close',
+SELECT 'Volunteer Leadership Council Election', 'Student election for volunteer leadership council.', NOW() + INTERVAL 5 DAY, NOW() + INTERVAL 10 DAY, 'scheduled', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() + INTERVAL 5 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Volunteer Leadership Council Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Peer Mentoring Board Election', 'Student election for peer mentoring board.', NOW() + INTERVAL 7 DAY, NOW() + INTERVAL 14 DAY, 'scheduled', 'after_close',
+SELECT 'Peer Mentoring Board Election', 'Student election for peer mentoring board.', NOW() + INTERVAL 7 DAY, NOW() + INTERVAL 14 DAY, 'scheduled', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() + INTERVAL 7 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Peer Mentoring Board Election');
 INSERT INTO elections (title, description, start_datetime, end_datetime, status, results_visibility, created_by, created_at)
-SELECT 'Campus Transportation Council Election', 'Student election for campus transportation council.', NOW() + INTERVAL 10 DAY, NOW() + INTERVAL 17 DAY, 'scheduled', 'after_close',
+SELECT 'Campus Transportation Council Election', 'Student election for campus transportation council.', NOW() + INTERVAL 10 DAY, NOW() + INTERVAL 17 DAY, 'scheduled', 'after_vote',
        (SELECT id FROM users WHERE role = 'admin' ORDER BY id LIMIT 1),
        LEAST(NOW(), NOW() + INTERVAL 10 DAY - INTERVAL 2 DAY)
 WHERE NOT EXISTS (SELECT 1 FROM elections WHERE title = 'Campus Transportation Council Election');
 
--- One contested position per election.
+-- Initial representative position for each seeded election.
 INSERT INTO positions (election_id, name, description, max_selections, display_order)
 SELECT e.id, 'Student Representative', 'Represents students in this council or committee.', 1, 1
 FROM elections e
@@ -220,7 +220,7 @@ WHERE e.title IN (
 )
   AND NOT EXISTS (SELECT 1 FROM positions p WHERE p.election_id = e.id AND p.name = 'Student Representative');
 
--- Two candidates per position, with no synthetic votes.
+-- Initial candidates for the representative position, with no synthetic votes.
 INSERT INTO candidates (election_id, position_id, first_name, last_name, party, biography, platform, status)
 SELECT e.id, p.id, seed.first_name, seed.last_name, seed.party, seed.biography, seed.platform, 'active'
 FROM (
@@ -378,6 +378,63 @@ WHERE e.title IN (
     'Peer Mentoring Board Election',
     'Campus Transportation Council Election'
 );
+-- Fill every election to at least five positions and each position to three
+-- active sample candidates. Previously submitted ballots are unchanged.
+
+-- Add Chairperson only while an election has fewer than five positions.
+INSERT INTO positions (election_id, name, description, max_selections, display_order)
+SELECT e.id, 'Chairperson', 'Coordinates the council or committee.', 1,
+       COALESCE((SELECT MAX(p2.display_order) FROM positions p2 WHERE p2.election_id = e.id), 0) + 1
+FROM elections e
+WHERE (SELECT COUNT(*) FROM positions p WHERE p.election_id = e.id) < 5
+  AND NOT EXISTS (SELECT 1 FROM positions p WHERE p.election_id = e.id AND p.name = 'Chairperson');
+
+-- Add Vice Chairperson only while an election has fewer than five positions.
+INSERT INTO positions (election_id, name, description, max_selections, display_order)
+SELECT e.id, 'Vice Chairperson', 'Supports the chairperson and student initiatives.', 1,
+       COALESCE((SELECT MAX(p2.display_order) FROM positions p2 WHERE p2.election_id = e.id), 0) + 1
+FROM elections e
+WHERE (SELECT COUNT(*) FROM positions p WHERE p.election_id = e.id) < 5
+  AND NOT EXISTS (SELECT 1 FROM positions p WHERE p.election_id = e.id AND p.name = 'Vice Chairperson');
+
+-- Add Secretary only while an election has fewer than five positions.
+INSERT INTO positions (election_id, name, description, max_selections, display_order)
+SELECT e.id, 'Secretary', 'Maintains meeting records and announcements.', 1,
+       COALESCE((SELECT MAX(p2.display_order) FROM positions p2 WHERE p2.election_id = e.id), 0) + 1
+FROM elections e
+WHERE (SELECT COUNT(*) FROM positions p WHERE p.election_id = e.id) < 5
+  AND NOT EXISTS (SELECT 1 FROM positions p WHERE p.election_id = e.id AND p.name = 'Secretary');
+
+-- Add Treasurer only while an election has fewer than five positions.
+INSERT INTO positions (election_id, name, description, max_selections, display_order)
+SELECT e.id, 'Treasurer', 'Oversees student activity funds and reporting.', 1,
+       COALESCE((SELECT MAX(p2.display_order) FROM positions p2 WHERE p2.election_id = e.id), 0) + 1
+FROM elections e
+WHERE (SELECT COUNT(*) FROM positions p WHERE p.election_id = e.id) < 5
+  AND NOT EXISTS (SELECT 1 FROM positions p WHERE p.election_id = e.id AND p.name = 'Treasurer');
+
+-- Fill candidate slot 1 where needed.
+INSERT INTO candidates (election_id, position_id, first_name, last_name, party, biography, platform, status)
+SELECT e.id, p.id, ELT(1 + MOD(p.id * 3 + 1 * 11, 30), 'Aira', 'Noel', 'Mika', 'Jonah', 'Lea', 'Rafael', 'Sofia', 'Nico', 'Isabel', 'Marco', 'Trisha', 'Paolo', 'Mara', 'Kenji', 'Dana', 'Luis', 'Aya', 'Miguel', 'Tala', 'Enzo', 'Rina', 'Carlo', 'Bea', 'Andre', 'Lia', 'Jared', 'Nina', 'Sam', 'Celine', 'Diego'), ELT(1 + MOD(e.id * 7 + p.id * 3 + 1 * 13, 30), 'Cruz', 'Reyes', 'Santos', 'Mendoza', 'Tan', 'Garcia', 'Lim', 'Chua', 'Ramos', 'Dela Cruz', 'Navarro', 'Bautista', 'Flores', 'Villanueva', 'Castillo', 'Aquino', 'Pascual', 'Torres', 'Mercado', 'Rivera', 'De Leon', 'Sy', 'Gonzales', 'Salazar', 'Ocampo', 'Valdez', 'Diaz', 'Lopez', 'Soriano', 'Manalo'), 'Students First', NULL, NULL, 'active'
+FROM positions p
+JOIN elections e ON e.id = p.election_id
+WHERE (SELECT COUNT(*) FROM candidates c WHERE c.position_id = p.id AND c.status = 'active') < 1;
+
+-- Fill candidate slot 2 where needed.
+INSERT INTO candidates (election_id, position_id, first_name, last_name, party, biography, platform, status)
+SELECT e.id, p.id, ELT(1 + MOD(p.id * 3 + 2 * 11, 30), 'Aira', 'Noel', 'Mika', 'Jonah', 'Lea', 'Rafael', 'Sofia', 'Nico', 'Isabel', 'Marco', 'Trisha', 'Paolo', 'Mara', 'Kenji', 'Dana', 'Luis', 'Aya', 'Miguel', 'Tala', 'Enzo', 'Rina', 'Carlo', 'Bea', 'Andre', 'Lia', 'Jared', 'Nina', 'Sam', 'Celine', 'Diego'), ELT(1 + MOD(e.id * 7 + p.id * 3 + 2 * 13, 30), 'Cruz', 'Reyes', 'Santos', 'Mendoza', 'Tan', 'Garcia', 'Lim', 'Chua', 'Ramos', 'Dela Cruz', 'Navarro', 'Bautista', 'Flores', 'Villanueva', 'Castillo', 'Aquino', 'Pascual', 'Torres', 'Mercado', 'Rivera', 'De Leon', 'Sy', 'Gonzales', 'Salazar', 'Ocampo', 'Valdez', 'Diaz', 'Lopez', 'Soriano', 'Manalo'), 'Campus Voice', NULL, NULL, 'active'
+FROM positions p
+JOIN elections e ON e.id = p.election_id
+WHERE (SELECT COUNT(*) FROM candidates c WHERE c.position_id = p.id AND c.status = 'active') < 2;
+
+-- Fill candidate slot 3 where needed.
+INSERT INTO candidates (election_id, position_id, first_name, last_name, party, biography, platform, status)
+SELECT e.id, p.id, ELT(1 + MOD(p.id * 3 + 3 * 11, 30), 'Aira', 'Noel', 'Mika', 'Jonah', 'Lea', 'Rafael', 'Sofia', 'Nico', 'Isabel', 'Marco', 'Trisha', 'Paolo', 'Mara', 'Kenji', 'Dana', 'Luis', 'Aya', 'Miguel', 'Tala', 'Enzo', 'Rina', 'Carlo', 'Bea', 'Andre', 'Lia', 'Jared', 'Nina', 'Sam', 'Celine', 'Diego'), ELT(1 + MOD(e.id * 7 + p.id * 3 + 3 * 13, 30), 'Cruz', 'Reyes', 'Santos', 'Mendoza', 'Tan', 'Garcia', 'Lim', 'Chua', 'Ramos', 'Dela Cruz', 'Navarro', 'Bautista', 'Flores', 'Villanueva', 'Castillo', 'Aquino', 'Pascual', 'Torres', 'Mercado', 'Rivera', 'De Leon', 'Sy', 'Gonzales', 'Salazar', 'Ocampo', 'Valdez', 'Diaz', 'Lopez', 'Soriano', 'Manalo'), 'Independent', NULL, NULL, 'active'
+FROM positions p
+JOIN elections e ON e.id = p.election_id
+WHERE (SELECT COUNT(*) FROM candidates c WHERE c.position_id = p.id AND c.status = 'active') < 3;
+
+
 COMMIT;
 
 -- Verify the import. Expect 28 seeded elections and 30 total on the initial 2-election database.

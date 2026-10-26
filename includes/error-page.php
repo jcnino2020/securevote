@@ -34,12 +34,12 @@ $badgeClass = match ($code) {
 <link rel="icon" href="<?= e(asset('images/favicon-32.png')) ?>" type="image/png" sizes="32x32">
 <link rel="shortcut icon" href="<?= e(url('favicon.ico')) ?>" type="image/x-icon">
 <link rel="apple-touch-icon" href="<?= e(asset('images/apple-touch-icon.png')) ?>" sizes="180x180">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&display=swap">
+<link rel="stylesheet" href="<?= e(asset('css/fonts.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/style.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/redesign.css')) ?>">
-<script src="<?= e(asset('js/app.js')) ?>"></script>
+<link rel="stylesheet" href="<?= e(asset('css/responsive.css')) ?>">
+<script src="<?= e(asset('js/theme.js')) ?>"></script>
+<script src="<?= e(asset('js/app.js')) ?>" defer></script>
 </head>
 <body class="app-shell app-shell--auth page-error">
   <div class="auth-layout">

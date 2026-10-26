@@ -72,7 +72,7 @@ require __DIR__ . '/includes/header.php';
       <a class="btn btn--primary btn--lg" href="<?= e(url('auth/login.php')) ?>">
         <?= sv_icon('vote', 18, 'btn__icon') ?><span>Sign in to vote</span>
       </a>
-      <a class="btn btn--secondary btn--lg" href="#open-elections">Explore elections <?= sv_icon('arrow-right', 17) ?></a>
+      <a class="btn btn--secondary btn--lg" href="#open-elections"><?= e(sv_t("Explore elections")) ?> <?= sv_icon('arrow-right', 17) ?></a>
     </div>
     <p class="campus-hero__join">New to SecureVote? <a href="<?= e(url('auth/register.php')) ?>">Create your voter account</a></p>
   </div>
@@ -95,11 +95,12 @@ require __DIR__ . '/includes/header.php';
   </div>
 </section>
 
-<div class="student-steps" id="how-it-works" aria-label="How SecureVote works">
+<section class="student-steps" id="how-it-works" aria-labelledby="how-it-works-heading">
+  <h2 id="how-it-works-heading">How it works</h2>
   <div><span>1</span><div><strong>Explore</strong><small>See what is on the ballot</small></div></div>
-  <div><span>2</span><div><strong>Choose</strong><small>Pick your candidates</small></div></div>
+  <div><span>2</span><div><strong><?= e(sv_t("Choose")) ?></strong><small>Pick your candidates</small></div></div>
   <div><span>3</span><div><strong>Confirm</strong><small>Review and get a receipt</small></div></div>
-</div>
+</section>
 
 <section class="home-section" id="open-elections" aria-labelledby="open-elections-heading">
   <div class="home-section__head">
@@ -124,7 +125,7 @@ require __DIR__ . '/includes/header.php';
       <?php foreach ($openElections as $election): ?>
         <article class="election-tile">
           <div class="election-tile__top">
-            <span class="badge badge--success"><?= sv_icon('vote', 13) ?> Voting open</span>
+            <span class="badge badge--success"><?= sv_icon('vote', 13) ?> <?= e(sv_t("Voting open")) ?></span>
             <span class="election-tile__countdown"><?= e(countdown_text($election)) ?></span>
           </div>
           <h3><?= e($election['title']) ?></h3>
@@ -138,7 +139,7 @@ require __DIR__ . '/includes/header.php';
           </div>
           <div class="election-tile__actions">
             <a class="btn btn--primary" href="<?= e(url('auth/login.php')) ?>">Sign in to vote <?= sv_icon('arrow-right', 16) ?></a>
-            <a class="btn btn--ghost" href="<?= e(url('voter/results.php?election_id=' . (int) $election['id'])) ?>" aria-label="View results for <?= e($election['title']) ?>">Results</a>
+            <a class="btn btn--ghost" href="<?= e(url('voter/results.php?election_id=' . (int) $election['id'])) ?>" aria-label="View results for <?= e($election['title']) ?>"><?= e(sv_t("Results")) ?></a>
           </div>
         </article>
       <?php endforeach; ?>
@@ -161,7 +162,7 @@ require __DIR__ . '/includes/header.php';
           <h3><?= e($election['title']) ?></h3>
           <p>Ended <?= e(fmt_datetime($election['end_datetime'])) ?> &middot; <?= e((string) $election['ballot_count']) ?> ballots</p>
         </div>
-        <a class="btn btn--secondary btn--sm" href="<?= e(url('voter/results.php?election_id=' . (int) $election['id'])) ?>">View results <?= sv_icon('arrow-right', 15) ?></a>
+        <a class="btn btn--secondary btn--sm" href="<?= e(url('voter/results.php?election_id=' . (int) $election['id'])) ?>"><?= e(sv_t("View results")) ?> <?= sv_icon('arrow-right', 15) ?></a>
       </article>
     <?php endforeach; ?>
   </div>

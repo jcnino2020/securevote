@@ -20,7 +20,7 @@ Students may use the site on a phone or desktop. The app includes public electio
 
 ## Capabilities and Constraints
 
-Preserve the existing PHP routes, server-side behavior, forms, roles, voting flow, result displays, security messages, and accessibility semantics. This request covers the frontend only.
+Preserve the existing PHP routes, server-side behavior, forms, roles, voting flow, result displays, security messages, and accessibility semantics. The application also includes candidate comparisons, announcements, an isolated fictional practice ballot, receipt recording checks, readiness checks, atomic CSV voter imports, and student issue reports. Existing voting and results policies remain authoritative.
 
 ## Brand Commitments
 
@@ -36,3 +36,7 @@ Existing application pages, interface copy, icons, and logo in this repository. 
 - Present election status and ballot choices clearly.
 - Give administrators dense information without visual clutter.
 - Make trust cues specific and readable.
+
+## Election engagement
+
+Published election timelines, account-scoped in-app reminders, administrator-reviewed candidate Q&A, English/Filipino navigation and core voting instructions, and printable owned receipts. Reminders refresh on visits. Milestone dates inform voters without overriding election or results rules.

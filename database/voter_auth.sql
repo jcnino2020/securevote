@@ -30,6 +30,9 @@ CREATE DATABASE IF NOT EXISTS `u184230832_securevote`
 
 USE `u184230832_securevote`;
 
+DROP TABLE IF EXISTS `announcements`;
+DROP TABLE IF EXISTS `support_tickets`;
+DROP TABLE IF EXISTS `feature_rate_limits`;
 DROP TABLE IF EXISTS `dismissed_alerts`;
 DROP TABLE IF EXISTS `audit_logs`;
 DROP TABLE IF EXISTS `votes`;
@@ -73,7 +76,7 @@ CREATE TABLE `elections` (
   `start_datetime`     DATETIME     NOT NULL,
   `end_datetime`       DATETIME     NOT NULL,
   `status`             ENUM('draft','scheduled','open','closed','archived') NOT NULL DEFAULT 'open',
-  `results_visibility` ENUM('hidden','after_vote','after_close')            NOT NULL DEFAULT 'after_close',
+  `results_visibility` ENUM('hidden','after_vote','after_close')            NOT NULL DEFAULT 'after_vote',
   `created_by`         INT UNSIGNED NULL DEFAULT NULL,
   `created_at`         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at`         DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -247,3 +250,41 @@ INSERT INTO `audit_logs`
 (1, 'system_initialized', 'SecureVote authentication and voting system initialized.', '127.0.0.1', NOW() - INTERVAL 10 DAY),
 (1, 'election_created', 'Election #1 created.', '127.0.0.1', NOW() - INTERVAL 5 DAY),
 (1, 'election_opened', 'Election #1 opened for voting.', '127.0.0.1', NOW() - INTERVAL 1 DAY);
+
+-- Community features
+-- Additive migration. Safe to run again. Does not modify ballots or votes.
+CREATE TABLE IF NOT EXISTS announcements (
+ id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+ election_id INT UNSIGNED NULL,
+ title VARCHAR(150) NOT NULL,
+ body TEXT NOT NULL,
+ status ENUM('draft','published','withdrawn') NOT NULL DEFAULT 'draft',
+ created_by INT UNSIGNED NULL,
+ created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+ KEY idx_announcement_feed (status, created_at),
+ FOREIGN KEY (election_id) REFERENCES elections(id) ON DELETE CASCADE,
+ FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS support_tickets (
+ id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+ reference CHAR(23) NOT NULL UNIQUE,
+ user_id INT UNSIGNED NULL,
+ email VARCHAR(150) NOT NULL,
+ category ENUM('eligibility','login','ballot','other') NOT NULL,
+ subject VARCHAR(150) NOT NULL,
+ message TEXT NOT NULL,
+ status ENUM('open','in_progress','resolved') NOT NULL DEFAULT 'open',
+ response TEXT NULL,
+ created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+ KEY idx_ticket_queue (status, created_at),
+ KEY idx_ticket_user (user_id, created_at),
+ FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS feature_rate_limits (
+ bucket CHAR(64) NOT NULL PRIMARY KEY,
+ window_start BIGINT UNSIGNED NOT NULL,
+ attempts INT UNSIGNED NOT NULL DEFAULT 1,
+ KEY idx_limit_window (window_start)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

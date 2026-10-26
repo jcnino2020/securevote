@@ -80,7 +80,7 @@ $eligible        = (int) $election['eligible_count'];
 $voted           = (int) $election['voted_count'];
 $ballots         = (int) $election['ballot_count'];
 $turnout         = percent($voted, $eligible);
-$policyNotice    = results_policy_notice($election, false);
+
 
 /* =====================================================================
  | Build the tally
@@ -162,9 +162,7 @@ if ((string) input('export', '') === 'csv') {
 
 $pageTitle   = 'Results';
 $activeNav   = 'results.php';
-$pageActions  = '<a class="btn btn--secondary btn--sm" href="'
-    . e(url('admin/results.php?election_id=' . $electionId . '&export=csv')) . '">'
-    . sv_icon('download', 16, 'btn__icon') . '<span>Export CSV</span></a>';
+$pageActions = '<details class="display-settings"><summary>Export results</summary><div class="display-settings__panel"><a class="link" href="'.e(url('results-report.php?election_id='.$electionId)).'">Download PDF report</a><a class="link" href="'.e(url('admin/results.php?election_id='.$electionId.'&export=csv')).'">Download CSV data</a></div></details>';
 $breadcrumb = [
     ['label' => 'Results', 'href' => 'admin/results.php'],
     ['label' => (string) $election['title']],
@@ -200,17 +198,7 @@ require __DIR__ . '/../includes/header.php';
       </a>
     </form>
 
-    <?php if ($policyNotice !== null): ?>
-      <div class="divider" role="presentation"></div>
-      <div class="notice">
-        <span class="notice__icon" aria-hidden="true"><?= sv_icon('eye', 18) ?></span>
-        <span>
-          <?= e($policyNotice) ?>
-          Administrators can always see the tally; the results policy only controls when
-          <em>voters</em> may see it. Current policy: <strong><?= e((string) $election['results_visibility']) ?></strong>.
-        </span>
-      </div>
-    <?php endif; ?>
+    <p class="help">Voters see aggregate live totals after submitting their ballot. Final outcomes publish when voting closes.</p>
   </div>
 </section>
 
@@ -247,6 +235,14 @@ require __DIR__ . '/../includes/header.php';
   </div>
 </section>
 
+<?php
+  $chartElectionId = $electionId;
+  $chartEligible = $eligible;
+  $chartBallots = $ballots;
+  $chartPositions = $positions;
+  require __DIR__ . '/../includes/results-charts.php';
+?>
+
 <?php if ($isFinal): ?>
   <section class="card" aria-labelledby="final-results-heading">
     <div class="card__header">
@@ -266,14 +262,6 @@ require __DIR__ . '/../includes/header.php';
     </div>
   </section>
 <?php endif; ?>
-
-<div class="security-note">
-  <?= sv_icon('shield-check', 16) ?>
-  <span>
-    These figures come from aggregate SQL only. SecureVote never stores or displays a link
-    between a voter's identity and the candidates they chose.
-  </span>
-</div>
 
 <?php if ($positions === []): ?>
   <section class="card">
@@ -338,7 +326,7 @@ require __DIR__ . '/../includes/header.php';
                 <div class="result-row__head">
                   <div class="row">
                     <?php if ($row['photo'] !== null): ?>
-                      <img class="avatar avatar--sm" alt=""
+                      <img class="avatar avatar--sm" alt="" width="32" height="32" decoding="async"
                            src="<?= e(asset('images/candidates/' . basename((string) $row['photo']))) ?>">
                     <?php else: ?>
                       <span class="avatar avatar--sm" aria-hidden="true">

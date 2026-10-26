@@ -107,8 +107,7 @@ require __DIR__ . '/../includes/header.php';
 
       <div class="form-field">
         <label class="label" for="password">
-          Password
-          <span class="label__required" aria-hidden="true">*</span>
+          Password <span class="text-muted text-sm">(leave blank for code-only accounts)</span>
         </label>
         <div class="input-password-wrap">
           <input
@@ -118,8 +117,6 @@ require __DIR__ . '/../includes/header.php';
             name="password"
             placeholder="••••••••"
             autocomplete="current-password"
-            required
-            aria-required="true"
             <?= isset($formFields['password'])
                 ? 'aria-describedby="password-error" aria-invalid="true"'
                 : '' ?>>
@@ -144,6 +141,7 @@ require __DIR__ . '/../includes/header.php';
         </button>
       </div>
     </form>
+    <p><a class="link" href="<?= e(url('auth/forgot-password.php')) ?>">Forgot your password?</a></p>
 
     <div class="divider" role="presentation"></div>
 

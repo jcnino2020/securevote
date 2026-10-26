@@ -119,32 +119,32 @@ require __DIR__ . '/../includes/header.php';
 
 <nav class="vote-progress" aria-label="Voting progress">
   <ol>
-    <li class="is-complete"><span><?= sv_icon('check', 15) ?></span> Choose</li>
-    <li class="is-current" aria-current="step"><span>2</span> Review</li>
-    <li><span>3</span> Receipt</li>
+    <li class="is-complete"><span><?= sv_icon('check', 15) ?></span> <?= e(sv_t("Choose")) ?></li>
+    <li class="is-current" aria-current="step"><span>2</span> <?= e(sv_t("Review")) ?></li>
+    <li><span>3</span> <?= e(sv_t("Receipt")) ?></li>
   </ol>
 </nav>
 
 <section class="vote-intro" aria-labelledby="vote-intro-title">
   <div>
-    <h2 id="vote-intro-title">Take one last look</h2>
-    <p>Review your choices for <?= e($election['title']) ?>. You can go back and change them before submitting. After submission, your ballot cannot be changed.</p>
+    <h2 id="vote-intro-title"><?= e(sv_t("Take one last look")) ?></h2>
+    <p>Review your choices for <?= e($election['title']) ?>. <?= e(sv_t('You can go back and change your choices before submitting. After submission, your ballot cannot be changed.')) ?></p>
   </div>
-  <span class="badge badge--success"><?= sv_icon('shield-check', 14) ?> Ready to submit</span>
+  <span class="badge badge--success"><?= sv_icon('shield-check', 14) ?> <?= e(sv_t("Ready to submit")) ?></span>
 </section>
 
 <div class="review-summary" style="margin-bottom: var(--sp-6);">
   <div class="review-summary__metric">
     <span class="review-summary__metric-number"><?= e((string) count($describe)) ?></span>
-    <span class="review-summary__metric-label">positions on ballot</span>
+    <span class="review-summary__metric-label"><?= e(sv_t("positions on ballot")) ?></span>
   </div>
   <div class="review-summary__metric">
     <span class="review-summary__metric-number"><?= e((string) $chosenTotal) ?></span>
-    <span class="review-summary__metric-label">candidate(s) selected</span>
+    <span class="review-summary__metric-label"><?= e(sv_t("candidate(s) selected")) ?></span>
   </div>
   <div class="review-summary__metric">
     <span class="review-summary__metric-number">1</span>
-    <span class="review-summary__metric-label">ballot allocated</span>
+    <span class="review-summary__metric-label"><?= e(sv_t("ballot allocated")) ?></span>
   </div>
 </div>
 
@@ -209,13 +209,13 @@ require __DIR__ . '/../includes/header.php';
       <div class="flex flex--between flex--middle flex--wrap gap-md">
         <a class="btn btn--secondary" href="<?= e(url('voter/ballot.php?election_id=' . $electionId)) ?>">
           <?= sv_icon('arrow-left', 16, 'btn__icon') ?>
-          <span>Change my choices</span>
+          <span><?= e(sv_t("Change my choices")) ?></span>
         </a>
 
         <button class="btn btn--success btn--lg" type="submit" data-submit-once
                 data-submitting-label="Recording your ballot…">
           <?= sv_icon('shield-check', 18, 'btn__icon') ?>
-          <span>Confirm and submit my ballot</span>
+          <span><?= e(sv_t("Confirm and submit my ballot")) ?></span>
         </button>
       </div>
     </form>

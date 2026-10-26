@@ -4,11 +4,9 @@
  * =====================================================================
  * voter/results.php
  *
- * Results, but only where the election's configured policy allows them.
+ * Aggregate results available after a ballot is submitted or voting closes.
  *
- * The policy is not a cosmetic setting: this page asks may_view_results()
- * before it runs a single counting query, so a voter who is not yet
- * entitled to see a tally never receives those numbers at all.
+ * This page asks may_view_results() before it runs a counting query.
  *
  * Counting is aggregate only. Nothing here can reveal how a particular
  * person voted, and the query never joins a ballot to the voter's name.
@@ -27,11 +25,13 @@ $userId = (int) $voter['id'];
 
 $stmt = $pdo->prepare(
     "SELECT e.*,
+            (SELECT COUNT(*) FROM voter_eligibility vv WHERE vv.election_id = e.id) AS eligible_count,
             (SELECT COUNT(*) FROM ballots bb WHERE bb.election_id = e.id AND bb.status = 'submitted') AS ballot_count,
             b.id AS ballot_id,
             b.ballot_reference,
             COALESCE(b.submitted_at, ve.voted_at) AS ballot_submitted_at,
-            (CASE WHEN b.id IS NOT NULL OR ve.has_voted = 1 THEN 1 ELSE 0 END) AS has_voted
+            (CASE WHEN b.id IS NOT NULL OR ve.has_voted = 1 THEN 1 ELSE 0 END) AS has_voted,
+            (CASE WHEN ve.user_id IS NOT NULL THEN 1 ELSE 0 END) AS is_eligible
        FROM elections e
        LEFT JOIN ballots b ON b.election_id = e.id AND b.voter_id = :ballot_user_id AND b.status = 'submitted'
        LEFT JOIN voter_eligibility ve ON ve.election_id = e.id AND ve.user_id = :ve_user_id
@@ -62,11 +62,13 @@ if ($electionId > 0) {
     if ($focus === null) {
         $stmtFocus = $pdo->prepare(
             "SELECT e.*,
+                    (SELECT COUNT(*) FROM voter_eligibility vv WHERE vv.election_id = e.id) AS eligible_count,
                     (SELECT COUNT(*) FROM ballots bb WHERE bb.election_id = e.id AND bb.status = 'submitted') AS ballot_count,
                     b.id AS ballot_id,
                     b.ballot_reference,
                     COALESCE(b.submitted_at, ve.voted_at) AS ballot_submitted_at,
-                    (CASE WHEN b.id IS NOT NULL OR ve.has_voted = 1 THEN 1 ELSE 0 END) AS has_voted
+                    (CASE WHEN b.id IS NOT NULL OR ve.has_voted = 1 THEN 1 ELSE 0 END) AS has_voted,
+                    (CASE WHEN ve.user_id IS NOT NULL THEN 1 ELSE 0 END) AS is_eligible
                FROM elections e
                LEFT JOIN ballots b ON b.election_id = e.id AND b.voter_id = :ballot_user_id AND b.status = 'submitted'
                LEFT JOIN voter_eligibility ve ON ve.election_id = e.id AND ve.user_id = :ve_user_id
@@ -112,8 +114,10 @@ $breadcrumb = $focus !== null
     ? [['label' => 'Results', 'href' => 'voter/results.php'], ['label' => (string) $focus['title']]]
     : [['label' => 'Results', 'href' => 'voter/results.php']];
 
+
 require __DIR__ . '/../includes/header.php';
 ?>
+<?php if($focusMaySee): ?><p class="report-download"><a class="link" href="<?= e(url('results-report.php?election_id='.(int)$focus['id'])) ?>">Download PDF report</a></p><?php endif; ?>
 
 <?php if ($elections === []): ?>
   <section class="card">
@@ -131,21 +135,20 @@ require __DIR__ . '/../includes/header.php';
   <section class="card">
     <div class="card__header">
       <div class="card__headings">
-        <h2 class="card__title">Which results you can see</h2>
+        <h2 class="card__title">Election results</h2>
         <p class="card__subtitle">
-          Each election decides for itself when its tally becomes public.
+          See live totals after you vote. Completed elections show their final outcomes.
         </p>
       </div>
     </div>
 
-    <div class="table-wrap">
-      <table class="table">
+    <div class="table-wrap voter-results-list-wrap">
+      <table class="table voter-results-list-table">
         <caption class="visually-hidden">Elections you are registered for and whether their results are published</caption>
         <thead>
           <tr>
             <th scope="col">Election</th>
             <th scope="col">Status</th>
-            <th scope="col">Results policy</th>
             <th scope="col">Availability</th>
             <th scope="col" class="table__actions-col">Actions</th>
           </tr>
@@ -156,31 +159,44 @@ require __DIR__ . '/../includes/header.php';
               $status  = election_effective_status($election);
               $voted   = (int) ($election['has_voted'] ?? 0) === 1 || !empty($election['ballot_reference']);
               $maySee  = may_view_results($election, $voter, $voted);
+              $canVote = $status === 'open' && !$voted && (int) ($election['is_eligible'] ?? 0) === 1;
               $note    = results_policy_notice($election, $voted);
             ?>
             <tr>
-              <td class="table__cell-strong"><?= e($election['title']) ?></td>
-              <td><?= election_badge($status) ?></td>
-              <td><?= e((string) $election['results_visibility']) ?></td>
-              <td>
+              <td data-label="Election"><span class="table__cell-strong"><?= e($election['title']) ?></span></td>
+              <td data-label="Status"><?= election_badge($status) ?></td>
+              <td data-label="Availability">
                 <?php if ($maySee): ?>
                   <span class="badge badge--teal"><?= sv_icon('check', 13) ?>Available</span>
                 <?php else: ?>
-                  <span class="badge badge--neutral"><?= sv_icon('clock', 13) ?>Not yet published</span>
-                  <?php if ($note !== null): ?>
+                  <?php if ($canVote): ?>
+                    <span class="badge badge--neutral"><?= sv_icon('clock', 13) ?>Vote to unlock</span>
+                  <?php elseif ($status === 'scheduled'): ?>
+                    <span class="badge badge--neutral">Not open yet</span>
+                  <?php else: ?>
+                    <span class="badge badge--neutral">Not on voter list</span>
+                  <?php endif; ?>
+                  <?php if ($canVote && $note !== null): ?>
                     <span class="table__cell-sub"><?= e($note) ?></span>
                   <?php endif; ?>
                 <?php endif; ?>
               </td>
-              <td class="table__actions-col">
+              <td class="table__actions-col" data-label="Results">
                 <div class="table__actions">
                   <?php if ($maySee): ?>
                     <a class="btn btn--secondary btn--sm"
                        href="<?= e(url('voter/results.php?election_id=' . (int) $election['id'])) ?>">
                       <?= sv_icon('results', 14, 'btn__icon') ?><span>View results</span>
                     </a>
+                  <?php elseif ($canVote): ?>
+                    <a class="btn btn--primary btn--sm"
+                       href="<?= e(url('voter/ballot.php?election_id=' . (int) $election['id'])) ?>">
+                      <?= sv_icon('vote', 14, 'btn__icon') ?><span>Vote now</span>
+                    </a>
+                  <?php elseif ($status === 'scheduled'): ?>
+                    <span class="text-sm text-muted">Not open yet</span>
                   <?php else: ?>
-                    <span class="text-sm text-muted">Withheld by policy</span>
+                    <span class="text-sm text-muted">Not on voter list</span>
                   <?php endif; ?>
                 </div>
               </td>
@@ -191,12 +207,7 @@ require __DIR__ . '/../includes/header.php';
     </div>
 
     <div class="card__footer">
-      <p class="text-sm text-muted">
-        <?= sv_icon('info', 14) ?>
-        The three policies are: <strong>hidden</strong> (never published),
-        <strong>after vote</strong> (published once you have voted) and
-        <strong>after close</strong> (published when the election closes).
-      </p>
+      <p class="text-sm text-muted">Live tallies become visible after your ballot is submitted. Final outcomes appear when voting closes.</p>
     </div>
   </section>
 
@@ -205,12 +216,15 @@ require __DIR__ . '/../includes/header.php';
   <section class="card">
     <div class="empty-state">
       <span class="empty-state__icon"><?= sv_icon('lock', 26) ?></span>
-      <p class="empty-state__title">These results are not public yet</p>
+      <?php $focusCanVote = election_effective_status($focus) === 'open' && !$focusVoted && (int) ($focus['is_eligible'] ?? 0) === 1; ?>
+      <p class="empty-state__title"><?= $focusCanVote ? 'Vote to see live results' : 'Results are not available yet' ?></p>
       <p class="empty-state__text">
-        <?= e(results_policy_notice($focus, $focusVoted)
-            ?? 'The election administrator has not published these results.') ?>
+        <?= e($focusCanVote ? (results_policy_notice($focus, $focusVoted) ?? 'Submit your ballot to unlock the live tally.') : (election_effective_status($focus) === 'scheduled' ? 'Voting has not opened yet.' : 'Results become available after an eligible ballot is submitted.')) ?>
       </p>
       <div class="row" style="justify-content:center">
+        <?php if ($focusCanVote): ?>
+          <a class="btn btn--primary" href="<?= e(url('voter/ballot.php?election_id=' . (int) $focus['id'])) ?>">Vote now</a>
+        <?php endif; ?>
         <a class="btn btn--secondary" href="<?= e(url('voter/results.php')) ?>">All elections</a>
         <a class="btn btn--ghost" href="<?= e(url('voter/elections.php')) ?>">My elections</a>
       </div>
@@ -254,6 +268,14 @@ require __DIR__ . '/../includes/header.php';
     </div>
   </section>
 
+  <?php
+    $chartElectionId = (int) $focus['id'];
+    $chartEligible = (int) $focus['eligible_count'];
+    $chartBallots = (int) $focus['ballot_count'];
+    $chartPositions = $tally;
+    require __DIR__ . '/../includes/results-charts.php';
+  ?>
+
   <?php if ($focusFinal): ?>
     <section class="card" aria-labelledby="final-results-heading">
       <div class="card__header">
@@ -273,14 +295,6 @@ require __DIR__ . '/../includes/header.php';
       </div>
     </section>
   <?php endif; ?>
-
-  <div class="security-note">
-    <?= sv_icon('shield-check', 16) ?>
-    <span>
-      Counts are produced with aggregate queries. SecureVote never publishes, and cannot
-      reconstruct, which voter chose which candidate.
-    </span>
-  </div>
 
   <?php if ($tally === []): ?>
     <section class="card">

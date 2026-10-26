@@ -18,11 +18,13 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/locale.php';
 require_once __DIR__ . '/flash.php';
 require_once __DIR__ . '/csrf.php';
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/icons.php';
 require_once __DIR__ . '/traffic.php';
+require_once __DIR__ . '/next-features.php';
 
 // Any uncaught exception or fatal error becomes a calm, branded page and
 // a line in storage/logs/php-error.log, never a stack trace on screen.

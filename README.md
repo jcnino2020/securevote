@@ -486,3 +486,55 @@ Ensure that `storage/` and `database/` directories are inaccessible via direct U
 ---
 
 *SecureVote is an academic endterm project created for educational demonstration of information assurance, cryptographic integrity, and secure web application development. It is not affiliated with any government electoral body.*
+
+## Election preparation and student support
+
+The site includes seven additional tools in the existing navigation:
+
+- **Compare candidates** (`voter/compare.php`): signed-in voters compare active candidate affiliations, biographies, and full platforms by election and position. Draft elections stay hidden.
+- **Announcements** (`announcements.php`, `admin/announcements.php`): administrators create, edit, publish, or withdraw global/election updates. Only published updates for published elections appear publicly. These are website announcements, not email or push notifications.
+- **Practice ballot** (`practice.php`): a fictional single-choice and multi-choice ballot with review, edit, abstention, and completion. No practice selections are persisted, no receipt is generated, and eligibility is untouched.
+- **Readiness checklist** (`admin/readiness.php`): advisory checks for schedules, positions/candidates, active voter assignments, candidate information, and selection limits. It does not replace server-side ballot validation. The existing “Open now” action automatically enrols active voters; scheduled elections must have eligibility assigned beforehand.
+- **CSV import** (`admin/import-voters.php`): UTF-8 CSV with exactly `username,email,first_name,last_name`; maximum 1 MB and 500 rows. Download a header template, choose an election, preview, then confirm within 15 minutes. File duplicates, account conflicts, administrators, and inactive/blocked voters prevent import. Existing accounts require matching username **and** email; profile, credentials, and participation are preserved. New voters receive code-only accounts; distribute their generated voter codes privately through the registry. Imports are transactional and only enrol voters in the selected election.
+- **Receipt check** (`verify.php`): POST-only lookup returns recorded/not found and the election title. It does not return identity, choices, or timestamps and does not prove tally correctness. Database-backed IP limits allow 20 checks per 15-minute window. Receipt values are excluded from URLs and audit descriptions; responses disable caching.
+- **Help and issue reports** (`help.php`, `admin/support.php`): FAQ, guest/signed-in issue submission, administrator status updates and replies, and account-scoped report history. Guest reporters must follow up with the administrator using their reference. No email is sent. Limits allow five reports per connection per hour. Reporters are instructed not to include credentials, receipt codes, or selections.
+
+### Database setup
+
+For an existing installation, back up the database and run `database/migration_community_features.sql` in the configured database using phpMyAdmin or the MySQL client. It adds `announcements`, `support_tickets`, and `feature_rate_limits` without changing votes. Fresh schema files include these tables. If tables are missing, the new community pages attempt this same additive migration once on first use; installations whose app account lacks CREATE privileges need the manual migration.
+
+Deploy the new PHP routes, `includes/community.php`, `includes/voter-import.php`, `assets/css/community.css`, and updated shared/navigation/authentication files together. Support reports contain personal information; administrators should handle retention/removal according to institutional policy. The application does not automatically purge reports.
+
+### Feature verification
+
+`tests/community-features.php` checks CSV validation, account protection, code-only authentication, import transactions, participation preservation, practice ballot rules, readiness queries, migrations, and persistent rate limits. It refuses to run without `SV_TEST_ALLOW_WRITES=1` and a disposable socket beginning `/tmp/securevote-feature`. Load the primary schema into a temporary MariaDB instance first and set the `SV_DB_*` environment variables. Never point tests at production.
+
+`tests/community-browser.cjs` uses Playwright with installed Chrome against the isolated fixture preview at `http://127.0.0.1:8765`. After loading a fresh disposable primary schema, run `tests/community-fixtures.php` with the same test database environment and `SV_TEST_ALLOW_WRITES=1` to create the fixtures. The browser suite expects fixture accounts `admin` and `browserstudent` with the test-only password `FeatureTest123`, a submitted fixture receipt `SV-2026-ABC123`, and seeded primary election candidates. It exercises all seven flows, CSRF/role checks, student report isolation, and desktop/mobile layouts. Screenshots are written under `/tmp/securevote-feature-screens`. These accounts and credentials are test fixtures only and must never be installed on a deployed site.
+
+### Election engagement features
+
+- `timeline.php` displays registration/campaign dates from `admin/engagement.php`, authoritative voting dates, and an optional results announcement. Unset phases say “Not announced.” Informational phase dates do not enforce registration/campaign access or override results policy.
+- `voter/reminders.php` computes in-app opening reminders within 24 hours, current voting reminders, and separate closing reminders within 24 hours for assigned voters without a submitted ballot. Dismissals persist per account and schedule; alerts refresh on page visits, with no email or background push service.
+- `candidate-qa.php` shows only administrator-published answers for active candidates in published elections. Administrators enter candidate-supplied answers as draft, publish after review, or withdraw them. No sample answers are installed in production.
+- The English/Filipino control translates navigation, new feature pages, and core voter instructions; candidate names, platforms, administrator-authored content, and remaining operational copy retain their supplied language. The language choice stays in the session and changes via CSRF-protected POST.
+- Receipt history links select the correct election. Receipts require account ownership, omit login voter codes and candidate choices, and support Print / Save PDF through an external CSP-compatible script.
+
+Apply `database/migration_engagement.sql` once on existing installations; it is additive and repeatable. New routes also attempt setup on first use. Deploy the shared locale helper before the updated bootstrap. No admin two-factor authentication is included.
+
+Checks: `tests/engagement-features.php` uses the same disposable-database guard as the community suite. `tests/engagement-browser.cjs` requires local fixture accounts and a currently open election #1; it creates test answers and schedules only on the isolated localhost preview. Never run the fixture setup on production.
+
+### Recovery, election resources, reports, and reading preferences
+
+Apply `database/migration_next_features.sql` (additive, repeatable) before deploying the updated authentication/shared bootstrap. Deploy `includes/next-features.php` with the migration. The new helpers also attempt first-use setup. Existing sessions stay valid until a password reset changes that account's session version.
+
+Password recovery is available at `auth/forgot-password.php`. It uses generic responses, persistent IP and account limits, 256-bit random tokens stored only as SHA-256 digests, a 30-minute expiry, one-use consumption under database locks, and revocation of previous sessions after reset. Reset links use trusted `SV_PUBLIC_ORIGIN` (defaulting to the configured Hostinger `/securevote` deployment), never the request Host header. PHP `mail()` uses Hostinger's configured transport; `SV_MAIL_FROM` optionally overrides the default `no-reply@darkblue-hummingbird-464264.hostingersite.com`. Configure a sender your hosting provider permits and monitor delivery/bounces. Transport failure invalidates that token and logs a generic diagnostic without the token or email body. Mail acceptance does not verify inbox delivery. Password inputs accept 12–72 bytes, matching the underlying password-hashing limit. Recovery emails are not sent by automated tests; tests inject a local mail callback.
+
+`admin/resources.php` edits organization/department/school-year classifications and publishes or withdraws forum events, debate video links, and campaign materials. `forum.php` displays only published resources for published elections. Resource links require HTTPS and open safely in a separate tab; remote media is not embedded or fetched by the server. Election filters use these explicitly supplied classifications; older elections remain unclassified until edited.
+
+`changes.php` displays forward-only change summaries for schedules, candidate profiles/rosters, classifications, status, and results policy. `election_snapshots` establishes a baseline when enabled; initial import does not manufacture past history. Successful writes through the election, candidate, timeline, and metadata editors record comparisons. Direct SQL edits and external tools bypass these application hooks. Changes expose field categories and timestamps, never administrator identities or private before/after content.
+
+`results-report.php?election_id=ID` generates a paginated PDF with aggregate turnout, tallies, seat outcomes/ties, and generation time. It checks the same results visibility policy before collecting tallies; administrators can export through the Results export menu, and permitted voters through a report link. Live reports are labeled non-final. PDF standard fonts use WinAnsi with transliteration for unsupported characters; full original names remain on the website. No voter selections or identities are exported.
+
+The voter sidebar is reduced to core destinations. `guide.php` groups preparation, updates, and voting help; the dashboard retains a guide link and reminder count. Display & language contains persistent text-size and high-contrast preferences, stored locally in the browser, and session-based language selection. A reset control clears reading preferences.
+
+`tests/next-features.php` and `tests/next-browser.cjs` validate the new features using the disposable feature database and local fixture server only. Neither fixture nor test data is deployed. SecureVote v1 remains an earlier interface; shared account security protections also apply to its existing-account login.

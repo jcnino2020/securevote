@@ -25,29 +25,36 @@ $focusId = int_input('election_id', 0);
 
 $stmt = $pdo->prepare(
     "SELECT e.*,
+            ve.id AS eligibility_id,
             b.id AS ballot_id,
             b.ballot_reference,
             b.submitted_at AS ballot_submitted_at,
             (SELECT COUNT(*) FROM positions p WHERE p.election_id = e.id) AS position_count,
             (SELECT COUNT(*) FROM candidates c WHERE c.election_id = e.id AND c.status = 'active') AS candidate_count
        FROM elections e
+       LEFT JOIN voter_eligibility ve ON ve.election_id = e.id AND ve.user_id = :eligibility_user_id
        LEFT JOIN ballots b ON b.election_id = e.id AND b.voter_id = :user_id AND b.status = 'submitted'
       WHERE e.status IN ('open', 'scheduled', 'closed', 'archived')
       ORDER BY FIELD(e.status, 'open', 'scheduled', 'closed', 'archived'),
                e.start_datetime DESC"
 );
-$stmt->execute([':user_id' => $userId]);
+$stmt->execute([':eligibility_user_id' => $userId, ':user_id' => $userId]);
 $elections = $stmt->fetchAll();
 
+$metadataRows=sv_next_db()->query("SELECT m.* FROM election_metadata m JOIN elections e ON e.id=m.election_id WHERE e.status IN ('scheduled','open','closed','archived')")->fetchAll();$metadata=[];foreach($metadataRows as $row)$metadata[(int)$row['election_id']]=$row;
+$filters=[];foreach(['organization','department','school_year'] as $key){$filters[$key]=input($key,'');}
+$search=input('q','');
+$elections=array_values(array_filter($elections,static function($e)use($metadata,$filters,$search){$m=$metadata[(int)$e['id']]??[];foreach($filters as $k=>$value)if($value!==''&&($m[$k]??'')!==$value)return false;return $search===''||mb_stripos($e['title'].' '.($e['description']??''),$search)!==false;}));
 $focus = null;
 if ($focusId > 0) {
     $focusStmt = $pdo->prepare(
-        'SELECT e.*, b.id AS ballot_id, b.ballot_reference, b.submitted_at AS ballot_submitted_at
+        'SELECT e.*, ve.id AS eligibility_id, b.id AS ballot_id, b.ballot_reference, b.submitted_at AS ballot_submitted_at
            FROM elections e
+           LEFT JOIN voter_eligibility ve ON ve.election_id = e.id AND ve.user_id = :eligibility_user_id
            LEFT JOIN ballots b ON b.election_id = e.id AND b.voter_id = :user_id AND b.status = \'submitted\'
           WHERE e.id = :id LIMIT 1'
     );
-    $focusStmt->execute([':user_id' => $userId, ':id' => $focusId]);
+    $focusStmt->execute([':eligibility_user_id' => $userId, ':user_id' => $userId, ':id' => $focusId]);
     $focus = $focusStmt->fetch();
 
     if (!$focus) {
@@ -78,10 +85,12 @@ $breadcrumb = $focus !== null
 require __DIR__ . '/../includes/header.php';
 ?>
 
+<?php if($focus===null): ?><form method="get" class="election-filters"><div><label for="filter-search">Search elections</label><input class="input" id="filter-search" type="search" name="q" value="<?= e($search) ?>" placeholder="Election name or description"></div><details class="advanced-filters" <?= array_filter($filters)?'open':'' ?>><summary>More election filters</summary><div class="filter-fields"><?php foreach(['organization'=>'Organization','department'=>'Department','school_year'=>'School year'] as $key=>$label): $values=array_unique(array_filter(array_column($metadataRows,$key)));sort($values); ?><div><label for="filter-<?= e($key) ?>"><?= e($label) ?></label><select class="input" id="filter-<?= e($key) ?>" name="<?= e($key) ?>"><option value="">All</option><?php foreach($values as $value): ?><option <?= $filters[$key]===$value?'selected':'' ?>><?= e($value) ?></option><?php endforeach; ?></select></div><?php endforeach; ?></div></details><button class="btn btn--primary">Apply filters</button><a class="link" href="<?= e(url('voter/elections.php')) ?>">Clear filters</a></form><?php endif; ?>
 <?php if ($focus !== null): ?>
   <?php
     $focusStatus = election_effective_status($focus);
     $focusVoted  = !empty($focus['ballot_reference']);
+    $focusEligible = !empty($focus['eligibility_id']);
     $policyNote  = results_policy_notice($focus, $focusVoted);
   ?>
   <section class="card" style="margin-bottom: var(--sp-6);">
@@ -105,28 +114,30 @@ require __DIR__ . '/../includes/header.php';
 
       <dl class="kv">
         <div class="kv__row">
-          <dt class="kv__key">Voting opens</dt>
+          <dt class="kv__key"><?= e(sv_t("Voting opens")) ?></dt>
           <dd class="kv__value"><?= e(fmt_datetime($focus['start_datetime'])) ?></dd>
         </div>
         <div class="kv__row">
-          <dt class="kv__key">Voting closes</dt>
+          <dt class="kv__key"><?= e(sv_t("Voting closes")) ?></dt>
           <dd class="kv__value">
             <?= e(fmt_datetime($focus['end_datetime'])) ?>
             <span class="text-muted text-sm">(<?= e(countdown_text($focus)) ?>)</span>
           </dd>
         </div>
         <div class="kv__row">
-          <dt class="kv__key">Your Voting Status</dt>
+          <dt class="kv__key"><?= e(sv_t("Your Voting Status")) ?></dt>
           <dd class="kv__value">
             <?php if ($focusVoted): ?>
               <span class="badge badge--success" style="font-size:0.85rem;">
                 <?= sv_icon('check-circle', 14) ?> Submitted on <?= e(fmt_datetime((string) $focus['ballot_submitted_at'])) ?>
               </span>
               <span class="text-sm text-muted" style="margin-left:8px;">Receipt: <code class="mono"><?= e((string) $focus['ballot_reference']) ?></code></span>
-            <?php elseif ($focusStatus === 'open'): ?>
+            <?php elseif ($focusStatus === 'open' && $focusEligible): ?>
               <span class="badge badge--primary" style="font-size:0.85rem;">
                 <?= sv_icon('shield-check', 14) ?> Eligible & Ready to Vote
               </span>
+            <?php elseif (!$focusEligible): ?>
+              <span class="badge badge--neutral">Not on voter list</span>
             <?php else: ?>
               <span class="badge badge--neutral"><?= ucfirst($focusStatus) ?></span>
             <?php endif; ?>
@@ -144,24 +155,24 @@ require __DIR__ . '/../includes/header.php';
 
     <div class="card__footer">
       <div class="row">
-        <?php if ($focusStatus === 'open' && !$focusVoted): ?>
+        <?php if ($focusStatus === 'open' && $focusEligible && !$focusVoted): ?>
           <a class="btn btn--primary"
              href="<?= e(url('voter/ballot.php?election_id=' . (int) $focus['id'])) ?>">
-            <?= sv_icon('vote', 16, 'btn__icon') ?><span>Cast Your Ballot Now</span>
+            <?= sv_icon('vote', 16, 'btn__icon') ?><span><?= e(sv_t("Cast Your Ballot Now")) ?></span>
           </a>
         <?php elseif ($focusVoted): ?>
           <a class="btn btn--secondary"
-             href="<?= e(url('voter/confirmation.php')) ?>">
-            <?= sv_icon('file', 16, 'btn__icon') ?><span>View My Ballot Receipt</span>
+             href="<?= e(url('voter/confirmation.php?election_id=' . (int)$focus['id'])) ?>">
+            <?= sv_icon('file', 16, 'btn__icon') ?><span><?= e(sv_t("View My Ballot Receipt")) ?></span>
           </a>
         <?php endif; ?>
 
         <a class="btn btn--secondary"
            href="<?= e(url('voter/results.php?election_id=' . (int) $focus['id'])) ?>">
-          <?= sv_icon('results', 16, 'btn__icon') ?><span>View Results Tally</span>
+          <?= sv_icon('results', 16, 'btn__icon') ?><span><?= e(sv_t("View Results Tally")) ?></span>
         </a>
 
-        <a class="btn btn--ghost" href="<?= e(url('voter/elections.php')) ?>">Back to all elections</a>
+        <a class="btn btn--ghost" href="<?= e(url('guide.php?election_id='.(int)$focus['id'])) ?>">Election guide</a>
       </div>
     </div>
   </section>
@@ -170,8 +181,8 @@ require __DIR__ . '/../includes/header.php';
   <section class="card" aria-labelledby="positions-heading">
     <div class="card__header">
       <div class="card__headings">
-        <h2 class="card__title" id="positions-heading">Contested Positions and Candidates</h2>
-        <p class="card__subtitle">Candidate roster for this election.</p>
+        <h2 class="card__title" id="positions-heading"><?= e(sv_t("Contested Positions and Candidates")) ?></h2>
+        <p class="card__subtitle"><?= e(sv_t("Candidate roster for this election.")) ?></p>
       </div>
     </div>
     <div class="card__body">
@@ -199,7 +210,7 @@ require __DIR__ . '/../includes/header.php';
               <?php foreach ($focusBallot as $index => $entry): ?>
                 <tr>
                   <td class="mono"><?= e((string) ($index + 1)) ?></td>
-                  <td class="table__cell-strong"><?= e($entry['position']['name']) ?></td>
+                  <td><span class="table__cell-strong"><?= e($entry['position']['name']) ?></span></td>
                   <td><?= e($entry['position']['description'] ?: '—') ?></td>
                   <td>
                     <?= e((string) $entry['position']['max_selections']) ?>
@@ -236,24 +247,16 @@ require __DIR__ . '/../includes/header.php';
     <section class="student-section" aria-labelledby="all-elections-heading">
       <div class="student-section__heading">
         <div>
-          <h2 id="all-elections-heading">All elections</h2>
-          <p><?= e((string) count($elections)) ?> election<?= count($elections) === 1 ? '' : 's' ?> available for your account.</p>
+          <h2 id="all-elections-heading"><?= e(sv_t("All elections")) ?></h2>
+          <p><?= e((string) count($elections)) ?> election<?= count($elections) === 1 ? '' : 's' ?> on the registry.</p>
         </div>
       </div>
       <div class="election-explorer" data-election-explorer>
-        <div class="election-explorer__top">
-          <label class="election-explorer__search">
-            <?= sv_icon('search', 18) ?>
-            <span class="visually-hidden">Search elections</span>
-            <input type="search" data-election-search placeholder="Search elections" autocomplete="off">
-          </label>
-          <p class="election-explorer__count" data-election-count role="status" aria-live="polite"></p>
-        </div>
         <div class="election-explorer__filters" role="group" aria-label="Filter elections by status">
-          <button type="button" data-election-filter="all" aria-pressed="true">All</button>
-          <button type="button" data-election-filter="open" aria-pressed="false">Open now</button>
-          <button type="button" data-election-filter="scheduled" aria-pressed="false">Upcoming</button>
-          <button type="button" data-election-filter="past" aria-pressed="false">Past</button>
+          <button type="button" data-election-filter="all" aria-pressed="true"><?= e(sv_t("All")) ?></button>
+          <button type="button" data-election-filter="open" aria-pressed="false"><?= e(sv_t("Open now")) ?></button>
+          <button type="button" data-election-filter="scheduled" aria-pressed="false"><?= e(sv_t("Upcoming")) ?></button>
+          <button type="button" data-election-filter="past" aria-pressed="false"><?= e(sv_t("Past")) ?></button>
         </div>
       </div>
       <div class="voter-election-list" data-election-list>
@@ -261,7 +264,7 @@ require __DIR__ . '/../includes/header.php';
           <?php
             $status   = election_effective_status($election);
             $hasVoted = !empty($election['ballot_reference']);
-            $canVote  = ($status === 'open' && !$hasVoted);
+            $canVote  = ($status === 'open' && !empty($election['eligibility_id']) && !$hasVoted);
           ?>
           <article class="voter-election" data-election-card data-status="<?= e($status) ?>" data-title="<?= e($election['title']) ?>">
             <div class="voter-election__body">
@@ -271,27 +274,27 @@ require __DIR__ . '/../includes/header.php';
               <span class="voter-election__meta">
                 <?= e((string) $election['position_count']) ?> positions &middot;
                 <?= e((string) $election['candidate_count']) ?> candidates
-                <?php if ($hasVoted): ?> &middot; Ballot submitted<?php elseif ($status === 'open'): ?> &middot; <?= e(countdown_text($election)) ?><?php endif; ?>
+                <?php if ($hasVoted): ?> &middot; Ballot submitted<?php elseif ($status === 'open' && empty($election['eligibility_id'])): ?> &middot; Not on voter list<?php elseif ($status === 'open'): ?> &middot; <?= e(countdown_text($election)) ?><?php endif; ?>
               </span>
             </div>
             <div class="voter-election__actions">
               <?php if ($canVote): ?>
-                <a class="btn btn--primary" href="<?= e(url('voter/ballot.php?election_id=' . (int) $election['id'])) ?>">Open ballot <?= sv_icon('arrow-right', 16) ?></a>
+                <a class="btn btn--primary" href="<?= e(url('voter/ballot.php?election_id=' . (int) $election['id'])) ?>"><?= e(sv_t("Open ballot")) ?> <?= sv_icon('arrow-right', 16) ?></a>
               <?php elseif ($hasVoted): ?>
-                <a class="btn btn--secondary" href="<?= e(url('voter/results.php?election_id=' . (int) $election['id'])) ?>">View results <?= sv_icon('arrow-right', 16) ?></a>
+                <a class="btn btn--secondary" href="<?= e(url('voter/results.php?election_id=' . (int) $election['id'])) ?>"><?= e(sv_t("View results")) ?> <?= sv_icon('arrow-right', 16) ?></a>
               <?php elseif (in_array($status, ['closed', 'archived'], true) && may_view_results($election, $voter, false)): ?>
                 <a class="btn btn--secondary" href="<?= e(url('voter/results.php?election_id=' . (int) $election['id'])) ?>">Final summary <?= sv_icon('arrow-right', 16) ?></a>
               <?php endif; ?>
-              <a class="btn btn--ghost" href="<?= e(url('voter/elections.php?election_id=' . (int) $election['id'])) ?>">Election details</a>
+              <a class="btn btn--ghost" href="<?= e(url('voter/elections.php?election_id=' . (int) $election['id'])) ?>"><?= e(sv_t("Election details")) ?></a>
             </div>
           </article>
         <?php endforeach; ?>
       </div>
       <div class="election-explorer__empty" data-election-empty hidden>
         <?= sv_icon('search', 25) ?>
-        <h3>No elections match</h3>
-        <p>Try another search or view all elections.</p>
-        <button type="button" class="btn btn--secondary" data-election-reset>Clear filters</button>
+        <h3><?= e(sv_t("No elections match")) ?></h3>
+        <p><?= e(sv_t("Try another search or view all elections.")) ?></p>
+        <button type="button" class="btn btn--secondary" data-election-reset><?= e(sv_t("Clear filters")) ?></button>
       </div>
     </section>
   <?php endif; ?>
@@ -301,7 +304,7 @@ require __DIR__ . '/../includes/header.php';
     <div class="card__header">
       <div class="card__headings">
         <h2 class="card__title" id="how-heading">How your vote is protected</h2>
-        <p class="card__subtitle">Your ballot is private, and you receive a receipt after voting.</p>
+        <p class="card__subtitle">Review your ballot status and receipt after voting.</p>
       </div>
     </div>
     <div class="card__body">

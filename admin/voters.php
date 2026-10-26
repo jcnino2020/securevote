@@ -416,6 +416,9 @@ if ($viewAction === 'eligibility') {
     ];
 
     require __DIR__ . '/../includes/header.php';
+?>
+<div class="feature-shortcuts"><a class="btn btn--secondary" href="<?= e(url('admin/import-voters.php')) ?>">Import voters from CSV</a></div>
+<?php
     ?>
 
     <section class="card" aria-labelledby="eligibility-heading">

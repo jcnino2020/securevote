@@ -281,10 +281,10 @@ function countdown_text(array $election): string
     $status = election_effective_status($election);
 
     if ($status === 'open') {
-        return 'Closes in ' . relative_time($election['end_datetime']);
+        return 'Closes ' . relative_time($election['end_datetime']);
     }
     if ($status === 'scheduled') {
-        return 'Opens in ' . relative_time($election['start_datetime']);
+        return 'Opens ' . relative_time($election['start_datetime']);
     }
     if ($status === 'closed' || $status === 'archived') {
         return 'Closed ' . relative_time($election['end_datetime']);
@@ -446,9 +446,7 @@ function election_status_options(): array
 function results_visibility_options(): array
 {
     return [
-        'hidden'      => 'Hidden — nobody can view results',
         'after_vote'  => 'After voting — a voter sees results once they vote',
-        'after_close' => 'After close — results appear when the election closes',
     ];
 }
 
@@ -562,7 +560,8 @@ function election_state_denial(string $status, array $election): array
 
 /**
  * May this user see the results of this election?
- * Implements the election's configured results policy.
+ * Publish aggregate tallies after a voter submits a ballot, or once voting
+ * closes. The stored legacy policy cannot withhold a submitted voter's tally.
  */
 function may_view_results(array $election, ?array $user = null, bool $hasVoted = false): bool
 {
@@ -573,29 +572,19 @@ function may_view_results(array $election, ?array $user = null, bool $hasVoted =
     $status = election_effective_status($election);
     $closed = in_array($status, ['closed', 'archived'], true);
 
-    return match ((string) ($election['results_visibility'] ?? 'after_close')) {
-        'hidden'      => false,
-        'after_vote'  => $hasVoted || $closed,
-        'after_close' => $closed,
-        default       => $closed,
-    };
+    return $hasVoted || $closed;
 }
 
 
 /** Human explanation of why results are or are not visible. */
 function results_policy_notice(array $election, bool $hasVoted = false): ?string
 {
-    $policy = (string) ($election['results_visibility'] ?? 'after_close');
     $closed = in_array(election_effective_status($election), ['closed', 'archived'], true);
 
-    if ($policy === 'hidden') {
-        return 'Results for this election are configured as hidden.';
-    }
-    if ($policy === 'after_vote' && !$hasVoted && !$closed) {
-        return 'Results become available after you submit your ballot.';
-    }
-    if ($policy === 'after_close' && !$closed) {
-        return 'Results become available once the election closes.';
+    if (!$hasVoted && !$closed) {
+        return election_effective_status($election) === 'scheduled'
+            ? 'Results become available after voting opens and you submit your ballot.'
+            : 'Results become available after you submit your ballot.';
     }
 
     return null;

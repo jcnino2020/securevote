@@ -51,13 +51,22 @@ if (is_post()) {
         }
 
         if ($errors === []) {
-            $update = $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
-            $update->execute([password_hash($password, PASSWORD_DEFAULT), $userId]);
+            $pdo->beginTransaction();
+            try {
+                $update = $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
+                $update->execute([password_hash($password, PASSWORD_DEFAULT), $userId]);
+                $version = sv_rotate_security_version($pdo, $userId);
+                $pdo->commit();
+            } catch (Throwable $e) {
+                if ($pdo->inTransaction()) $pdo->rollBack();
+                throw $e;
+            }
 
+            $_SESSION['security_version'] = $version;
             csrf_rotate();
             audit_log('password_changed', 'Voter changed their own password.', $userId);
 
-            flash_success('Your password was changed.');
+            flash_success('Your password was changed. Other sessions have been signed out.');
             redirect('voter/profile.php');
         }
     }
@@ -73,8 +82,7 @@ $stmt = $pdo->prepare(
             b.status,
             e.title AS election_title,
             e.id AS election_id,
-            e.end_datetime,
-            e.results_visibility
+            e.end_datetime
        FROM ballots b
        JOIN elections e ON e.id = b.election_id
       WHERE b.voter_id = ? AND b.status = 'submitted'
@@ -286,7 +294,7 @@ require __DIR__ . '/../includes/header.php';
     <div class="card__headings">
       <h2 class="card__title" id="history-heading">Participation history</h2>
       <p class="card__subtitle">
-        What you took part in and when. The candidates you chose are never listed here.
+        Your submitted ballot receipts and dates.
       </p>
     </div>
   </div>
@@ -303,15 +311,14 @@ require __DIR__ . '/../includes/header.php';
       </a>
     </div>
   <?php else: ?>
-    <div class="table-wrap">
-      <table class="table">
+    <div class="table-wrap profile-history-wrap">
+      <table class="table profile-history-table">
         <caption class="visually-hidden">Your submitted ballots with their public reference</caption>
         <thead>
           <tr>
             <th scope="col">Election</th>
             <th scope="col">Receipt code</th>
             <th scope="col">Submitted</th>
-            <th scope="col">Ballot secrecy</th>
             <th scope="col">Status</th>
             <th scope="col" class="table__actions-col">Receipt</th>
           </tr>
@@ -320,15 +327,14 @@ require __DIR__ . '/../includes/header.php';
           <?php foreach ($history as $row): ?>
             <?php [$label, $variant] = ballot_status_meta((string) $row['status']); ?>
             <tr>
-              <td class="table__cell-strong"><?= e($row['election_title']) ?></td>
-              <td class="mono"><?= e((string) ($row['ballot_reference'] !== '' ? $row['ballot_reference'] : '—')) ?></td>
-              <td>
+              <td data-label="Election"><span class="table__cell-strong"><?= e($row['election_title']) ?></span></td>
+              <td class="mono" data-label="Receipt code"><?= e((string) ($row['ballot_reference'] !== '' ? $row['ballot_reference'] : '—')) ?></td>
+              <td data-label="Submitted">
                 <?= e(fmt_datetime((string) $row['submitted_at'])) ?>
                 <span class="table__cell-sub"><?= e(relative_time((string) $row['submitted_at'])) ?></span>
               </td>
-              <td><span class="badge badge--navy"><?= sv_icon('shield-check', 13) ?>Secret ballot</span></td>
-              <td><?= badge($label, $variant) ?></td>
-              <td class="table__actions-col">
+              <td data-label="Status"><?= badge($label, $variant) ?></td>
+              <td class="table__actions-col" data-label="Receipt">
                 <div class="table__actions">
                   <a class="btn btn--secondary btn--sm" href="<?= e(url('voter/confirmation.php?election_id=' . (int) $row['election_id'])) ?>">
                     <?= sv_icon('file', 14, 'btn__icon') ?><span>View</span>

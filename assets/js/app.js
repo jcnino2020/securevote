@@ -24,7 +24,8 @@
 
   function storedTheme() {
     try {
-      return window.localStorage.getItem(STORAGE_KEY);
+      var value = window.localStorage.getItem(STORAGE_KEY);
+      return value === 'light' || value === 'dark' ? value : null;
     } catch (e) {
       return null;
     }
@@ -46,6 +47,8 @@
       var label = theme === 'dark' ? 'Switch to light appearance' : 'Switch to dark appearance';
       toggle.setAttribute('aria-label', label);
       toggle.setAttribute('title', label);
+      var valueLabel = toggle.querySelector('[data-theme-label]');
+      if (valueLabel) valueLabel.textContent = theme === 'dark' ? 'Dark mode' : 'Light mode';
     }
   }
 
@@ -80,6 +83,7 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     initThemeToggle();
+    initAccessibleContent();
     initSidebarDrawer();
     initPasswordToggles();
     initBallotEngine();
@@ -125,6 +129,55 @@
     }
   }
 
+  // Progressive enhancement: preserve native forms and table relationships.
+  function initAccessibleContent() {
+    var header = document.querySelector('.topbar');
+    if (header) {
+      var measureHeader = function () {
+        document.documentElement.style.setProperty('--header-offset', Math.ceil(header.getBoundingClientRect().height + 16) + 'px');
+      };
+      measureHeader();
+      if (window.ResizeObserver) new ResizeObserver(measureHeader).observe(header);
+      else window.addEventListener('resize', measureHeader);
+    }
+    document.querySelectorAll('.table-wrap, .traffic-table-wrap, .comparison-scroll').forEach(function (region, index) {
+      var table = region.querySelector('table');
+      if (!table) return;
+      table.querySelectorAll('thead th:not([scope])').forEach(function (cell) { cell.scope = 'col'; });
+      var refresh = function () {
+        var scrolls = region.scrollWidth > region.clientWidth + 1;
+        if (scrolls) {
+          region.tabIndex = 0;
+          region.setAttribute('role', 'region');
+          if (!region.hasAttribute('aria-label') && !region.hasAttribute('aria-labelledby')) {
+            var caption = table.querySelector('caption');
+            region.setAttribute('aria-label', caption ? caption.textContent.trim() : 'Scrollable data table ' + (index + 1));
+          }
+        } else if (region.getAttribute('role') === 'region') {
+          region.removeAttribute('tabindex');
+        }
+      };
+      refresh();
+      if (window.ResizeObserver) new ResizeObserver(refresh).observe(region);
+      else window.addEventListener('resize', refresh);
+    });
+    document.querySelectorAll('.form-field').forEach(function (field, index) {
+      var error = field.querySelector('.field-error');
+      if (!error) return;
+      if (!error.id) error.id = 'field-feedback-' + index;
+      field.querySelectorAll('input:not([type=hidden]), select, textarea').forEach(function (input) {
+        input.setAttribute('aria-invalid', 'true');
+        var descriptions = (input.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean);
+        if (descriptions.indexOf(error.id) < 0) descriptions.push(error.id);
+        input.setAttribute('aria-describedby', descriptions.join(' '));
+      });
+    });
+    document.querySelectorAll('img').forEach(function (image) {
+      image.decoding = 'async';
+      if (!image.hasAttribute('loading') && image.getBoundingClientRect().top > window.innerHeight) image.loading = 'lazy';
+    });
+  }
+
   /* ======================================================================
      5. Mobile Navigation Drawer & Backdrop
      ==================================================================== */
@@ -153,6 +206,8 @@
       setSidebarAccess(true);
       if (backdrop) backdrop.hidden = false;
       document.body.style.overflow = 'hidden';
+      var shell = document.querySelector('.shell');
+      if (shell) shell.inert = true;
 
       Array.prototype.forEach.call(toggles, function (btn) {
         btn.setAttribute('aria-expanded', 'true');
@@ -168,6 +223,8 @@
       sidebar.classList.remove('is-open');
       if (backdrop) backdrop.hidden = true;
       document.body.style.overflow = '';
+      var shell = document.querySelector('.shell');
+      if (shell) shell.inert = false;
 
       Array.prototype.forEach.call(toggles, function (btn) {
         btn.setAttribute('aria-expanded', 'false');
@@ -204,7 +261,7 @@
         closeSidebar(true);
       }
       if (e.key === 'Tab' && sidebar.classList.contains('is-open')) {
-        var focusable = Array.prototype.slice.call(sidebar.querySelectorAll('a, button:not([disabled])'))
+        var focusable = Array.prototype.slice.call(sidebar.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex="0"]'))
           .filter(function (element) { return element.getClientRects().length > 0; });
         if (!focusable.length) return;
         var first = focusable[0];
@@ -290,7 +347,7 @@
         var count = checked.length;
 
         if (counter) {
-          counter.textContent = count + ' of ' + max + ' selected';
+          counter.textContent = (document.documentElement.lang === 'fil' ? count + ' sa ' + max + ' ang napili' : count + ' of ' + max + ' selected');
           if (count >= max) {
             counter.classList.add('is-full');
           } else {
@@ -325,10 +382,10 @@
 
         if (counter) {
           if (isAbstain || !checked) {
-            counter.textContent = '0 of 1 selected (Abstained)';
+            counter.textContent = (document.documentElement.lang === 'fil' ? '0 sa 1 ang napili (Nilaktawan)' : '0 of 1 selected (Abstained)');
             counter.classList.remove('is-full');
           } else {
-            counter.textContent = '1 of 1 selected';
+            counter.textContent = (document.documentElement.lang === 'fil' ? '1 sa 1 ang napili' : '1 of 1 selected');
             counter.classList.add('is-full');
           }
         }
@@ -369,7 +426,7 @@
 
         var label = btn.querySelector('.bio-toggle-label');
         if (label) {
-          label.textContent = isExpanded ? 'Read platform & bio' : 'Hide platform & bio';
+          label.textContent = document.documentElement.lang === 'fil' ? (isExpanded ? 'Basahin ang plataporma at talambuhay' : 'Itago ang plataporma at talambuhay') : (isExpanded ? 'Read platform & bio' : 'Hide platform & bio');
         }
       });
     });

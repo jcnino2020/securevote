@@ -25,6 +25,7 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 
 $admin = require_admin();
 $pdo   = db();
+require_once __DIR__.'/../includes/engagement.php'; sv_engagement_db(); sv_seed_change_baselines();
 
 $errors = [];
 $form   = [
@@ -323,6 +324,7 @@ if (is_post()) {
                 flash_success('Candidate "' . $firstName . ' ' . $lastName . '" was added.');
             }
 
+            sv_record_election_change((int)$form['election_id']);
             redirect('admin/candidates.php?election_id=' . $form['election_id']);
         }
 
@@ -364,6 +366,7 @@ if (is_post()) {
         audit_log('candidate_deleted', 'Deleted candidate #' . $id . ' "'
             . $candidate['first_name'] . ' ' . $candidate['last_name'] . '".');
 
+        sv_record_election_change((int)$candidate['election_id']);
         flash_success('Candidate was deleted.');
         redirect('admin/candidates.php?election_id=' . (int) $candidate['election_id']);
     }
@@ -647,7 +650,7 @@ if ($isForm):
 
                 <?php if (($form['photo'] ?? null) !== null): ?>
                   <div class="row">
-                    <img class="avatar avatar--lg" alt=""
+                    <img class="avatar avatar--lg" alt="" width="56" height="56" decoding="async"
                          src="<?= e(asset('images/candidates/' . basename((string) $form['photo']))) ?>">
                     <label class="check">
                       <input type="checkbox" name="remove_photo" value="1">
@@ -847,7 +850,7 @@ $candidates = $listStmt->fetchAll();
               <td>
                 <div class="row">
                   <?php if ($candidate['photo'] !== null): ?>
-                    <img class="avatar" alt=""
+                    <img class="avatar" alt="" width="42" height="42" decoding="async"
                          src="<?= e(asset('images/candidates/' . basename((string) $candidate['photo']))) ?>">
                   <?php else: ?>
                     <span class="avatar" aria-hidden="true">

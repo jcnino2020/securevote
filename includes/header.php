@@ -35,7 +35,36 @@ if ($user === null && $layout === 'app') {
     $layout = 'portal';
 }
 
-$showPageTitle = $showPageTitle ?? ($layout !== 'portal');
+$guidePages = [
+ 'guide.php'=>'Election Guide','forum.php'=>'Candidate Forum','timeline.php'=>'Election Timeline',
+ 'candidate-qa.php'=>'Candidate Q&A','changes.php'=>'Change History','compare.php'=>'Compare Candidates',
+ 'announcements.php'=>'Announcements','practice.php'=>'Practice Voting','verify.php'=>'Verify Receipt',
+ 'help.php'=>'Help and Support','reminders.php'=>'Reminders',
+];
+$resourceScript = basename($_SERVER['SCRIPT_FILENAME'] ?? '');
+$scriptPath = str_replace('\\','/',$_SERVER['SCRIPT_FILENAME'] ?? '');
+$isAdminPage = str_contains($scriptPath,'/admin/');
+$home = $user === null ? 'index.php' : dashboard_path_for_current_user();
+$homeCrumb = ['label'=>'Home','href'=>$home];
+if (!$isAdminPage && isset($guidePages[$resourceScript])) {
+    $breadcrumb = [$homeCrumb];
+    $guidePath = 'guide.php';
+    if (int_input('election_id')>0) $guidePath .= '?election_id='.int_input('election_id');
+    if ($resourceScript !== 'guide.php') $breadcrumb[] = ['label'=>'Election Guide','href'=>$guidePath];
+    $breadcrumb[] = ['label'=>$guidePages[$resourceScript]];
+} elseif ($resourceScript === 'dashboard.php') {
+    $breadcrumb = $isAdminPage ? [$homeCrumb,['label'=>'Administration']] : [['label'=>'Home']];
+} elseif ($resourceScript === 'index.php') {
+    $breadcrumb = [['label'=>'Home']];
+} else {
+    $existing = array_values(array_filter($breadcrumb,static fn($c)=>!in_array(strtolower($c['label']),['home','dashboard'],true)));
+    $breadcrumb = [$homeCrumb];
+    if ($isAdminPage) $breadcrumb[] = ['label'=>'Administration','href'=>'admin/dashboard.php'];
+    foreach ($existing as $crumb) $breadcrumb[] = $crumb;
+    if (!$existing) $breadcrumb[] = ['label'=>$pageTitle];
+}
+$showPageTitle = false;
+require_once __DIR__.'/breadcrumbs.php';
 
 $hasSidebar = ($layout === 'app' && $user !== null);
 $shellClass = 'app-shell app-shell--' . ($layout === 'auth' ? 'auth' : ($hasSidebar ? 'app' : 'portal'));
@@ -59,6 +88,10 @@ if ($user !== null && ($user['role'] ?? '') === 'admin') {
         'label' => 'Election operations',
         'items' => [
             ['file' => 'elections.php',  'label' => 'Elections',  'icon' => 'vote',       'href' => 'admin/elections.php'],
+            ['file'=>'resources.php','label'=>'Forum & election filters','icon'=>'file','href'=>'admin/resources.php'],
+            ['file'=>'engagement.php','label'=>'Timeline & candidate Q&A','icon'=>'file','href'=>'admin/engagement.php'],
+            ['file' => 'readiness.php', 'label' => 'Readiness checklist', 'icon' => 'check-circle', 'href' => 'admin/readiness.php'],
+            ['file' => 'announcements.php', 'label' => 'Announcements', 'icon' => 'file', 'href' => 'admin/announcements.php'],
             ['file' => 'positions.php',  'label' => 'Positions',  'icon' => 'positions',  'href' => 'admin/positions.php'],
             ['file' => 'candidates.php', 'label' => 'Candidates', 'icon' => 'users',      'href' => 'admin/candidates.php'],
         ],
@@ -67,7 +100,9 @@ if ($user !== null && ($user['role'] ?? '') === 'admin') {
         'label' => 'People & evidence',
         'items' => [
             ['file' => 'voters.php',     'label' => 'Voter Registry', 'icon' => 'user-check', 'href' => 'admin/voters.php'],
-            ['file' => 'results.php',    'label' => 'Certified Tallies', 'icon' => 'results', 'href' => 'admin/results.php'],
+            ['file' => 'import-voters.php', 'label' => 'Import voters', 'icon' => 'users', 'href' => 'admin/import-voters.php'],
+            ['file' => 'support.php', 'label' => 'Issue reports', 'icon' => 'file', 'href' => 'admin/support.php'],
+            ['file' => 'results.php',    'label' => 'Live & Final Results', 'icon' => 'results', 'href' => 'admin/results.php'],
             ['file' => 'audit-logs.php', 'label' => 'Audit Trail',    'icon' => 'audit',      'href' => 'admin/audit-logs.php'],
             ['file' => 'traffic.php',    'label' => 'Site Traffic',   'icon' => 'chart',      'href' => 'admin/traffic.php'],
         ],
@@ -85,17 +120,21 @@ if ($user !== null && ($user['role'] ?? '') === 'admin') {
         'items' => [
             ['file' => 'dashboard.php', 'label' => 'Home', 'icon' => 'dashboard', 'href' => 'voter/dashboard.php'],
             ['file' => 'elections.php', 'label' => 'Elections', 'icon' => 'vote',  'href' => 'voter/elections.php'],
+            ['file'=>'guide.php','label'=>'Election guide','icon'=>'file','href'=>'guide.php'],
+            ['file'=>'reminders.php','label'=>'Reminders','icon'=>'file','href'=>'voter/reminders.php'],
             ['file' => 'results.php',   'label' => 'Results', 'icon' => 'results', 'href' => 'voter/results.php'],
         ],
     ];
     $navGroups[] = [
         'label' => 'Account',
         'items' => [
+            ['file' => 'help.php', 'label' => 'Help and support', 'icon' => 'file', 'href' => 'help.php'],
             ['file' => 'profile.php', 'label' => 'My profile', 'icon' => 'user', 'href' => 'voter/profile.php'],
         ],
     ];
 }
 
+if (in_array($activeNav,['timeline.php','candidate-qa.php','compare.php','practice.php','verify.php','announcements.php'],true) && ($user['role']??'')==='voter') $activeNav='guide.php';
 $flashes = take_flashes();
 
 ob_start();
@@ -116,7 +155,7 @@ if ($flashes !== []) {
 $flashHtml = ob_get_clean();
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="<?= e(sv_language()) ?>" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -130,14 +169,19 @@ $flashHtml = ob_get_clean();
 <link rel="icon" href="<?= e(asset('images/favicon-32.png')) ?>" type="image/png" sizes="32x32">
 <link rel="shortcut icon" href="<?= e(url('favicon.ico')) ?>" type="image/x-icon">
 <link rel="apple-touch-icon" href="<?= e(asset('images/apple-touch-icon.png')) ?>" sizes="180x180">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&display=swap">
+<link rel="preload" href="<?= e(asset('fonts/dm-sans-latin.woff2')) ?>" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="<?= e(asset('css/fonts.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/style.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/redesign.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('css/community.css')) ?>">
 <?php if ($bodyClass === 'page-admin-traffic'): ?><link rel="stylesheet" href="<?= e(asset('css/traffic.css')) ?>"><?php endif; ?>
-<script src="<?= e(asset('js/app.js')) ?>"></script>
+<link rel="stylesheet" href="<?= e(asset('css/next-features.css')) ?>">
+<link rel="stylesheet" href="<?= e(asset('css/responsive.css')) ?>">
+<script src="<?= e(asset('js/accessibility.js')) ?>"></script>
+<script src="<?= e(asset('js/theme.js')) ?>"></script>
+<script src="<?= e(asset('js/app.js')) ?>" defer></script>
 <script src="<?= e(asset('js/navigation.js')) ?>" defer></script>
+<script src="<?= e(asset('js/engagement.js')) ?>" defer></script>
 <script src="<?= e(asset('js/traffic.js')) ?>" defer></script>
 </head>
 <body class="<?= e($shellClass . ($bodyClass !== '' ? ' ' . $bodyClass : '')) ?>">
@@ -174,11 +218,11 @@ $flashHtml = ob_get_clean();
           <li>
             <a class="nav__item<?= $isActive ? ' is-active' : '' ?>"
                href="<?= e(url($item['href'])) ?>"
-               aria-label="<?= e($item['label']) ?>"
-               title="<?= e($item['label']) ?>"
+               aria-label="<?= e(sv_t($item['label'])) ?>"
+               title="<?= e(sv_t($item['label'])) ?>"
                <?= $isActive ? 'aria-current="page"' : '' ?>>
               <?= sv_icon($item['icon'], 18, 'nav__icon') ?>
-              <span class="nav__label"><?= e($item['label']) ?></span>
+              <span class="nav__label"><?= e(sv_t($item['label'])) ?></span>
             </a>
           </li>
         <?php endforeach; ?>
@@ -201,7 +245,7 @@ $flashHtml = ob_get_clean();
       <?= csrf_field() ?>
       <button class="nav__item nav__item--button" type="submit" title="Sign out of your session">
         <?= sv_icon('logout', 18, 'nav__icon') ?>
-        <span class="nav__label">Sign Out</span>
+        <span class="nav__label"><?= e(sv_t("Sign Out")) ?></span>
       </button>
     </form>
   </div>
@@ -216,45 +260,22 @@ $flashHtml = ob_get_clean();
                 aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation menu">
           <?= sv_icon('menu', 20) ?>
         </button>
+        <div class="topbar__titles"><?= sv_breadcrumbs($breadcrumb) ?></div>
       <?php else: ?>
         <a class="brand topbar__brand" href="<?= e(url('index.php')) ?>">
           <?= sv_logo_mark(30) ?>
           <span class="brand__word">Secure<span>Vote</span></span>
         </a>
         <nav class="public-nav" aria-label="Explore SecureVote">
-          <a href="<?= e($bodyClass === 'page-home' ? '#open-elections' : url('index.php') . '#open-elections') ?>">Elections</a>
-          <a href="<?= e($bodyClass === 'page-home' ? '#how-it-works' : url('index.php') . '#how-it-works') ?>">How it works</a>
-          <a href="<?= e(url('privacy.php')) ?>">Privacy</a>
+          <a href="<?= e(url('index.php')) ?>"><?= e(sv_t("Home")) ?></a>
+          <a href="<?= e($bodyClass === 'page-home' ? '#open-elections' : url('index.php') . '#open-elections') ?>"><?= e(sv_t("Elections")) ?></a>
+          <a href="<?= e($bodyClass === 'page-home' ? '#how-it-works' : url('index.php') . '#how-it-works') ?>"><?= e(sv_t("How it works")) ?></a>
+          <a href="<?= e(url('announcements.php')) ?>"><?= e(sv_t("Announcements")) ?></a>
+          <a href="<?= e(url('help.php')) ?>"><?= e(sv_t("Help")) ?></a>
         </nav>
       <?php endif; ?>
 
-      <?php if ($showPageTitle || count($breadcrumb) > 1): ?>
-        <div class="topbar__titles">
-          <?php if ($hasSidebar && ($user['role'] ?? '') === 'admin'): ?>
-            <span class="admin-topbar__eyebrow">SECUREVOTE / ADMIN OPERATIONS</span>
-          <?php endif; ?>
-          <?php if (count($breadcrumb) > 1): ?>
-            <nav class="breadcrumb" aria-label="Breadcrumb navigation">
-              <ol>
-                <?php foreach ($breadcrumb as $index => $crumb): ?>
-                  <li>
-                    <?php if (isset($crumb['href']) && $index < count($breadcrumb) - 1): ?>
-                      <a href="<?= e(url($crumb['href'])) ?>"><?= e($crumb['label']) ?></a>
-                      <span class="breadcrumb__separator" aria-hidden="true"><?= sv_icon('chevron-right', 12) ?></span>
-                    <?php else: ?>
-                      <span aria-current="page"><?= e($crumb['label']) ?></span>
-                    <?php endif; ?>
-                  </li>
-                <?php endforeach; ?>
-              </ol>
-            </nav>
-          <?php endif; ?>
 
-          <?php if ($showPageTitle): ?>
-            <h1 class="page-title"><?= e($pageTitle) ?></h1>
-          <?php endif; ?>
-        </div>
-      <?php endif; ?>
     </div>
 
     <div class="topbar__actions">
@@ -267,26 +288,42 @@ $flashHtml = ob_get_clean();
             <span>Menu</span>
           </button>
           <nav class="public-menu__panel" id="public-menu-panel" aria-label="Explore SecureVote on mobile" hidden>
-            <a href="<?= e($bodyClass === 'page-home' ? '#open-elections' : url('index.php') . '#open-elections') ?>">Elections</a>
-            <a href="<?= e($bodyClass === 'page-home' ? '#how-it-works' : url('index.php') . '#how-it-works') ?>">How it works</a>
-            <a href="<?= e(url('privacy.php')) ?>">Privacy</a>
+            <a href="<?= e(url('index.php')) ?>"><?= e(sv_t("Home")) ?></a>
+            <a href="<?= e($bodyClass === 'page-home' ? '#open-elections' : url('index.php') . '#open-elections') ?>"><?= e(sv_t("Elections")) ?></a>
+            <a href="<?= e($bodyClass === 'page-home' ? '#how-it-works' : url('index.php') . '#how-it-works') ?>"><?= e(sv_t("How it works")) ?></a>
+            <a href="<?= e(url('announcements.php')) ?>"><?= e(sv_t("Announcements")) ?></a>
+          <a href="<?= e(url('help.php')) ?>"><?= e(sv_t("Help")) ?></a>
           </nav>
         </div>
       <?php endif; ?>
+<?php require __DIR__ . '/display-settings.php'; ?>
       <?= $pageActions ?>
 
-      <button class="icon-btn theme-toggle-btn" type="button" data-theme-toggle
-              aria-label="Switch between light and dark appearance" aria-pressed="false"
-              title="Toggle color theme">
-        <?= sv_icon('sun', 18, 'theme-icon theme-icon--sun') ?>
-        <?= sv_icon('moon', 18, 'theme-icon theme-icon--moon') ?>
-      </button>
     </div>
   </header>
 
   <main class="content" id="main-content" tabindex="-1">
+<?php
+// These templates already own a primary heading. Other account pages retain
+// their existing visual headings and gain a screen-reader page title here.
+$pageOwnsHeading = in_array($resourceScript, [
+    'traffic.php', 'support.php', 'import-voters.php', 'readiness.php',
+    'announcements.php', 'confirmation.php', 'compare.php', 'guide.php',
+    'help.php', 'timeline.php', 'candidate-qa.php', 'changes.php', 'verify.php',
+    'practice.php', 'forum.php', 'privacy.php', 'terms.php',
+], true);
+if ($hasSidebar && !$pageOwnsHeading): ?>
+<h1 class="visually-hidden"><?= e($pageTitle) ?></h1>
+<?php endif; ?>
+<?php if (!$hasSidebar && $resourceScript !== 'index.php'): ?>
+<?= str_replace('breadcrumb--header', 'breadcrumb--content', sv_breadcrumbs($breadcrumb)) ?>
+<?php endif; ?>
 <?= $flashHtml ?>
 <?php else: ?>
-<main class="auth-layout" id="main-content" tabindex="-1">
+<?php if ($resourceScript !== 'login.php'): ?>
+<header class="auth-breadcrumb-bar"><?= sv_breadcrumbs($breadcrumb) ?></header>
+<?php endif; ?>
+<main class="auth-layout" id="main-content" tabindex="-1"><?php require __DIR__ . '/display-settings.php'; ?>
+
 <?= $flashHtml ?>
 <?php endif; ?>

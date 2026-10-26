@@ -1,0 +1,18 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Application code, logs, test fixtures and database exports are never web pages.
+    RewriteRule ^(?:config|database|includes|storage|tests|scripts|tmp|output|hostinger_root)(?:/|$) - [F,L,NC]
+    RewriteRule (^|/)\.(?!well-known(?:/|$)) - [F,L]
+
+    # Older Hostinger redirects and bookmarked links use extensionless PHP paths.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME}.php -f
+    RewriteRule ^(.+?)/?$ $1.php [L]
+</IfModule>
+
+<FilesMatch "\.(?:sql|log|md|sh|bak|zip|env)$">
+    Require all denied
+</FilesMatch>
