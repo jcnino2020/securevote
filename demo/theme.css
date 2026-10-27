@@ -1,0 +1,66 @@
+/* Theme controls and page surfaces for the separate SecureVote sample-election site. */
+.site-header nav .theme-toggle{gap:7px;border:1px solid #6577ae;background:#243461;color:#eef1ff;white-space:nowrap}
+.site-header nav .theme-toggle:hover{background:#354a84}
+.theme-toggle-icon{font-size:17px;line-height:1}
+html[data-theme=dark] .auth-card{background:#202e59;color:#f3f5ff;border:1px solid #40558e;box-shadow:0 20px 55px #080f2a55}
+html[data-theme=dark] .auth-card>p,html[data-theme=dark] .field-hint{color:#c2ceef}
+html[data-theme=dark] .auth-card input:not([type=hidden]){background:#142046;color:#f5f7ff;border-color:#7083bd}
+html[data-theme=dark] .auth-card input:not([type=hidden]):focus{border-color:#b8c6ff}
+html[data-theme=dark] .auth-switch a{color:#c6d0ff}
+html[data-theme=dark] .field-error{color:#ffb8c7}
+html[data-theme=dark] .auth-card input[aria-invalid=true]{border-color:#ff8da6}
+
+html[data-theme=light]{color-scheme:light;--ink:#1a2853;--muted:#536384;--line:#cbd5ec;--bg:#f5f7fd;--panel:#fff;--panel2:#edf1fb;--accent:#3d50b6;--coral:#b45839;--green:#177457}
+html[data-theme=light] body{background:radial-gradient(circle at 80% -10%,#e7edff 0,transparent 36%),var(--bg)}
+html[data-theme=light] .site-header{background:#fff;box-shadow:0 2px 16px #1729540b}
+html[data-theme=light] .site-header nav a,html[data-theme=light] .site-header nav button{color:#24345e}
+html[data-theme=light] .site-header nav a:hover,html[data-theme=light] .site-header nav button:hover,html[data-theme=light] .site-header nav a.is-active{background:#e9edfb;color:#1c2d68}
+html[data-theme=light] .site-header nav .header-cta{background:#3d50b6;color:#fff}
+html[data-theme=light] .site-header nav .header-cta:hover,html[data-theme=light] .site-header nav .header-cta.is-active{background:#2f419e;color:#fff}
+html[data-theme=light] .site-header nav .theme-toggle{background:#f3f5ff;border-color:#bdc8e8;color:#253773}
+html[data-theme=light] .site-header nav .theme-toggle:hover{background:#e8edff}
+html[data-theme=light] .btn-primary{background:#3d50b6;color:#fff}
+html[data-theme=light] .btn-primary:hover{background:#3042a1;color:#fff}
+html[data-theme=light] .btn-outline{border-color:#6c7eb8;color:#2a3d86;background:#fff}
+html[data-theme=light] .btn-outline:hover{background:#e8edff}
+html[data-theme=light] .hero{background:radial-gradient(circle at 77% 44%,#dce5ff 0,transparent 42%),#eef2ff}
+html[data-theme=light] .hero-copy>p,html[data-theme=light] .hero-copy .hero-note{color:#4d5d80}
+html[data-theme=light] .hero h1 em{color:#3d50b6}
+html[data-theme=light] .steps-grid article,html[data-theme=light] .info-strip,html[data-theme=light] .next-card{background:#fff}
+html[data-theme=light] .site-footer{color:#526384}
+html[data-theme=light] .auth-story{background:linear-gradient(145deg,#e1e9ff,#f4f6ff);border-color:#c6d2f5}
+html[data-theme=light] .auth-story p{color:#4f5e7e}
+html[data-theme=light] .story-steps span{background:#fff;border-color:#cbd5f4;color:#33477f}
+html[data-theme=light] .auth-card{background:#fff;color:#1a2853;border:1px solid #d7dff1;box-shadow:0 20px 55px #233e781a}
+html[data-theme=light] .auth-card>p,html[data-theme=light] .field-hint{color:#526383}
+html[data-theme=light] .auth-card input:not([type=hidden]){background:#fff;color:#1a2853;border-color:#aebddd}
+html[data-theme=light] .dashboard-card,html[data-theme=light] .dashboard-summary>div,html[data-theme=light] .result-summary>div,html[data-theme=light] .election-card,html[data-theme=light] .account-panel{background:#fff;border-color:#cbd5ec}
+html[data-theme=light] .dashboard-summary strong,html[data-theme=light] .result-summary strong{color:#1a2853}
+html[data-theme=light] .dashboard-summary span,html[data-theme=light] .result-summary span,html[data-theme=light] .elections-section .section-heading p,html[data-theme=light] .election-card>p,html[data-theme=light] .election-category,html[data-theme=light] .election-facts span,html[data-theme=light] .receipt-mini,html[data-theme=light] .account-panel p,html[data-theme=light] .dashboard-card p,html[data-theme=light] .profile-card dt,html[data-theme=light] .status-line span{color:#536384}
+html[data-theme=light] .election-facts span{border-color:#cbd5ec}
+html[data-theme=light] .sample-badge{background:#e8edff;color:#30459b}
+html[data-theme=light] .status-open,html[data-theme=light] .status-card .status-line strong{color:#116c51}
+html[data-theme=light] .status-voted,html[data-theme=light] .status-line:last-child strong{color:#344eab}
+html[data-theme=light] .election-card-actions{border-color:#d4ddef}
+html[data-theme=light] .election-card-actions .text-link,html[data-theme=light] .back-link{color:#314bad}
+html[data-theme=light] .active-badge{background:#e5f6ef;color:#126c51;border-color:#a6d9c5}
+html[data-theme=light] .election-page-head{background:linear-gradient(120deg,#e5ecff,#f5f7ff);border-color:#cbd5ec}
+html[data-theme=light] .election-page-head p,html[data-theme=light] .results-index>p,html[data-theme=light] .election-meta span{color:#536384}
+html[data-theme=light] .election-meta span{border-color:#c2cdec}
+html[data-theme=light] .position-card,html[data-theme=light] .review-panel,html[data-theme=light] .result-position{background:#fff;border-color:#cbd5ec}
+html[data-theme=light] .position-card legend small,html[data-theme=light] .review-panel>p,html[data-theme=light] .review-list span,html[data-theme=light] .review-list small,html[data-theme=light] .result-position-head p,html[data-theme=light] .result-position-head>span{color:#536384}
+html[data-theme=light] .candidate-content,html[data-theme=light] .result-candidate{background:#f4f6fd;border-color:#cbd5ec}
+html[data-theme=light] .candidate-card:hover .candidate-content{background:#eaf0ff}
+html[data-theme=light] .candidate-card:has(input:checked) .candidate-content{background:#e1e9ff;border-color:#4861c4}
+html[data-theme=light] .candidate-content small,html[data-theme=light] .candidate-statement,html[data-theme=light] .result-candidate-top small,html[data-theme=light] .result-score span{color:#596887}
+html[data-theme=light] .ballot-bottom,html[data-theme=light] .receipt-panel{background:#eef2ff;border-color:#cbd5ec}
+html[data-theme=light] .ballot-bottom p,html[data-theme=light] .receipt-panel p{color:#536384}
+html[data-theme=light] .receipt-check,html[data-theme=light] .leader-label{color:#126c51}
+html[data-theme=light] .result-footnote{background:#f0f3fb;border-color:#cbd5ec}
+html[data-theme=light] .result-footnote p{color:#536384}
+html[data-theme=light] .result-bar,html[data-theme=light] .result-bar::-webkit-meter-bar{background:#d8e0f2}
+html[data-theme=light] .result-bar::-webkit-meter-optimum-value,html[data-theme=light] .result-bar::-moz-meter-bar{background:#435bc0}
+html[data-theme=light] .submitted-banner{background:#e4f5ec;border-color:#abd7bd}
+html[data-theme=light] .submitted-banner p{color:#35614d}
+html[data-theme=light] .submitted-banner strong{color:#174b36}
+@media(max-width:650px){.site-header nav{flex-wrap:wrap;justify-content:flex-start}.site-header nav .theme-toggle{margin-left:auto}.theme-toggle-label{font-size:11px}}
