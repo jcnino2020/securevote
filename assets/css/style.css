@@ -3762,3 +3762,13 @@ dialog.modal::backdrop {
     background: transparent !important;
   }
 }
+
+.alert-tab-link {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}

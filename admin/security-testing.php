@@ -915,7 +915,7 @@ $pageActions  = '<div class="btn-group">'
     . sv_icon('download', 15, 'btn__icon') . '<span>' . sv_t('Export CSV') . '</span></a>'
     . '<a class="btn btn--secondary btn--sm" href="' . e(url('admin/security-testing.php?export=json')) . '">'
     . sv_icon('file', 15, 'btn__icon') . '<span>' . sv_t('Export JSON') . '</span></a>'
-    . '<button type="button" class="btn btn--secondary btn--sm" onclick="window.print()">'
+    . '<button type="button" class="btn btn--secondary btn--sm" data-security-print>'
     . sv_icon('archive', 15, 'btn__icon') . '<span>' . sv_t('Print Report') . '</span></button>'
     . '</div>';
 
@@ -1634,7 +1634,7 @@ require __DIR__ . '/../includes/header.php';
             $pillarClass = 'pillar-badge--' . strtolower($t['cia']);
             $detailId = 'test-detail-' . $index;
           ?>
-          <tr class="test-row" data-cia="<?= e($t['cia']) ?>" data-status="<?= e($rowStatus) ?>" onclick="toggleTestDetail('<?= e($detailId) ?>', this)">
+          <tr class="test-row" data-cia="<?= e($t['cia']) ?>" data-status="<?= e($rowStatus) ?>">
             <td style="white-space: nowrap;">
               <span class="status-pill <?= e($statusClass) ?>">
                 <?= sv_icon($statusIcon, 14) ?>
@@ -1654,14 +1654,14 @@ require __DIR__ . '/../includes/header.php';
               <span class="table__cell-sub"><?= e($t['result']) ?></span>
             </td>
             <td class="table__actions-col" style="white-space: nowrap;">
-              <button type="button" class="btn btn--secondary btn--xs" aria-expanded="false" aria-controls="<?= e($detailId) ?>" onclick="event.stopPropagation(); toggleTestDetail('<?= e($detailId) ?>', this.closest('.test-row'))">
+              <button type="button" class="btn btn--secondary btn--xs" aria-expanded="false" aria-controls="<?= e($detailId) ?>">
                 <span><?= sv_t('View Details') ?></span>
                 <?= sv_icon('chevron-down', 13) ?>
               </button>
             </td>
           </tr>
           <!-- Expandable Details Row -->
-          <tr class="test-detail-row" style="display: table-row;" data-parent-cia="<?= e($t['cia']) ?>" data-parent-status="<?= e($rowStatus) ?>">
+          <tr class="test-detail-row" data-parent-cia="<?= e($t['cia']) ?>" data-parent-status="<?= e($rowStatus) ?>">
             <td colspan="5" style="padding: 0; border-bottom: 1px solid var(--border-subtle);">
               <div class="test-detail-box" id="<?= e($detailId) ?>">
                 <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-2);">
@@ -1778,82 +1778,6 @@ require __DIR__ . '/../includes/header.php';
   </div>
 </section>
 
-<!-- ===================================================================
- | 5. Client-Side Interactive Filter & Accordion Scripts
- * =================================================================== -->
-<script>
-function toggleTestDetail(detailId, rowEl) {
-  var box = document.getElementById(detailId);
-  if (!box) return;
-  var isOpen = box.classList.contains('is-open');
-  if (isOpen) {
-    box.classList.remove('is-open');
-    if (rowEl) rowEl.classList.remove('is-expanded');
-    var btn = rowEl ? rowEl.querySelector('button[aria-controls="' + detailId + '"]') : null;
-    if (btn) btn.setAttribute('aria-expanded', 'false');
-  } else {
-    box.classList.add('is-open');
-    if (rowEl) rowEl.classList.add('is-expanded');
-    var btn = rowEl ? rowEl.querySelector('button[aria-controls="' + detailId + '"]') : null;
-    if (btn) btn.setAttribute('aria-expanded', 'true');
-  }
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-  var pills = document.querySelectorAll('.cia-pill');
-  var searchInput = document.getElementById('ciaSearchInput');
-  var rows = document.querySelectorAll('.test-row');
-  var detailRows = document.querySelectorAll('.test-detail-row');
-
-  var currentFilter = 'all';
-
-  function applyFilters() {
-    var query = (searchInput ? searchInput.value : '').toLowerCase().trim();
-
-    rows.forEach(function (row, idx) {
-      var cia = row.getAttribute('data-cia') || '';
-      var status = row.getAttribute('data-status') || '';
-      var text = row.textContent.toLowerCase();
-      var detailRow = detailRows[idx];
-
-      var matchesPillar = false;
-      if (currentFilter === 'all') {
-        matchesPillar = true;
-      } else if (currentFilter === 'ATTENTION') {
-        matchesPillar = (status === 'WARNING' || status === 'FAIL' || status === 'NOT_TESTABLE');
-      } else {
-        matchesPillar = (cia === currentFilter);
-      }
-
-      var matchesQuery = (query === '' || text.indexOf(query) !== -1);
-
-      if (matchesPillar && matchesQuery) {
-        row.style.display = '';
-        if (detailRow) detailRow.style.display = '';
-      } else {
-        row.style.display = 'none';
-        if (detailRow) detailRow.style.display = 'none';
-      }
-    });
-  }
-
-  pills.forEach(function (pill) {
-    pill.addEventListener('click', function () {
-      pills.forEach(function (p) {
-        p.classList.remove('is-active');
-        p.setAttribute('aria-selected', 'false');
-      });
-      pill.classList.add('is-active');
-      pill.setAttribute('aria-selected', 'true');
-      currentFilter = pill.getAttribute('data-filter') || 'all';
-      applyFilters();
-    });
-  });
-
-  if (searchInput) {
-    searchInput.addEventListener('input', applyFilters);
-  }
-});
-</script>
+<script src="<?= e(asset('js/security-testing.js')) ?>" defer></script>
 
 <?php require __DIR__ . '/../includes/footer.php'; ?>

@@ -870,10 +870,10 @@ require __DIR__ . '/../includes/header.php';
     <div class="card__body stack-sm">
       <!-- Tabs for Active vs Resolved -->
       <div class="tabs mb-4" role="tablist" aria-label="<?= sv_t('Security alerts views') ?>">
-        <button type="button" class="tab <?= $activeTab === 'active' ? 'is-active' : '' ?>" id="alert-tab-active-btn" role="tab" aria-selected="<?= $activeTab === 'active' ? 'true' : 'false' ?>" onclick="switchAlertTab('active')">
+        <button type="button" class="tab <?= $activeTab === 'active' ? 'is-active' : '' ?>" id="alert-tab-active-btn" role="tab" aria-selected="<?= $activeTab === 'active' ? 'true' : 'false' ?>" data-alert-tab="active">
           <?= sv_icon('bell', 14) ?> <?= sv_t('Active Alerts (%d)', count($alerts)) ?>
         </button>
-        <button type="button" class="tab <?= $activeTab === 'resolved' ? 'is-active' : '' ?>" id="alert-tab-resolved-btn" role="tab" aria-selected="<?= $activeTab === 'resolved' ? 'true' : 'false' ?>" onclick="switchAlertTab('resolved')">
+        <button type="button" class="tab <?= $activeTab === 'resolved' ? 'is-active' : '' ?>" id="alert-tab-resolved-btn" role="tab" aria-selected="<?= $activeTab === 'resolved' ? 'true' : 'false' ?>" data-alert-tab="resolved">
           <?= sv_icon('check-circle', 14) ?> <?= sv_t('Resolved History (%d)', count($resolvedHistory)) ?>
         </button>
       </div>
@@ -886,7 +886,7 @@ require __DIR__ . '/../includes/header.php';
               <?= csrf_field() ?>
               <input type="hidden" name="action" value="resolve_all_alerts">
               <input type="hidden" name="alerts_json" value="<?= e(json_encode($alerts)) ?>">
-              <button type="submit" class="btn btn--sm btn--outline" onclick="return confirm('<?= sv_t('Mark all active security alerts as resolved?') ?>');">
+              <button type="submit" class="btn btn--sm btn--outline" data-confirm-submit="<?= e(sv_t('Mark all active security alerts as resolved?')) ?>">
                 <?= sv_icon('check', 14) ?> <?= sv_t('Resolve All Active Alerts') ?>
               </button>
             </form>
@@ -901,7 +901,7 @@ require __DIR__ . '/../includes/header.php';
             <?php if ($resolvedHistory !== []): ?>
               <p class="text-xs text-muted mt-2">
                 <?= sv_t('%d alert(s) have been resolved by administrators.', count($resolvedHistory)) ?>
-                <a href="javascript:void(0)" onclick="switchAlertTab('resolved')" class="font-semibold text-main"><?= sv_t('View Resolved History') ?> &rarr;</a>
+                <button type="button" class="link font-semibold text-main alert-tab-link" data-alert-tab="resolved"><?= sv_t('View Resolved History') ?> &rarr;</button>
               </p>
             <?php endif; ?>
           </div>
@@ -921,7 +921,7 @@ require __DIR__ . '/../includes/header.php';
                 </div>
                 <div class="alert__actions">
                   <a class="btn btn--sm btn--secondary" href="<?= e(url($alert['href'])) ?>"><?= e($alert['label']) ?></a>
-                  <button type="button" class="btn btn--sm btn--success" onclick="openResolveModal('<?= e(addslashes($alert['key'])) ?>', '<?= e(addslashes($alert['title'])) ?>', '<?= e(addslashes($alert['severity'])) ?>', '<?= e(addslashes($alert['text'])) ?>')" title="<?= sv_t('Mark this alert as resolved') ?>">
+                  <button type="button" class="btn btn--sm btn--success" data-open-resolve data-alert-key="<?= e($alert['key']) ?>" data-alert-title="<?= e($alert['title']) ?>" data-alert-severity="<?= e($alert['severity']) ?>" data-alert-text="<?= e($alert['text']) ?>" title="<?= e(sv_t('Mark this alert as resolved')) ?>">
                     <?= sv_icon('check', 14) ?> <?= sv_t('Mark Resolved') ?>
                   </button>
                 </div>
@@ -1409,7 +1409,7 @@ require __DIR__ . '/../includes/header.php';
         <span class="text-success"><?= sv_icon('check-circle', 20) ?></span>
         <h3 class="modal__title"><?= sv_t('Resolve Security Alert') ?></h3>
       </div>
-      <button type="button" class="btn btn--sm btn--ghost" onclick="document.getElementById('resolveAlertModal').close();" aria-label="<?= sv_t('Close dialog') ?>">
+      <button type="button" class="btn btn--sm btn--ghost" data-close-resolve aria-label="<?= sv_t('Close dialog') ?>">
         <?= sv_icon('x', 18) ?>
       </button>
     </div>
@@ -1430,7 +1430,7 @@ require __DIR__ . '/../includes/header.php';
     </div>
 
     <div class="modal__footer">
-      <button type="button" class="btn btn--secondary" onclick="document.getElementById('resolveAlertModal').close();"><?= sv_t('Cancel') ?></button>
+      <button type="button" class="btn btn--secondary" data-close-resolve><?= sv_t('Cancel') ?></button>
       <button type="submit" class="btn btn--success">
         <?= sv_icon('check', 16) ?> <?= sv_t('Confirm & Mark Resolved') ?>
       </button>
@@ -1438,49 +1438,6 @@ require __DIR__ . '/../includes/header.php';
   </form>
 </dialog>
 
-<script>
-function openResolveModal(key, title, severity, text) {
-  var modal = document.getElementById('resolveAlertModal');
-  if (!modal) return;
-  document.getElementById('resolveModalKey').value = key;
-  document.getElementById('resolveModalTitle').value = title;
-  document.getElementById('resolveModalSeverity').value = severity;
-  document.getElementById('resolveModalDisplayTitle').textContent = title;
-  document.getElementById('resolveModalDisplayText').textContent = text || '';
-  document.getElementById('resolveModalReason').value = '';
-  modal.showModal();
-}
-
-function switchAlertTab(tabName) {
-  var activeTabBtn = document.getElementById('alert-tab-active-btn');
-  var resolvedTabBtn = document.getElementById('alert-tab-resolved-btn');
-  var activePanel = document.getElementById('alert-panel-active');
-  var resolvedPanel = document.getElementById('alert-panel-resolved');
-
-  if (tabName === 'resolved') {
-    if (activeTabBtn) {
-      activeTabBtn.classList.remove('is-active');
-      activeTabBtn.setAttribute('aria-selected', 'false');
-    }
-    if (resolvedTabBtn) {
-      resolvedTabBtn.classList.add('is-active');
-      resolvedTabBtn.setAttribute('aria-selected', 'true');
-    }
-    if (activePanel) activePanel.style.display = 'none';
-    if (resolvedPanel) resolvedPanel.style.display = 'block';
-  } else {
-    if (resolvedTabBtn) {
-      resolvedTabBtn.classList.remove('is-active');
-      resolvedTabBtn.setAttribute('aria-selected', 'false');
-    }
-    if (activeTabBtn) {
-      activeTabBtn.classList.add('is-active');
-      activeTabBtn.setAttribute('aria-selected', 'true');
-    }
-    if (resolvedPanel) resolvedPanel.style.display = 'none';
-    if (activePanel) activePanel.style.display = 'block';
-  }
-}
-</script>
+<script src="<?= e(asset('js/admin-dashboard.js')) ?>" defer></script>
 
 <?php require __DIR__ . '/../includes/footer.php'; ?>
