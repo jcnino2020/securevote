@@ -1,0 +1,57 @@
+/* Administrator identity lives at the end of the operations header. */
+.app-shell--admin .topbar__actions { min-width: 0; }
+.admin-account { position: relative; flex: 0 0 auto; }
+.admin-account__trigger {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 6px 10px 6px 7px;
+  border: 1px solid #405174;
+  border-radius: 12px;
+  background: #1c2b49;
+  color: #f6f8ff;
+  cursor: pointer;
+  list-style: none;
+}
+.admin-account__trigger::-webkit-details-marker { display: none; }
+.admin-account__trigger:hover,
+.admin-account[open] .admin-account__trigger { background: #263858; border-color: #65799f; }
+.admin-account__trigger:focus-visible { outline: 3px solid #a9bbff; outline-offset: 3px; }
+.admin-account .avatar { width: 34px; height: 34px; background: #ffbd96; color: #1c285e; }
+.admin-account__identity { display: flex; flex-direction: column; min-width: 0; text-align: left; }
+.admin-account__name { max-width: 190px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .8rem; font-weight: 800; line-height: 1.15; }
+.admin-account__role { display: flex; align-items: center; gap: 6px; margin-top: 4px; color: #b9c6e2; font-size: .68rem; line-height: 1; }
+.admin-account__role .status-dot { width: 6px; height: 6px; }
+.admin-account__chevron { flex: 0 0 auto; color: #b9c6e2; transition: transform .18s ease; }
+.admin-account[open] .admin-account__chevron { transform: rotate(180deg); }
+.admin-account__panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 120;
+  width: min(280px, calc(100vw - 24px));
+  padding: 15px;
+  border: 1px solid #405174;
+  border-radius: 12px;
+  background: #1c2b49;
+  color: #f6f8ff;
+  box-shadow: 0 14px 32px rgba(5, 13, 31, .28);
+}
+.admin-account__panel-name { overflow-wrap: anywhere; font-size: .88rem; font-weight: 800; }
+.admin-account__panel-role { margin-top: 3px; color: #b9c6e2; font-size: .75rem; }
+.admin-account__panel form { margin-top: 13px; padding-top: 10px; border-top: 1px solid #405174; }
+.admin-account__logout { display: flex; align-items: center; gap: 11px; width: 100%; min-height: 44px; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: #f6f8ff; cursor: pointer; text-align: left; font: inherit; font-size: .88rem; font-weight: 700; }
+.admin-account__logout:hover,
+.admin-account__logout:focus-visible { background: #33496f; }
+.admin-account__logout:focus-visible { outline: 2px solid #a9bbff; outline-offset: 2px; }
+@media (max-width: 1380px) {
+  .admin-account__identity { display: none; }
+  .admin-account__trigger { min-width: 48px; justify-content: center; padding: 6px; }
+  .admin-account__chevron { display: none; }
+}
+@media (max-width: 760px) {
+  .admin-account .avatar { width: 32px; height: 32px; }
+  .admin-account__trigger { min-height: 44px; min-width: 44px; }
+}
+@media print { .admin-account { display: none; } }

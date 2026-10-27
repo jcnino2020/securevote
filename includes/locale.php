@@ -36,6 +36,7 @@ function sv_t(string $text, ...$args): string
         "My profile" => "Aking profile",
         "Profile" => "Profile",
         "Sign Out" => "Mag-sign out",
+        "Account menu for %s" => "Menu ng account ni %s",
         "Sign In" => "Mag-sign in",
         "Sign in" => "Mag-sign in",
         "Register" => "Magrehistro",

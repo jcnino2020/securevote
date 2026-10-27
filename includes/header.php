@@ -177,6 +177,7 @@ $flashHtml = ob_get_clean();
 <?php if ($bodyClass === 'page-admin-traffic'): ?><link rel="stylesheet" href="<?= e(asset('css/traffic.css')) ?>"><?php endif; ?>
 <link rel="stylesheet" href="<?= e(asset('css/next-features.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/responsive.css')) ?>">
+<?php if ($hasSidebar && ($user['role'] ?? '') === 'admin'): ?><link rel="stylesheet" href="<?= e(asset('css/admin-account.css')) ?>"><?php endif; ?>
 <?php if ($bodyClass === 'page-verify-registration'): ?><link rel="stylesheet" href="<?= e(asset('css/registration-otp.css')) ?>"><?php endif; ?>
 <script src="<?= e(asset('js/accessibility.js')) ?>"></script>
 <script src="<?= e(asset('js/theme.js')) ?>"></script>
@@ -232,6 +233,7 @@ $flashHtml = ob_get_clean();
     <?php endforeach; ?>
   </nav>
 
+  <?php if (($user['role'] ?? '') !== 'admin'): ?>
   <div class="sidebar__foot">
     <div class="user-chip">
       <span class="avatar avatar--sm" aria-hidden="true"><?= e(initials($user['first_name'] ?? '', $user['last_name'] ?? '')) ?></span>
@@ -251,6 +253,7 @@ $flashHtml = ob_get_clean();
       </button>
     </form>
   </div>
+  <?php endif; ?>
 </aside>
 <?php endif; ?>
 
@@ -300,6 +303,26 @@ $flashHtml = ob_get_clean();
       <?php endif; ?>
 <?php require __DIR__ . '/display-settings.php'; ?>
       <?= $pageActions ?>
+      <?php if (($user['role'] ?? '') === 'admin'): ?>
+        <details class="admin-account">
+          <summary class="admin-account__trigger" aria-label="<?= e(sprintf(sv_t('Account menu for %s'), user_full_name($user))) ?>">
+            <span class="avatar avatar--sm" aria-hidden="true"><?= e(initials($user['first_name'] ?? '', $user['last_name'] ?? '')) ?></span>
+            <span class="admin-account__identity">
+              <span class="admin-account__name"><?= e(user_full_name($user)) ?></span>
+              <span class="admin-account__role"><span class="status-dot status-dot--online" aria-hidden="true"></span><?= e(sv_t('Admin')) ?></span>
+            </span>
+            <?= sv_icon('chevron-down', 16, 'admin-account__chevron') ?>
+          </summary>
+          <div class="admin-account__panel">
+            <div class="admin-account__panel-name"><?= e(user_full_name($user)) ?></div>
+            <div class="admin-account__panel-role"><?= e(sv_t('Admin')) ?></div>
+            <form method="post" action="<?= e(post_url('auth/logout.php')) ?>">
+              <?= csrf_field() ?>
+              <button class="admin-account__logout" type="submit"><?= sv_icon('logout', 18) ?><span><?= e(sv_t('Sign Out')) ?></span></button>
+            </form>
+          </div>
+        </details>
+      <?php endif; ?>
 
     </div>
   </header>
