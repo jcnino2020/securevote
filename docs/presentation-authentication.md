@@ -1,39 +1,39 @@
 # SecureVote group demo: authentication and landing page
 
-Start at **https://darkblue-hummingbird-464264.hostingersite.com/securevote/demo/** for the isolated 4- to 5-minute presentation walkthrough. Its four screens include presenter notes and fictional sample data; it never creates a real account or ballot. Use each screen's **Open real page** link when the panel asks to see the production behavior. For a real sign-in, have an approved voter account ready in a password manager and enter its password privately. Do not cast a ballot during this demo.
+Start at **https://darkblue-hummingbird-464264.hostingersite.com/securevote/demo/** for the separate, working authentication demo. It has its own landing page, registration, password sign-in, and personal dashboard. Accounts are stored in a separate private database and do not receive live election eligibility. Use a demo-only email and password. Do not cast a ballot during this presentation.
 
 ## Run of show
 
 | Time | Screen | Show and say |
 | --- | --- | --- |
-| 0:00-0:40 | Public home | "This is SecureVote's landing page. Visitors can see elections and learn the voting steps before signing in. The main actions lead to registration or sign-in." Point to the open-election list and the two actions. |
-| 0:40-1:50 | Registration | "A voter can use Google or create an account with a name, username, email, and password. The form checks required fields, password rules, and duplicate usernames and emails. The server generates a personal voter code. An administrator then assigns election eligibility." Show the form and one validation error without creating an extra live account. |
-| 1:50-2:50 | Sign-in | "Voters can sign in with email, username, or voter code. Password accounts require their password; imported code-only accounts use their assigned code. Google is an alternate sign-in method." Sign in with the approved demo account. |
-| 2:50-4:15 | Voter dashboard | "After authentication, the dashboard shows elections this voter can access, the voter pass, voting summary, and prior receipt codes. The next action is visible at the top." Point to a ready election without opening or submitting a ballot. |
-| 4:15-4:45 | Wrap-up | "The server checks account status, protects form submissions with a CSRF token, rate-limits failed sign-ins, and issues a new session ID after login. The dashboard loads election and receipt data for the signed-in voter." |
+| 0:00-0:40 | Demo home | "This is the SecureVote demo landing page. Visitors can see the account journey and choose registration or sign-in." Point to both actions. |
+| 0:40-1:50 | Registration | "We create a demo account with a name, username, email, and password. The server validates the fields, checks duplicate usernames and emails, and stores a password hash." Show one validation error, then register a demo-only account. |
+| 1:50-2:50 | Sign-in | "The demo accepts the registered username or email with a password. After sign-out, we can sign in again with the same account." Sign out, then sign in privately. |
+| 2:50-4:15 | Dashboard | "The dashboard is protected and displays only this signed-in account's profile and authentication status. Demo accounts have no live election eligibility." Point to the name, email, and status. |
+| 4:15-4:45 | Wrap-up | "The demo verifies password hashes, protects form submissions with a CSRF token, limits repeated failed logins, and renews the session ID after login. Its account database is separate from the main SecureVote voter registry." |
 
 ## Presenter handoffs
 
-1. **Presenter 1 - landing page and registration:** Open `/demo/`, then select Registration. Demonstrate validation with blank fields; enter fictional details to show the unassigned-election dashboard.
-2. **Presenter 2 - sign-in:** Select Sign in. Use the fictional sample credentials shown on the demo page. Explain the three identifier choices and Google sign-in in the real system.
-3. **Presenter 3 - dashboard:** Show the sample voter pass, voting summary, and assigned-election state. Contrast it with the unassigned state from the new registration preview.
+1. **Presenter 1 - landing page and registration:** Open `/demo/`, then Register. Demonstrate validation with blank fields; create one demo-only account with a group-controlled password.
+2. **Presenter 2 - sign-in:** Sign out, then sign in with the account just created. Explain that the demo supports username or email and password. The main system also supports voter codes and Google sign-in.
+3. **Presenter 3 - dashboard:** Show that the dashboard displays the signed-in account's name, email, session status, and lack of live election eligibility.
 
 ## If the live site or account is unavailable
 
 - Show the public home and registration pages first; they do not require a session.
-- Use the isolated `/demo/` flow for the dashboard if a real login fails.
+- If the new demo account cannot sign in, register a fresh demo-only account and continue to the dashboard.
 - If connectivity fails, use the screenshots captured during rehearsal. Explain that the live vote submission is outside this authentication walkthrough.
 
 ## Questions the panel may ask
 
 - **Where are passwords stored?** The application stores password hashes generated by PHP's `password_hash()`, then checks them with `password_verify()`.
 - **What stops repeated password guesses?** Five recent failed sign-ins for the same identifier trigger a 15-minute throttle.
-- **What happens after login?** The session ID is regenerated, the account role is recorded, and the visitor is sent to the proper dashboard.
-- **Does the dashboard show everybody's votes?** No. It looks up the signed-in account's election eligibility and ballot receipts. Candidate choices are tallied separately.
-- **Does registration itself prove voting eligibility?** No. A new account can sign in, but it receives no election eligibility automatically. An administrator assigns the elections the voter can participate in. The registration form alone does not verify institutional identity.
+- **What happens after login?** The demo regenerates the session ID, records the demo account ID, and sends the visitor to their dashboard.
+- **Does the demo dashboard show any votes?** No. The demo does not connect to ballots or live election eligibility.
+- **Does registration itself prove voting eligibility?** No. Demo registration grants access only to the demo dashboard. The main system assigns election eligibility separately through an administrator.
 
 ## Technical route map
 
-`index.php` -> `auth/register.php` or `auth/login.php` -> `auth/authenticate.php` -> `includes/auth.php` -> `voter/dashboard.php`. Administrators assign election eligibility in `admin/voters.php`.
+`demo/index.php` -> `demo/register.php` -> `demo/dashboard.php` -> `demo/logout.php` -> `demo/login.php` -> `demo/dashboard.php`. The demo account database is a separate SQLite file outside the public web directory.
 
-Google uses `auth/google-login.php` and `auth/google-callback.php`. The live site has real Google OAuth configured; the presentation can remain on the email/password path.
+The main SecureVote site has additional voter-code and Google sign-in routes. Those are outside this focused demo.
