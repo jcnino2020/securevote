@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#141d43">
+  <title>Presentation Demo · SecureVote</title>
+  <link rel="stylesheet" href="./style.css">
+  <script src="./demo.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#demo-content">Skip to demo</a>
+  <header class="site-header">
+    <a class="brand" href="../" aria-label="SecureVote home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2.75 5.5 6.5v9.1c0 6.6 4.4 11.9 10.5 13.65C22.1 27.5 26.5 22.2 26.5 15.6V6.5Z" fill="currentColor"/><path d="m11.4 16.2 3.2 3.2 6-6.6" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>Secure<span class="brand-accent">Vote</span></span>
+    </a>
+    <span class="header-label">GROUP PRESENTATION · AUTHENTICATION</span>
+    <a class="header-link" href="../" target="_blank" rel="noopener">Open live site <span aria-hidden="true">↗</span></a>
+  </header>
+
+  <main id="demo-content">
+    <div class="demo-banner" role="note"><span class="banner-dot" aria-hidden="true"></span><strong>Presentation demo</strong><span>This page uses fictional sample data in your browser. It does not create accounts, authenticate users, or submit ballots to SecureVote.</span></div>
+
+    <section class="intro" aria-labelledby="intro-title">
+      <div>
+        <p class="eyebrow">SECUREVOTE / GUIDED WALKTHROUGH</p>
+        <h1 id="intro-title">Four screens.<br><span>One clear story.</span></h1>
+        <p class="intro-copy">Take the panel from the public landing page to a voter dashboard in a short, repeatable flow. Use the controls below to present each screen.</p>
+      </div>
+      <div class="intro-meta" aria-label="Presentation details"><div><strong>04</strong><span>screens</span></div><div><strong>05</strong><span>minutes</span></div><div><strong>00</strong><span>live ballots</span></div></div>
+    </section>
+
+    <nav class="steps" aria-label="Demo screens">
+      <button class="step is-active" type="button" data-screen="landing" aria-current="step"><span>01</span><strong>Landing page</strong><small>Public entry point</small></button>
+      <button class="step" type="button" data-screen="register"><span>02</span><strong>Registration</strong><small>Account creation</small></button>
+      <button class="step" type="button" data-screen="login"><span>03</span><strong>Sign in</strong><small>Authentication</small></button>
+      <button class="step" type="button" data-screen="dashboard"><span>04</span><strong>Dashboard</strong><small>Voter workspace</small></button>
+    </nav>
+
+    <div class="presentation-grid">
+      <section class="stage" aria-label="Interactive SecureVote preview">
+        <div class="stage-toolbar"><span><span class="stage-light"></span> SECUREVOTE PREVIEW</span><span id="stage-title">01 / Landing page</span></div>
+
+        <div class="screen" id="screen-landing">
+          <div class="preview-nav"><span class="preview-brand">◈ &nbsp; Secure<span>Vote</span></span><span>Home &nbsp;&nbsp; Elections &nbsp;&nbsp; How it works</span><span class="nav-pill">Sign in</span></div>
+          <div class="landing-hero"><div class="landing-copy"><span class="mini-label">YOUR CAMPUS. YOUR CHOICE.</span><h2>Your campus.<br><em>Your say.</em></h2><p>Choose the students who will represent you. Explore an election, make your choices, and keep a receipt after you vote.</p><div class="button-row"><button class="primary-button" type="button" data-go="login">Sign in to vote <span aria-hidden="true">→</span></button><button class="secondary-button" type="button" data-go="register">Create account</button></div></div><div class="ballot-art" aria-hidden="true"><div class="ballot-head"><span class="ballot-shield">✓</span> YOUR VOTE</div><div class="ballot-line"></div><div class="ballot-line short"></div><div class="ballot-choice"><i></i><b></b></div><div class="ballot-choice selected"><i>✓</i><b></b></div><div class="ballot-choice"><i></i><b></b></div><div class="ballot-foot"></div></div></div>
+          <div class="landing-stats"><div><strong>Explore</strong><span>See what is on the ballot</span></div><div><strong>Choose</strong><span>Review your candidates</span></div><div><strong>Confirm</strong><span>Keep your receipt</span></div></div>
+        </div>
+
+        <div class="screen" id="screen-register" hidden>
+          <div class="form-layout"><div class="form-story"><span class="mini-label">02 / REGISTRATION</span><h2>Be part of what comes next.</h2><p>New voters can create an account. An election administrator assigns their election access afterward.</p><div class="story-proof"><span>1</span> Create account <span>2</span> Receive voter code <span>3</span> Get eligibility</div></div><form id="register-form" class="preview-form" novalidate><span class="form-mark" aria-hidden="true">✓</span><h2>Join SecureVote</h2><p>Try the fictional registration flow. Do not enter a real password.</p><div class="field-pair"><label>First name<input name="firstName" autocomplete="off" required placeholder="Alex"></label><label>Last name<input name="lastName" autocomplete="off" required placeholder="Rivera"></label></div><label>Username<input name="username" autocomplete="off" required minlength="3" placeholder="alex.rivera"></label><label>Email address<input name="email" type="email" autocomplete="off" required placeholder="alex@example.test"></label><div class="field-pair"><label>Password<input name="password" type="password" autocomplete="off" required minlength="8" placeholder="8 characters minimum"></label><label>Confirm password<input name="confirm" type="password" autocomplete="off" required placeholder="Repeat password"></label></div><p class="form-error" id="register-error" role="alert" hidden></p><button class="primary-button form-submit" type="submit">Create preview account <span aria-hidden="true">→</span></button><p class="form-foot">Already registered? <button class="text-button" type="button" data-go="login">Sign in</button></p></form></div>
+        </div>
+
+        <div class="screen" id="screen-login" hidden>
+          <div class="form-layout"><div class="form-story"><span class="mini-label">03 / AUTHENTICATION</span><h2>A secure path back to your vote.</h2><p>In the real system, voters can sign in with email, username, or voter code. Google is also available when configured.</p><div class="story-proof"><span>✓</span> Account status <span>✓</span> Login limits <span>✓</span> New session ID</div></div><form id="login-form" class="preview-form" novalidate><span class="form-mark" aria-hidden="true">↗</span><h2>Welcome back</h2><p>Use the fictional sample below for this preview.</p><label>Email, username, or voter code<input name="identifier" autocomplete="off" required value="demo.voter@example.test"></label><label>Password<input name="password" type="password" autocomplete="off" required value="DemoPass2026!"></label><p class="sample-hint">Sample: <strong>demo.voter@example.test</strong> / <strong>DemoPass2026!</strong></p><p class="form-error" id="login-error" role="alert" hidden></p><button class="primary-button form-submit" type="submit">Sign in to preview <span aria-hidden="true">→</span></button><p class="form-foot">New here? <button class="text-button" type="button" data-go="register">Create an account</button></p></form></div>
+        </div>
+
+        <div class="screen" id="screen-dashboard" hidden>
+          <div class="dashboard-shell"><aside class="dashboard-side"><strong>◈ &nbsp; SecureVote</strong><small>YOUR VOTING SPACE</small><span class="side-active">▦ &nbsp; Home</span><span>☑ &nbsp; Elections</span><span>▤ &nbsp; Election guide</span><span>▥ &nbsp; Results</span></aside><div class="dashboard-main"><div class="dashboard-top"><span>Home</span><span class="preview-tag">SAMPLE VIEW</span></div><div class="dashboard-welcome"><span class="mini-label">YOUR VOTING SPACE</span><h2 id="dashboard-greeting">Hi, Demo Voter.</h2><p id="dashboard-message">One election is ready for your vote. Take a look and choose when you are ready.</p><div class="dashboard-badges"><span>Active account</span><span id="dashboard-eligibility">1 assigned election</span></div></div><div class="dashboard-cards"><div><small>READY FOR YOUR VOTE</small><strong id="dashboard-ready">01</strong><span>Assigned and open</span></div><div><small>BALLOTS SUBMITTED</small><strong>00</strong><span>No ballots cast in this demo</span></div><div><small>VOTER PASS</small><strong class="code" id="dashboard-code">VC-DEMO-2026</strong><span>Fictional code</span></div></div><div class="dashboard-bottom"><h3 id="dashboard-election-title">Ready when you are</h3><p id="dashboard-election-copy">Student Council Election · Voting open · Demo data only</p><button class="secondary-button" type="button" id="sign-out">Sign out of preview</button></div></div></div>
+        </div>
+      </section>
+
+      <aside class="presenter" aria-labelledby="presenter-title"><div class="presenter-top"><span class="eyebrow">PRESENTER NOTES</span><h2 id="presenter-title">What to say</h2><p id="presenter-timing">0:00–0:40 · Presenter 1</p></div><div class="presenter-body"><p class="speaker-line" id="presenter-script">“This is SecureVote’s public landing page. Students can see how voting works and find the path to registration or sign-in before entering their account.”</p><div class="presenter-divider"></div><h3>Point out</h3><ul id="presenter-points"><li>Clear sign-in and registration actions</li><li>Three voting steps: explore, choose, confirm</li><li>Public information is available before login</li></ul><a id="live-link" class="live-link" href="../" target="_blank" rel="noopener">Open real landing page <span aria-hidden="true">↗</span></a></div><div class="presenter-footer"><button class="secondary-button" id="prev-screen" type="button" disabled>← Previous</button><button class="primary-button" id="next-screen" type="button">Next screen →</button></div></aside>
+    </div>
+
+    <section class="demo-footer"><div><span class="eyebrow">PANEL REMINDER</span><h2>Keep the boundary clear.</h2><p>This walkthrough illustrates the interface and expected journey. The real SecureVote pages perform server-side validation, password verification, session handling, and database lookups.</p></div><a href="../auth/login.php" target="_blank" rel="noopener">Open real sign-in <span aria-hidden="true">↗</span></a></section>
+  </main>
+  <footer class="site-footer"><span>SecureVote · Academic civic voting platform</span><span>Presentation preview · No live election data</span></footer>
+</body>
+</html>

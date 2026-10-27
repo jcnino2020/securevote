@@ -1,6 +1,6 @@
 # SecureVote group demo: authentication and landing page
 
-Use this as a 4- to 5-minute live walkthrough. Open the public home page, registration page, and sign-in page in separate tabs before presenting. Have an approved voter account ready in a password manager; enter its password privately. Do not cast a ballot during this demo.
+Start at **https://darkblue-hummingbird-464264.hostingersite.com/securevote/demo/** for the isolated 4- to 5-minute presentation walkthrough. Its four screens include presenter notes and fictional sample data; it never creates a real account or ballot. Use each screen's **Open real page** link when the panel asks to see the production behavior. For a real sign-in, have an approved voter account ready in a password manager and enter its password privately. Do not cast a ballot during this demo.
 
 ## Run of show
 
@@ -14,14 +14,14 @@ Use this as a 4- to 5-minute live walkthrough. Open the public home page, regist
 
 ## Presenter handoffs
 
-1. **Presenter 1 - landing page and registration:** Start on the public home page, then switch to the registration tab. Demonstrate validation with blank fields; stop before creating a new production account.
-2. **Presenter 2 - sign-in:** Switch to the sign-in tab. Enter the approved account credentials privately, then submit. Explain the three identifier choices and Google sign-in.
-3. **Presenter 3 - dashboard:** Show the ready-election list, voter pass, summary, and past receipts. End by explaining how the dashboard differs for a voter with no eligible elections.
+1. **Presenter 1 - landing page and registration:** Open `/demo/`, then select Registration. Demonstrate validation with blank fields; enter fictional details to show the unassigned-election dashboard.
+2. **Presenter 2 - sign-in:** Select Sign in. Use the fictional sample credentials shown on the demo page. Explain the three identifier choices and Google sign-in in the real system.
+3. **Presenter 3 - dashboard:** Show the sample voter pass, voting summary, and assigned-election state. Contrast it with the unassigned state from the new registration preview.
 
 ## If the live site or account is unavailable
 
 - Show the public home and registration pages first; they do not require a session.
-- Use the already signed-in voter browser tab for the dashboard if the demo login fails.
+- Use the isolated `/demo/` flow for the dashboard if a real login fails.
 - If connectivity fails, use the screenshots captured during rehearsal. Explain that the live vote submission is outside this authentication walkthrough.
 
 ## Questions the panel may ask
