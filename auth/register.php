@@ -298,7 +298,8 @@ require __DIR__ . '/../includes/header.php';
               required
               aria-required="true"
               placeholder="<?= e(sv_t("Min. 8 characters")) ?>"
-              <?= isset($errors['password']) ? 'aria-describedby="password-error" aria-invalid="true"' : '' ?>>
+              aria-describedby="<?= isset($errors['password']) ? 'password-error ' : '' ?>password-rules"
+              <?= isset($errors['password']) ? 'aria-invalid="true"' : '' ?>>
             <button type="button" class="btn-password-toggle" data-toggle-password="#password" aria-label="<?= e(sv_t("Show password")) ?>" aria-pressed="false" title="<?= e(sv_t("Show password")) ?>">
               <span class="icon-eye"><?= sv_icon('eye', 18) ?></span>
               <span class="icon-eye-off" hidden><?= sv_icon('eye-off', 18) ?></span>
@@ -309,9 +310,12 @@ require __DIR__ . '/../includes/header.php';
               <?= sv_icon('alert-triangle', 14) ?>
               <span><?= e($errors['password']) ?></span>
             </p>
-          <?php else: ?>
-            <p class="help"><?= e(sv_t("At least 8 characters with 1 letter & 1 number.")) ?></p>
           <?php endif; ?>
+          <ul class="password-checks" id="password-rules" aria-label="<?= e(sv_t('Password requirements')) ?>">
+            <li data-password-rule="length" data-state="pending"><span class="password-checks__icon" aria-hidden="true">○</span><?= e(sv_t('8 to 200 characters')) ?></li>
+            <li data-password-rule="letter" data-state="pending"><span class="password-checks__icon" aria-hidden="true">○</span><?= e(sv_t('At least one letter')) ?></li>
+            <li data-password-rule="number" data-state="pending"><span class="password-checks__icon" aria-hidden="true">○</span><?= e(sv_t('At least one number')) ?></li>
+          </ul>
         </div>
 
         <div class="form-field">
@@ -328,7 +332,8 @@ require __DIR__ . '/../includes/header.php';
               required
               aria-required="true"
               placeholder="<?= e(sv_t("Repeat password")) ?>"
-              <?= isset($errors['password_confirm']) ? 'aria-describedby="password_confirm-error" aria-invalid="true"' : '' ?>>
+              aria-describedby="<?= isset($errors['password_confirm']) ? 'password_confirm-error ' : '' ?>password-match"
+              <?= isset($errors['password_confirm']) ? 'aria-invalid="true"' : '' ?>>
             <button type="button" class="btn-password-toggle" data-toggle-password="#password_confirm" aria-label="<?= e(sv_t("Show password confirmation")) ?>" aria-pressed="false" title="<?= e(sv_t("Show password")) ?>">
               <span class="icon-eye"><?= sv_icon('eye', 18) ?></span>
               <span class="icon-eye-off" hidden><?= sv_icon('eye-off', 18) ?></span>
@@ -340,8 +345,14 @@ require __DIR__ . '/../includes/header.php';
               <span><?= e($errors['password_confirm']) ?></span>
             </p>
           <?php endif; ?>
+          <p class="password-checks__match" id="password-match" data-password-match data-state="pending"><span class="password-checks__icon" aria-hidden="true">○</span><?= e(sv_t('Passwords match')) ?></p>
         </div>
       </div>
+      <p class="visually-hidden" data-password-status role="status" aria-live="polite" aria-atomic="true"
+         data-valid-message="<?= e(sv_t('Password requirements met')) ?>"
+         data-invalid-message="<?= e(sv_t('Password requirements not yet met')) ?>"
+         data-match-message="<?= e(sv_t('Passwords match')) ?>"
+         data-mismatch-message="<?= e(sv_t('Passwords do not match')) ?>"></p>
 
       <div class="form-actions">
         <button class="btn btn--primary btn--lg btn--block" type="submit" data-submit-once

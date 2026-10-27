@@ -86,6 +86,7 @@
     initAccessibleContent();
     initSidebarDrawer();
     initPasswordToggles();
+    initRegistrationPasswordFeedback();
     initBallotEngine();
     initBioToggles();
     initCopyButtons();
@@ -323,6 +324,73 @@
         announce(isPassword ? 'Password revealed.' : 'Password hidden.');
       });
     });
+  }
+
+  function initRegistrationPasswordFeedback() {
+    var password = document.getElementById('password');
+    var confirmation = document.getElementById('password_confirm');
+    var live = document.querySelector('[data-password-status]');
+    if (!password || !confirmation || !live || !document.body.classList.contains('page-register')) return;
+
+    var rules = {
+      length: document.querySelector('[data-password-rule="length"]'),
+      letter: document.querySelector('[data-password-rule="letter"]'),
+      number: document.querySelector('[data-password-rule="number"]')
+    };
+    var match = document.querySelector('[data-password-match]');
+    if (!rules.length || !rules.letter || !rules.number || !match) return;
+    var lastAnnouncement = '';
+
+    function setState(element, state) {
+      element.dataset.state = state;
+      element.querySelector('.password-checks__icon').textContent = state === 'pass' ? '✓' : state === 'fail' ? '×' : '○';
+    }
+
+    function update() {
+      var value = password.value;
+      var count = Array.from(value).length;
+      var checks = {
+        length: count >= 8 && count <= 200,
+        letter: /[A-Za-z]/.test(value),
+        number: /[0-9]/.test(value)
+      };
+      Object.keys(checks).forEach(function (key) {
+        setState(rules[key], value ? (checks[key] ? 'pass' : 'fail') : 'pending');
+      });
+
+      var passwordValid = checks.length && checks.letter && checks.number;
+      var matches = confirmation.value !== '' && value === confirmation.value;
+      setState(match, confirmation.value ? (matches ? 'pass' : 'fail') : 'pending');
+      if (password.dataset.passwordTouched) password.setAttribute('aria-invalid', passwordValid ? 'false' : 'true');
+      if (confirmation.dataset.passwordTouched) confirmation.setAttribute('aria-invalid', matches ? 'false' : 'true');
+
+      var messages = [];
+      if (password.dataset.passwordTouched) messages.push(live.dataset[passwordValid ? 'validMessage' : 'invalidMessage']);
+      if (confirmation.dataset.passwordTouched) messages.push(live.dataset[matches ? 'matchMessage' : 'mismatchMessage']);
+      var announcement = messages.join('. ');
+      if (announcement !== lastAnnouncement) {
+        live.textContent = announcement;
+        lastAnnouncement = announcement;
+      }
+    }
+
+    password.addEventListener('input', function () {
+      password.dataset.passwordTouched = 'true';
+      password.classList.remove('is-invalid');
+      password.setAttribute('aria-describedby', 'password-rules');
+      var error = document.getElementById('password-error');
+      if (error) error.hidden = true;
+      update();
+    });
+    confirmation.addEventListener('input', function () {
+      confirmation.dataset.passwordTouched = 'true';
+      confirmation.classList.remove('is-invalid');
+      confirmation.setAttribute('aria-describedby', 'password-match');
+      var error = document.getElementById('password_confirm-error');
+      if (error) error.hidden = true;
+      update();
+    });
+    update();
   }
 
   /* ======================================================================
