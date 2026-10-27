@@ -52,6 +52,7 @@ fieldset { min-inline-size: 0; }
 .breadcrumb--header :where(ol, li) { flex-wrap: wrap; gap: 4px 8px; }
 .breadcrumb--header [aria-current=page] { font-weight: 700; }
 .content > .breadcrumb--content { display: block; width: 100%; max-width: 1120px; margin: 0 auto 24px; font-size: .9375rem; line-height: 1.5; }
+.page-policy .content > .breadcrumb--content { max-width: none; }
 .breadcrumb--content ol { flex-wrap: wrap; gap: 6px 10px; }
 .breadcrumb--content li { min-width: 0; gap: 10px; overflow-wrap: anywhere; }
 .breadcrumb--content a { min-height: 44px; display: inline-flex; align-items: center; }

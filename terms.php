@@ -14,6 +14,7 @@ require_once __DIR__ . '/includes/bootstrap.php';
 $pageTitle   = 'Terms of Service';
 $activeNav   = 'terms.php';
 $layout      = 'portal';
+$bodyClass   = 'page-policy';
 $breadcrumb   = [
     ['label' => 'Home', 'href' => 'index.php'],
     ['label' => 'Terms of Service'],

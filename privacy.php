@@ -14,6 +14,7 @@ require_once __DIR__ . '/includes/bootstrap.php';
 $pageTitle   = 'Privacy Policy';
 $activeNav   = 'privacy.php';
 $layout      = 'portal';
+$bodyClass   = 'page-policy';
 $breadcrumb   = [
     ['label' => 'Home', 'href' => 'index.php'],
     ['label' => 'Privacy Policy'],
