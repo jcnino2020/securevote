@@ -163,7 +163,7 @@ h1, h2, h3, h4 { letter-spacing: -.03em; }
 .brand__mark { color: var(--primary); }
 .app-shell--app { background: var(--bg); }
 .sidebar { box-shadow: none; }
-.sidebar__head { height: 86px; padding-inline: 22px; }
+.sidebar__head { height: var(--topbar-h); padding-inline: 22px; }
 .sidebar .brand__word span { color: #ffbd96; }
 .nav { padding: 26px 14px; }
 .nav__group { padding: 12px 12px 6px; color: #c2c9e9; font-size: .66rem; letter-spacing: .12em; }
