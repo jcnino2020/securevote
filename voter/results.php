@@ -117,6 +117,12 @@ $breadcrumb = $focus !== null
 
 require __DIR__ . '/../includes/header.php';
 ?>
+<?php if ($focus !== null && str_contains((string) ($focus['description'] ?? ''), '[Demo results]')): ?>
+<div class="alert alert--warning" role="note">
+  <span class="alert__icon" aria-hidden="true"><?= sv_icon('alert-triangle', 18) ?></span>
+  <p class="alert__text">Demo results: these ballots and tallies are simulated for testing and are not an official election outcome.</p>
+</div>
+<?php endif; ?>
 <?php if($focusMaySee): ?><p class="report-download"><a class="link" href="<?= e(url('results-report.php?election_id='.(int)$focus['id'])) ?>"><?= e(sv_t("Download PDF report")) ?></a></p><?php endif; ?>
 
 <?php if ($elections === []): ?>

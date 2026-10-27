@@ -123,6 +123,9 @@ if ((string) input('export', '') === 'csv') {
 
     fputcsv($out, ['SecureVote results export']);
     fputcsv($out, ['Election', $election['title']]);
+    if (str_contains((string) ($election['description'] ?? ''), '[Demo results]')) {
+        fputcsv($out, ['Data notice', 'Simulated demo ballots and results; not an official election outcome.']);
+    }
     fputcsv($out, ['Status', $effectiveStatus]);
     fputcsv($out, ['Voting window', $election['start_datetime'] . ' to ' . $election['end_datetime']]);
     fputcsv($out, ['Eligible voters', $eligible]);
@@ -170,6 +173,13 @@ $breadcrumb = [
 
 require __DIR__ . '/../includes/header.php';
 ?>
+
+<?php if (str_contains((string) ($election['description'] ?? ''), '[Demo results]')): ?>
+<div class="alert alert--warning" role="note">
+  <span class="alert__icon" aria-hidden="true"><?= sv_icon('alert-triangle', 18) ?></span>
+  <p class="alert__text">Demo results: these ballots and tallies are simulated for testing and are not an official election outcome.</p>
+</div>
+<?php endif; ?>
 
 <section class="card">
   <div class="card__header">
