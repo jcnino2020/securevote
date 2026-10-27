@@ -320,7 +320,7 @@ if ($hasSidebar && !$pageOwnsHeading): ?>
 <?php endif; ?>
 <?= $flashHtml ?>
 <?php else: ?>
-<?php if ($resourceScript !== 'login.php'): ?>
+<?php if (!in_array($resourceScript, ['login.php', 'register.php'], true)): ?>
 <header class="auth-breadcrumb-bar"><?= sv_breadcrumbs($breadcrumb) ?></header>
 <?php endif; ?>
 <main class="auth-layout" id="main-content" tabindex="-1"><?php require __DIR__ . '/display-settings.php'; ?>
