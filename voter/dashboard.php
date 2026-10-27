@@ -57,10 +57,16 @@ $breadcrumb = [['label' => 'Dashboard', 'href' => 'voter/dashboard.php']];
 $reminderCount=count(sv_reminders(sv_engagement_db(),$userId));
 require __DIR__ . '/../includes/header.php';
 ?>
-<nav class="dashboard-resources" aria-label="<?= e(sv_t("Voting resources")) ?>">
-  <a class="btn btn--secondary dashboard-resource" href="<?= e(url('guide.php')) ?>"><?= sv_icon('file', 18) ?><span><?= e(sv_t("Election guide")) ?></span></a>
-  <a class="btn btn--secondary dashboard-resource" href="<?= e(url('voter/reminders.php')) ?>"><?= sv_icon('bell', 18) ?><span><?= e(sv_t("Reminders")) ?></span><span class="dashboard-resource__count" aria-label="<?= sprintf(sv_t('%d reminders'), (int) $reminderCount) ?>"><?= (int) $reminderCount ?></span></a>
-</nav>
+<section class="dashboard-resources" aria-labelledby="dashboard-resources-title">
+  <div class="dashboard-resources__intro">
+    <h2 id="dashboard-resources-title"><?= e(sv_t("Voting resources")) ?></h2>
+    <p><?= e(sv_t("Read the election guide or check your reminders before voting.")) ?></p>
+  </div>
+  <nav class="dashboard-resources__links" aria-label="<?= e(sv_t("Voting resources")) ?>">
+    <a class="btn btn--secondary dashboard-resource" href="<?= e(url('guide.php')) ?>"><?= sv_icon('file', 18) ?><span><?= e(sv_t("Election guide")) ?></span></a>
+    <a class="btn btn--secondary dashboard-resource" href="<?= e(url('voter/reminders.php')) ?>"><?= sv_icon('bell', 18) ?><span><?= e(sv_t("Reminders")) ?></span><span class="dashboard-resource__count" aria-label="<?= sprintf(sv_t('%d reminders'), (int) $reminderCount) ?>"><?= (int) $reminderCount ?></span></a>
+  </nav>
+</section>
 <?php
 ?>
 

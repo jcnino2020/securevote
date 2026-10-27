@@ -83,7 +83,11 @@ fieldset { min-inline-size: 0; }
 
 /* Existing home and voter resource sections. */
 .student-steps > h2 { grid-column: 1 / -1; margin: 0; padding: 24px 25px 8px; font-family: var(--font-display); font-size: clamp(1.35rem,2vw,1.75rem); color: var(--text); }
-.app-shell--app .dashboard-resources { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0; }
+.app-shell--app .dashboard-resources { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin: 0; }
+.dashboard-resources__intro { max-width: 42ch; }
+.dashboard-resources__intro h2 { margin: 0; font-family: var(--font-display); font-size: clamp(1.15rem, 1.5vw, 1.4rem); line-height: 1.2; color: var(--text); }
+.dashboard-resources__intro p { margin: 4px 0 0; font-size: .875rem; line-height: 1.45; color: var(--text-muted); }
+.dashboard-resources__links { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 10px; }
 .dashboard-resources .dashboard-resource { display: inline-flex; align-items: center; justify-content: center; gap: 9px; min-height: var(--control-size); padding: 10px 14px; border-radius: 10px; font-size: .875rem; text-decoration: none; }
 .dashboard-resource__count { display: inline-grid; place-items: center; min-width: 24px; height: 24px; padding-inline: 6px; border-radius: 6px; background: var(--primary-light); color: var(--primary-text); font-size: .75rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 
@@ -96,6 +100,8 @@ fieldset { min-inline-size: 0; }
   .app-shell--portal .topbar__actions { grid-column: 3; grid-row: 1; justify-self: end; }
 }
 @media (max-width: 900px) {
+  .app-shell--app .dashboard-resources { align-items: flex-start; flex-direction: column; gap: 14px; }
+  .dashboard-resources__links { justify-content: flex-start; }
   :where(input:not([type=checkbox],[type=radio],[type=hidden]), select, textarea),
   .auth-card .input, .auth-card .select, .page-register .auth-card .input, .display-settings__panel select { font-size: max(1rem,16px); }
   .sidebar { padding-bottom: env(safe-area-inset-bottom,0px); }
@@ -115,7 +121,7 @@ fieldset { min-inline-size: 0; }
   .app-shell--portal .public-menu__toggle > span, .app-shell--portal .topbar__actions > .btn--sm span { display: none; }
   .app-shell--portal .public-menu__toggle, .app-shell--portal .topbar__actions > .btn--sm { width: var(--control-size); min-width: var(--control-size); padding: 10px; }
   .app-shell--portal .topbar__actions > .btn--sm svg { display: block; }
-  .app-shell--app .dashboard-resources { justify-content: flex-start; }
+  .dashboard-resources__links { width: 100%; }
   .dashboard-resources .dashboard-resource { flex: 1; padding-inline: 10px; }
   .auth-breadcrumb-bar { left: 16px; right: 80px; }
   .form-actions, .feature-toolbar, .card__header, .student-section__heading { flex-wrap: wrap; }

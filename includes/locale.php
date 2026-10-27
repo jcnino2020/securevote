@@ -287,6 +287,7 @@ function sv_t(string $text, ...$args): string
         "View receipt" => "Tingnan ang resibo",
         "View results" => "Tingnan ang resulta",
         "Voting resources" => "Mga sanggunian sa pagboto",
+        "Read the election guide or check your reminders before voting." => "Basahin ang gabay sa eleksiyon o tingnan ang iyong mga paalala bago bumoto.",
         "Your voting summary" => "Buod ng iyong pagboto",
         "Submitted %s" => "Naisumite noong %s",
         "Submitted on %s" => "Naisumite noong %s",
