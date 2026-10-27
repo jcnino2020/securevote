@@ -141,7 +141,7 @@ require __DIR__ . '/../includes/header.php';
         </button>
       </div>
     </form>
-    <p><a class="link" href="<?= e(url('auth/forgot-password.php')) ?>"><?= e(sv_t("Forgot your password?")) ?></a></p>
+    <p class="auth-recovery-link"><a class="link" href="<?= e(url('auth/forgot-password.php')) ?>"><?= e(sv_t("Forgot your password?")) ?></a></p>
 
     <div class="divider" role="presentation"></div>
 

@@ -320,6 +320,7 @@ h1, h2, h3, h4 { letter-spacing: -.03em; }
 .auth-card .input, .auth-card .select { min-height: 46px; height: auto; font-size: .91rem; padding: 10px 13px; }
 .auth-card .btn--google, .auth-card .form-actions .btn, .auth-card .btn--secondary { min-height: 46px; height: auto; font-size: .9rem; }
 .auth-card .form-actions { margin-top: 7px; }
+.page-login .auth-recovery-link { margin-top: var(--sp-5); }
 .auth-separator { margin: 18px 0; }
 .auth-separator span { font-size: .7rem; background: var(--surface); }
 .auth-footnote { margin-top: 18px !important; }
