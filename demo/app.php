@@ -46,7 +46,7 @@ function demo_db(): PDO {
     } catch (Throwable $error) {
         error_log('SecureVote demo database unavailable: ' . $error->getMessage());
         http_response_code(503);
-        exit('The demo account service is temporarily unavailable.');
+        exit('The account service is temporarily unavailable.');
     }
 }
 
@@ -73,13 +73,13 @@ function demo_logo(): string {
 function demo_header(string $title, string $active = ''): void {
     $user = demo_user();
     ?><!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#1a2750"><title><?= demo_e($title) ?> · SecureVote Demo</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="site.css"></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#1a2750"><title><?= demo_e($title) ?> · SecureVote</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="site.css"></head><body>
 <a class="skip" href="#main">Skip to content</a>
-<header class="site-header"><a class="brand" href="./"><?= demo_logo() ?><span>Secure<span class="brand-accent">Vote</span></span></a><span class="demo-pill">DEMO WEBSITE</span><nav aria-label="Main navigation"><a class="<?= $active === 'home' ? 'is-active' : '' ?>" href="./">Home</a><?php if ($user): ?><a class="<?= $active === 'dashboard' ? 'is-active' : '' ?>" href="dashboard.php">Dashboard</a><form method="post" action="logout.php"><input type="hidden" name="csrf" value="<?= demo_e(demo_csrf()) ?>"><button type="submit">Sign out</button></form><?php else: ?><a class="<?= $active === 'login' ? 'is-active' : '' ?>" href="login.php">Sign in</a><a class="header-cta <?= $active === 'register' ? 'is-active' : '' ?>" href="register.php">Register</a><?php endif; ?></nav></header>
+<header class="site-header"><a class="brand" href="./"><?= demo_logo() ?><span>Secure<span class="brand-accent">Vote</span></span></a><span class="demo-pill">ACCOUNT ACCESS</span><nav aria-label="Main navigation"><a class="<?= $active === 'home' ? 'is-active' : '' ?>" href="./">Home</a><?php if ($user): ?><a class="<?= $active === 'dashboard' ? 'is-active' : '' ?>" href="dashboard.php">Dashboard</a><form method="post" action="logout.php"><input type="hidden" name="csrf" value="<?= demo_e(demo_csrf()) ?>"><button type="submit">Sign out</button></form><?php else: ?><a class="<?= $active === 'login' ? 'is-active' : '' ?>" href="login.php">Sign in</a><a class="header-cta <?= $active === 'register' ? 'is-active' : '' ?>" href="register.php">Register</a><?php endif; ?></nav></header>
 <main id="main">
 <?php
 }
 
 function demo_footer(): void {
-    ?></main><footer class="site-footer"><span>SecureVote · Authentication demo</span><span>Separate accounts · No live votes or election access</span></footer></body></html><?php
+    ?></main><footer class="site-footer"><span>SecureVote · Academic civic voting platform</span><span>Account access only · Election voting is managed separately</span></footer></body></html><?php
 }
