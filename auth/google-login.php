@@ -5,8 +5,8 @@
  * auth/google-login.php
  *
  * Initiates the Google OAuth 2.0 authentication flow.
- * Redirects to Google's OAuth 2.0 authorization endpoint, or provides
- * instant developer simulation if Google API credentials are not yet set.
+ * Redirects to Google's OAuth 2.0 authorization endpoint. A simulation
+ * is available only on loopback in local debug mode without credentials.
  */
 
 require_once __DIR__ . '/../includes/bootstrap.php';
@@ -40,8 +40,13 @@ if ($clientId !== '' && !str_starts_with($clientId, 'YOUR_')) {
 }
 
 // ---------------------------------------------------------------------
-// Developer / Lab Test Simulation Mode
+// Developer / Lab Test Simulation Mode. Never show it on the live site.
 // ---------------------------------------------------------------------
+if (!APP_DEBUG || !in_array((string) ($_SERVER['REMOTE_ADDR'] ?? ''), ['127.0.0.1', '::1'], true)) {
+    flash_error('Google sign-in is temporarily unavailable. Please use your account credentials.');
+    redirect('auth/login.php');
+}
+
 $layout       = 'auth';
 $pageTitle    = 'Google Sign-In';
 $bodyClass    = 'page-login';

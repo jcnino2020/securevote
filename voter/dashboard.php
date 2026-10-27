@@ -38,8 +38,12 @@ $elections = $stmt->fetchAll();
 
 $awaiting = [];
 $voted    = [];
+$assignedElectionCount = 0;
 
 foreach ($elections as $election) {
+    if (!empty($election['eligibility_id'])) {
+        $assignedElectionCount++;
+    }
     $status = election_effective_status($election);
     $hasVoted = !empty($election['ballot_reference']);
 
@@ -76,6 +80,8 @@ require __DIR__ . '/../includes/header.php';
     <p>
       <?php if ($awaiting !== []): ?>
         <?= e(sprintf(count($awaiting) === 1 ? sv_t('%d election is ready for your vote. Take a look and choose when you are ready.') : sv_t('%d elections are ready for your vote. Take a look and choose when you are ready.'), count($awaiting))) ?>
+      <?php elseif ($assignedElectionCount === 0): ?>
+        <?= e(sv_t("Your account is ready. An election administrator will assign the elections you can vote in.")) ?>
       <?php else: ?>
         <?= e(sv_t("You are all caught up for now. Explore elections or check the receipts from ballots you have submitted.")) ?>
       <?php endif; ?>
@@ -102,7 +108,7 @@ require __DIR__ . '/../includes/header.php';
       <div><small><?= e(sv_t("Your voter code")) ?></small><strong class="mono" id="my-voter-code"><?= e((string) ($voter['voter_code'] ?? '')) ?></strong></div>
       <button class="icon-btn" type="button" data-copy="#my-voter-code" aria-label="<?= e(sv_t("Copy voter code")) ?>"><?= sv_icon('copy', 17) ?></button>
     </div>
-    <span class="voter-pass__verified"><?= sv_icon('check-circle', 15) ?> <?= e(sv_t("Verified voter")) ?></span>
+    <span class="voter-pass__verified"><?= sv_icon('check-circle', 15) ?> <?= e(sv_t("Active account")) ?></span>
   </div>
 </section>
 
@@ -123,7 +129,12 @@ require __DIR__ . '/../includes/header.php';
   <?php if ($awaiting === []): ?>
     <div class="student-empty">
       <span aria-hidden="true"><?= sv_icon('check-circle', 28) ?></span>
-      <div><h3><?= e(sv_t("Nothing waiting for your vote")) ?></h3><p><?= e(sv_t("New elections will appear here when they open.")) ?></p></div>
+      <div>
+        <h3><?= e($assignedElectionCount === 0 ? sv_t("No elections assigned yet") : sv_t("Nothing waiting for your vote")) ?></h3>
+        <p><?= e($assignedElectionCount === 0
+            ? sv_t("An election administrator will assign the elections you can vote in.")
+            : sv_t("New elections will appear here when they open.")) ?></p>
+      </div>
       <a class="btn btn--secondary" href="<?= e(url('voter/elections.php')) ?>"><?= e(sv_t("All elections")) ?></a>
     </div>
   <?php else: ?>

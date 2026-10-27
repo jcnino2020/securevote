@@ -24,8 +24,18 @@ if ($state === '' || $savedState === '' || !hash_equals($savedState, $state)) {
 
 $googleProfile = [];
 
-// 2. Handle Simulation Mode (Lab / Local Dev)
+// 2. Simulation is permitted only in local debug setups without real OAuth.
 if (input('sim') === '1') {
+    $remoteAddress = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+    $realGoogleConfigured = defined('GOOGLE_CLIENT_ID')
+        && trim((string) GOOGLE_CLIENT_ID) !== ''
+        && !str_starts_with(trim((string) GOOGLE_CLIENT_ID), 'YOUR_');
+    if (!APP_DEBUG || $realGoogleConfigured || !in_array($remoteAddress, ['127.0.0.1', '::1'], true)) {
+        audit_log('oauth_simulation_blocked', 'Rejected developer Google simulation outside local debug mode.');
+        flash_error('Google authentication is unavailable in this mode. Please use the normal Google sign-in button.');
+        redirect('auth/login.php');
+    }
+
     $email = strtolower(trim((string) input('email', '')));
     if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
         flash_error('Please enter a valid Google email address.');
@@ -129,6 +139,11 @@ if (input('sim') === '1') {
         flash_error('Could not retrieve Google profile details.');
         redirect('auth/login.php');
     }
+    if (($userData['email_verified'] ?? false) !== true) {
+        audit_log('oauth_email_unverified', 'Google account email was not verified.');
+        flash_error('Verify your Google email address before signing in to SecureVote.');
+        redirect('auth/login.php');
+    }
 
     $googleProfile = [
         'google_id'  => (string) ($userData['sub'] ?? ''),
@@ -145,7 +160,7 @@ $result = sv_login_or_register_google_user($googleProfile);
 if (($result['ok'] ?? false) === true) {
     $user = $result['user'];
     if (!empty($result['is_new'])) {
-        flash_success('Welcome to SecureVote, ' . $user['first_name'] . '! Your voter account is ready. Your personal Voter Code is: ' . $user['voter_code']);
+        flash_success('Welcome to SecureVote, ' . $user['first_name'] . '! Your account is ready. An election administrator will assign the elections you can vote in. Your personal Voter Code is: ' . $user['voter_code']);
     } else {
         flash_success('Welcome back, ' . $user['first_name'] . '! Signed in via Google.');
     }

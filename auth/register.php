@@ -111,13 +111,6 @@ if (is_post()) {
 
         $newUserId = (int) $pdo->lastInsertId();
 
-        // Automatically register the new voter for open and scheduled elections
-        $autoEnroll = $pdo->prepare(
-            "INSERT IGNORE INTO voter_eligibility (election_id, user_id, has_voted, created_at)
-             SELECT id, ?, 0, NOW() FROM elections WHERE status IN ('open', 'scheduled', 'draft')"
-        );
-        $autoEnroll->execute([$newUserId]);
-
         audit_log('voter_registered', 'New voter account self-registered: "' . $form['username'] . '" (Voter Code: ' . $voterCode . ').', $newUserId);
 
         // Fetch user data and log in
@@ -127,7 +120,7 @@ if (is_post()) {
 
         if ($newUser) {
             login_user($newUser);
-            flash_success(sprintf(sv_t('Welcome to SecureVote, %s! Your voter account is active. Your personal Voter Code is: %s'), $form['first_name'], $voterCode));
+            flash_success(sprintf(sv_t('Welcome to SecureVote, %s! Your account is ready. An election administrator will assign the elections you can vote in. Your personal Voter Code is: %s'), $form['first_name'], $voterCode));
             redirect('voter/dashboard.php');
         } else {
             flash_success(sv_t('Registration successful! Please sign in to your new voter account.'));
@@ -146,7 +139,7 @@ require __DIR__ . '/../includes/header.php';
   <a class="brand auth-story__brand" href="<?= e(url('index.php')) ?>"><?= sv_logo_mark(34) ?><span class="brand__word">Secure<span>Vote</span></span></a>
   <div class="auth-story__content">
     <h2 id="auth-story-title"><?= e(sv_t("Be part of what comes next.")) ?></h2>
-    <p><?= e(sv_t("Create your account so you are ready when an election opens on campus.")) ?></p>
+    <p><?= e(sv_t("Create your account, then an election administrator will assign the elections you can vote in.")) ?></p>
     <div class="auth-story__steps"><span><?= e(sv_t("Explore elections")) ?></span><span><?= e(sv_t("Choose candidates")) ?></span><span><?= e(sv_t("Keep your receipt")) ?></span></div>
   </div>
   <div class="auth-story__mark" aria-hidden="true"><?= sv_icon('vote', 86) ?></div>
@@ -161,7 +154,7 @@ require __DIR__ . '/../includes/header.php';
       </a>
       <h1 class="auth-card__title"><?= e(sv_t("Join SecureVote")) ?></h1>
       <p class="auth-card__text">
-        <?= e(sv_t("Use Google or fill in your details to create a voter account.")) ?>
+        <?= e(sv_t("Create an account with Google or email. An administrator assigns your election access.")) ?>
       </p>
     </div>
 

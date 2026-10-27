@@ -71,9 +71,9 @@ if (($result['ok'] ?? false) === true) {
 //    the visitor back to the form.
 $fields = [];
 if ($identifier === '') {
-    $fields['identifier'] = sv_t('Enter your username or email address.');
+    $fields['identifier'] = sv_t('Enter your email, username, or voter code.');
 }
-if ($password === '') {
+if ($identifier !== '' && $password === '' && ($result['error'] ?? '') === 'Incorrect password entered.') {
     $fields['password'] = sv_t('Enter your password.');
 }
 

@@ -397,13 +397,6 @@ function sv_login_or_register_google_user(array $profile): array
 
         $newUserId = (int) $pdo->lastInsertId();
 
-        // Auto-enroll new voter in active/open elections
-        $openElections = $pdo->query("SELECT id FROM elections WHERE status IN ('open', 'scheduled')")->fetchAll();
-        $eligStmt = $pdo->prepare('INSERT IGNORE INTO voter_eligibility (election_id, user_id, has_voted) VALUES (?, ?, 0)');
-        foreach ($openElections as $el) {
-            $eligStmt->execute([(int) $el['id'], $newUserId]);
-        }
-
         $newUserStmt = $pdo->prepare('SELECT * FROM users WHERE id = ? LIMIT 1');
         $newUserStmt->execute([$newUserId]);
         $newUser = $newUserStmt->fetch();
