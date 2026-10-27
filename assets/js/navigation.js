@@ -106,7 +106,11 @@
         card.hidden = !(matchesStatus && matchesSearch);
         if (!card.hidden) visible++;
       });
-      if (count) count.textContent = visible + ' of ' + cards.length + ' election' + (cards.length === 1 ? '' : 's') + ' shown';
+      if (count) {
+        count.textContent = document.documentElement.lang === 'fil'
+          ? visible + ' sa ' + cards.length + ' eleksiyon ang ipinapakita'
+          : visible + ' of ' + cards.length + ' election' + (cards.length === 1 ? '' : 's') + ' shown';
+      }
       if (empty) empty.hidden = visible !== 0;
     }
 

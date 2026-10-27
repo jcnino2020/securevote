@@ -906,17 +906,17 @@ if ($exportFormat === 'json') {
 /* =====================================================================
  | 4. Page Header Setup
  * =================================================================== */
-$pageTitle = 'CIA Security Testing';
+$pageTitle = sv_t('CIA Security Testing');
 $activeNav = 'security-testing.php';
-$breadcrumb   = [['label' => 'CIA Security Testing', 'href' => 'admin/security-testing.php']];
+$breadcrumb   = [['label' => sv_t('CIA Security Testing'), 'href' => 'admin/security-testing.php']];
 
 $pageActions  = '<div class="btn-group">'
     . '<a class="btn btn--secondary btn--sm" href="' . e(url('admin/security-testing.php?export=csv')) . '">'
-    . sv_icon('download', 15, 'btn__icon') . '<span>Export CSV</span></a>'
+    . sv_icon('download', 15, 'btn__icon') . '<span>' . sv_t('Export CSV') . '</span></a>'
     . '<a class="btn btn--secondary btn--sm" href="' . e(url('admin/security-testing.php?export=json')) . '">'
-    . sv_icon('file', 15, 'btn__icon') . '<span>Export JSON</span></a>'
+    . sv_icon('file', 15, 'btn__icon') . '<span>' . sv_t('Export JSON') . '</span></a>'
     . '<button type="button" class="btn btn--secondary btn--sm" onclick="window.print()">'
-    . sv_icon('archive', 15, 'btn__icon') . '<span>Print Report</span></button>'
+    . sv_icon('archive', 15, 'btn__icon') . '<span>' . sv_t('Print Report') . '</span></button>'
     . '</div>';
 
 require __DIR__ . '/../includes/header.php';
@@ -1436,13 +1436,16 @@ require __DIR__ . '/../includes/header.php';
 <!-- ===================================================================
  | 1. CIA SECURITY OVERVIEW (Top Triad Cards)
  * =================================================================== -->
-<section class="cia-triad-grid" aria-label="CIA Security Triad Overview">
+<!-- ===================================================================
+ | 1. CIA SECURITY OVERVIEW (Top Triad Cards)
+ * =================================================================== -->
+<section class="cia-triad-grid" aria-label="<?= sv_t('CIA Security Triad Overview') ?>">
   <!-- Confidentiality Card -->
   <div class="cia-card cia-card--c">
     <div class="cia-card__head">
       <div class="cia-card__title-wrap">
         <span class="cia-card__letter" aria-hidden="true">C</span>
-        <h2 class="cia-card__title">Confidentiality</h2>
+        <h2 class="cia-card__title"><?= sv_t('Confidentiality') ?></h2>
       </div>
       <?php $cStatus = $ciaSummary['Confidentiality']['status']; ?>
       <span class="cia-card__state-badge cia-card__state-badge--<?= strtolower($cStatus) ?>">
@@ -1451,10 +1454,10 @@ require __DIR__ . '/../includes/header.php';
       </span>
     </div>
     <p class="cia-card__desc">
-      Unauthorized users cannot access protected ballots, credentials, session tokens, or administrator routes.
+      <?= sv_t('Unauthorized users cannot access protected ballots, credentials, session tokens, or administrator routes.') ?>
     </p>
     <div class="cia-card__stats">
-      <span class="cia-card__score-label"><?= e((string) $ciaSummary['Confidentiality']['pass']) ?> of <?= e((string) $ciaSummary['Confidentiality']['total']) ?> controls passed</span>
+      <span class="cia-card__score-label"><?= sv_t('%d of %d controls passed', (int) $ciaSummary['Confidentiality']['pass'], (int) $ciaSummary['Confidentiality']['total']) ?></span>
       <span class="cia-card__score-val"><?= e((string) $ciaSummary['Confidentiality']['score']) ?><span>%</span></span>
     </div>
   </div>
@@ -1464,7 +1467,7 @@ require __DIR__ . '/../includes/header.php';
     <div class="cia-card__head">
       <div class="cia-card__title-wrap">
         <span class="cia-card__letter" aria-hidden="true">I</span>
-        <h2 class="cia-card__title">Integrity</h2>
+        <h2 class="cia-card__title"><?= sv_t('Integrity') ?></h2>
       </div>
       <?php $iStatus = $ciaSummary['Integrity']['status']; ?>
       <span class="cia-card__state-badge cia-card__state-badge--<?= strtolower($iStatus) ?>">
@@ -1473,10 +1476,10 @@ require __DIR__ . '/../includes/header.php';
       </span>
     </div>
     <p class="cia-card__desc">
-      Unauthorized users cannot manipulate ballots, election bounds, candidate assignments, or audit trails.
+      <?= sv_t('Unauthorized users cannot manipulate ballots, election bounds, candidate assignments, or audit trails.') ?>
     </p>
     <div class="cia-card__stats">
-      <span class="cia-card__score-label"><?= e((string) $ciaSummary['Integrity']['pass']) ?> of <?= e((string) $ciaSummary['Integrity']['total']) ?> controls passed</span>
+      <span class="cia-card__score-label"><?= sv_t('%d of %d controls passed', (int) $ciaSummary['Integrity']['pass'], (int) $ciaSummary['Integrity']['total']) ?></span>
       <span class="cia-card__score-val"><?= e((string) $ciaSummary['Integrity']['score']) ?><span>%</span></span>
     </div>
   </div>
@@ -1486,7 +1489,7 @@ require __DIR__ . '/../includes/header.php';
     <div class="cia-card__head">
       <div class="cia-card__title-wrap">
         <span class="cia-card__letter" aria-hidden="true">A</span>
-        <h2 class="cia-card__title">Availability</h2>
+        <h2 class="cia-card__title"><?= sv_t('Availability') ?></h2>
       </div>
       <?php $aStatus = $ciaSummary['Availability']['status']; ?>
       <span class="cia-card__state-badge cia-card__state-badge--<?= strtolower($aStatus) ?>">
@@ -1495,10 +1498,10 @@ require __DIR__ . '/../includes/header.php';
       </span>
     </div>
     <p class="cia-card__desc">
-      Authorized voters and administrators can access the voting pipeline, database, and telemetry reliably.
+      <?= sv_t('Authorized voters and administrators can access the voting pipeline, database, and telemetry reliably.') ?>
     </p>
     <div class="cia-card__stats">
-      <span class="cia-card__score-label"><?= e((string) $ciaSummary['Availability']['pass']) ?> of <?= e((string) $ciaSummary['Availability']['total']) ?> controls passed</span>
+      <span class="cia-card__score-label"><?= sv_t('%d of %d controls passed', (int) $ciaSummary['Availability']['pass'], (int) $ciaSummary['Availability']['total']) ?></span>
       <span class="cia-card__score-val"><?= e((string) $ciaSummary['Availability']['score']) ?><span>%</span></span>
     </div>
   </div>
@@ -1507,36 +1510,36 @@ require __DIR__ . '/../includes/header.php';
 <!-- ===================================================================
  | 2. RUN SECURITY TESTS & LIVE TELEMETRY HUB
  * =================================================================== -->
-<section class="cia-hub" aria-label="Security Test Controls & Telemetry">
+<section class="cia-hub" aria-label="<?= sv_t('Security Test Controls & Telemetry') ?>">
   <div class="cia-hub__meta">
     <div class="cia-hub__metric">
-      <span class="cia-hub__metric-lbl">Last Test Executed</span>
+      <span class="cia-hub__metric-lbl"><?= sv_t('Last Test Executed') ?></span>
       <span class="cia-hub__metric-val"><?= e(fmt_datetime($testedAt)) ?></span>
     </div>
     <div class="cia-hub__metric">
-      <span class="cia-hub__metric-lbl">Tests Completed</span>
+      <span class="cia-hub__metric-lbl"><?= sv_t('Tests Completed') ?></span>
       <span class="cia-hub__metric-val"><?= e((string) $stats['total']) ?></span>
     </div>
     <div class="cia-hub__metric">
-      <span class="cia-hub__metric-lbl">Passed</span>
+      <span class="cia-hub__metric-lbl"><?= sv_t('Passed') ?></span>
       <span class="cia-hub__metric-val" style="color: var(--success);">
         <?= sv_icon('check-circle', 18) ?> <?= e((string) $stats['pass']) ?>
       </span>
     </div>
     <div class="cia-hub__metric">
-      <span class="cia-hub__metric-lbl">Warnings / Notes</span>
+      <span class="cia-hub__metric-lbl"><?= sv_t('Warnings / Notes') ?></span>
       <span class="cia-hub__metric-val" style="color: var(--warning);">
         <?= sv_icon('alert-triangle', 18) ?> <?= e((string) ($stats['warning'] + $stats['not_testable'])) ?>
       </span>
     </div>
     <div class="cia-hub__metric">
-      <span class="cia-hub__metric-lbl">Failed</span>
+      <span class="cia-hub__metric-lbl"><?= sv_t('Failed') ?></span>
       <span class="cia-hub__metric-val" style="color: <?= $stats['fail'] > 0 ? 'var(--danger)' : 'var(--text-muted)' ?>;">
         <?= sv_icon($stats['fail'] > 0 ? 'x-circle' : 'shield-check', 18) ?> <?= e((string) $stats['fail']) ?>
       </span>
     </div>
     <div class="cia-hub__metric">
-      <span class="cia-hub__metric-lbl">Execution Duration</span>
+      <span class="cia-hub__metric-lbl"><?= sv_t('Execution Duration') ?></span>
       <span class="cia-hub__metric-val" style="font-size: 0.95rem; color: var(--text-muted);">
         <?= sv_icon('clock', 15) ?> <?= e((string) $durationMs) ?> ms
       </span>
@@ -1549,7 +1552,7 @@ require __DIR__ . '/../includes/header.php';
       <input type="hidden" name="action" value="run_tests">
       <button type="submit" class="btn--run-tests">
         <?= sv_icon('refresh', 18) ?>
-        <span>Run CIA Security Tests</span>
+        <span><?= sv_t('Run CIA Security Tests') ?></span>
       </button>
     </form>
   </div>
@@ -1561,46 +1564,46 @@ require __DIR__ . '/../includes/header.php';
 <section class="card" aria-labelledby="tests-table-heading">
   <div class="card__header">
     <div class="card__headings">
-      <h2 class="card__title" id="tests-table-heading">Security Verification Results</h2>
+      <h2 class="card__title" id="tests-table-heading"><?= sv_t('Security Verification Results') ?></h2>
       <p class="card__subtitle">
-        Individual safe inspections verifying cryptographic controls, database constraints, and application guards.
+        <?= sv_t('Individual safe inspections verifying cryptographic controls, database constraints, and application guards.') ?>
       </p>
     </div>
     <div class="card__actions">
       <a class="btn btn--secondary btn--sm" href="<?= e(url('admin/security-testing.php?export=csv')) ?>">
         <?= sv_icon('download', 15, 'btn__icon') ?>
-        <span>Export Security Report</span>
+        <span><?= sv_t('Export Security Report') ?></span>
       </a>
     </div>
   </div>
 
   <div class="card__body" style="padding-bottom: 0;">
     <div class="cia-filter-toolbar">
-      <div class="cia-pills" role="tablist" aria-label="Filter tests by pillar">
-        <button type="button" class="cia-pill is-active" data-filter="all" role="tab" aria-selected="true">All Tests (<?= e((string) $stats['total']) ?>)</button>
-        <button type="button" class="cia-pill" data-filter="C" role="tab" aria-selected="false">Confidentiality (<?= e((string) $ciaSummary['Confidentiality']['total']) ?>)</button>
-        <button type="button" class="cia-pill" data-filter="I" role="tab" aria-selected="false">Integrity (<?= e((string) $ciaSummary['Integrity']['total']) ?>)</button>
-        <button type="button" class="cia-pill" data-filter="A" role="tab" aria-selected="false">Availability (<?= e((string) $ciaSummary['Availability']['total']) ?>)</button>
-        <button type="button" class="cia-pill" data-filter="ATTENTION" role="tab" aria-selected="false">Advisories / Notes (<?= e((string) ($stats['warning'] + $stats['not_testable'] + $stats['fail'])) ?>)</button>
+      <div class="cia-pills" role="tablist" aria-label="<?= sv_t('Filter tests by pillar') ?>">
+        <button type="button" class="cia-pill is-active" data-filter="all" role="tab" aria-selected="true"><?= sv_t('All Tests (%d)', (int) $stats['total']) ?></button>
+        <button type="button" class="cia-pill" data-filter="C" role="tab" aria-selected="false"><?= sv_t('Confidentiality (%d)', (int) $ciaSummary['Confidentiality']['total']) ?></button>
+        <button type="button" class="cia-pill" data-filter="I" role="tab" aria-selected="false"><?= sv_t('Integrity (%d)', (int) $ciaSummary['Integrity']['total']) ?></button>
+        <button type="button" class="cia-pill" data-filter="A" role="tab" aria-selected="false"><?= sv_t('Availability (%d)', (int) $ciaSummary['Availability']['total']) ?></button>
+        <button type="button" class="cia-pill" data-filter="ATTENTION" role="tab" aria-selected="false"><?= sv_t('Advisories / Notes (%d)', (int) ($stats['warning'] + $stats['not_testable'] + $stats['fail'])) ?></button>
       </div>
 
       <div class="search-field" style="min-width: 260px;">
         <span class="search-field__icon" aria-hidden="true"><?= sv_icon('search', 16) ?></span>
-        <label class="visually-hidden" for="ciaSearchInput">Search tests</label>
-        <input class="input" type="search" id="ciaSearchInput" placeholder="Filter by test name, code or keyword...">
+        <label class="visually-hidden" for="ciaSearchInput"><?= sv_t('Search tests') ?></label>
+        <input class="input" type="search" id="ciaSearchInput" placeholder="<?= e(sv_t('Filter by test name, code or keyword...')) ?>">
       </div>
     </div>
   </div>
 
   <div class="table-wrap" style="border: 0; border-radius: 0; border-top: 1px solid var(--border);">
-    <table class="table" id="ciaTestsTable" aria-label="CIA Security Verification Results">
+    <table class="table" id="ciaTestsTable" aria-label="<?= sv_t('CIA Security Verification Results') ?>">
       <thead>
         <tr>
-          <th scope="col" style="width: 130px; white-space: nowrap;">Status</th>
-          <th scope="col" style="width: 120px; white-space: nowrap;">Code</th>
-          <th scope="col" style="width: 80px; white-space: nowrap;">CIA</th>
-          <th scope="col">Security Control & Verification Finding</th>
-          <th scope="col" class="table__actions-col" style="width: 120px; white-space: nowrap;">Details</th>
+          <th scope="col" style="width: 130px; white-space: nowrap;"><?= sv_t('Status') ?></th>
+          <th scope="col" style="width: 120px; white-space: nowrap;"><?= sv_t('Code') ?></th>
+          <th scope="col" style="width: 80px; white-space: nowrap;"><?= sv_t('CIA') ?></th>
+          <th scope="col"><?= sv_t('Security Control & Verification Finding') ?></th>
+          <th scope="col" class="table__actions-col" style="width: 120px; white-space: nowrap;"><?= sv_t('Details') ?></th>
         </tr>
       </thead>
       <tbody>
@@ -1622,10 +1625,10 @@ require __DIR__ . '/../includes/header.php';
                 default        => 'info',
             };
             $statusLabel = match ($rowStatus) {
-                'PASS'         => 'PASS',
-                'WARNING'      => 'WARNING',
-                'FAIL'         => 'FAIL',
-                'NOT_TESTABLE' => 'NOT TESTABLE',
+                'PASS'         => sv_t('PASS'),
+                'WARNING'      => sv_t('WARNING'),
+                'FAIL'         => sv_t('FAIL'),
+                'NOT_TESTABLE' => sv_t('NOT TESTABLE'),
                 default        => $rowStatus,
             };
             $pillarClass = 'pillar-badge--' . strtolower($t['cia']);
@@ -1652,7 +1655,7 @@ require __DIR__ . '/../includes/header.php';
             </td>
             <td class="table__actions-col" style="white-space: nowrap;">
               <button type="button" class="btn btn--secondary btn--xs" aria-expanded="false" aria-controls="<?= e($detailId) ?>" onclick="event.stopPropagation(); toggleTestDetail('<?= e($detailId) ?>', this.closest('.test-row'))">
-                <span>View Details</span>
+                <span><?= sv_t('View Details') ?></span>
                 <?= sv_icon('chevron-down', 13) ?>
               </button>
             </td>
@@ -1667,16 +1670,16 @@ require __DIR__ . '/../includes/header.php';
                     <strong style="font-size: 0.95rem; color: var(--text);"><?= e($t['name']) ?></strong>
                     <code class="sec-code-badge" style="font-size: 0.775rem;">(<?= e($t['code']) ?>)</code>
                   </div>
-                  <span class="text-sm text-muted">Verified: <?= e(fmt_datetime($t['tested_at'])) ?></span>
+                  <span class="text-sm text-muted"><?= sv_t('Verified: %s', fmt_datetime($t['tested_at'])) ?></span>
                 </div>
 
                 <div class="test-detail-grid">
                   <div class="test-detail-card">
-                    <p class="test-detail-card__label">Expected Security Standard</p>
+                    <p class="test-detail-card__label"><?= sv_t('Expected Security Standard') ?></p>
                     <p class="test-detail-card__body"><?= e($t['expected']) ?></p>
                   </div>
                   <div class="test-detail-card">
-                    <p class="test-detail-card__label">Observed Verification Result</p>
+                    <p class="test-detail-card__label"><?= sv_t('Observed Verification Result') ?></p>
                     <p class="test-detail-card__body" style="color: <?= $rowStatus === 'FAIL' ? 'var(--danger)' : ($rowStatus === 'WARNING' ? 'var(--warning)' : 'var(--success)') ?>;">
                       <?= e($t['result']) ?>
                     </p>
@@ -1684,7 +1687,7 @@ require __DIR__ . '/../includes/header.php';
                 </div>
 
                 <div class="test-detail-card" style="margin-top: var(--sp-3);">
-                  <p class="test-detail-card__label">Technical Evidence & Diagnostic Audit</p>
+                  <p class="test-detail-card__label"><?= sv_t('Technical Evidence & Diagnostic Audit') ?></p>
                   <p class="test-detail-card__body" style="font-size: 0.8125rem; color: var(--text-secondary);">
                     <?= e($t['evidence']) ?>
                   </p>
@@ -1692,7 +1695,7 @@ require __DIR__ . '/../includes/header.php';
                     <div class="alert alert--warning" style="margin-top: var(--sp-3); padding: var(--sp-3) var(--sp-4);">
                       <span class="alert__icon" aria-hidden="true"><?= sv_icon('alert-triangle', 16) ?></span>
                       <div class="alert__text" style="font-size: 0.8125rem;">
-                        <strong>Security Recommendation:</strong> <?= e($t['recommendation']) ?>
+                        <strong><?= sv_t('Security Recommendation:') ?></strong> <?= e($t['recommendation']) ?>
                       </div>
                     </div>
                   <?php endif; ?>
@@ -1712,12 +1715,12 @@ require __DIR__ . '/../includes/header.php';
 <section class="cia-summary-card" aria-labelledby="cia-summary-heading">
   <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-2);">
     <div>
-      <h2 class="card__title" id="cia-summary-heading" style="font-size: 1.15rem;">CIA Security Summary</h2>
-      <p class="card__subtitle" style="margin: 0;">Verified security guarantees actively enforced across SecureVote's core subsystems.</p>
+      <h2 class="card__title" id="cia-summary-heading" style="font-size: 1.15rem;"><?= sv_t('CIA Security Summary') ?></h2>
+      <p class="card__subtitle" style="margin: 0;"><?= sv_t("Verified security guarantees actively enforced across SecureVote's core subsystems.") ?></p>
     </div>
     <span class="badge badge--teal">
       <?= sv_icon('shield-check', 14) ?>
-      <?= e((string) $stats['pass']) ?> of <?= e((string) $stats['total']) ?> Controls Verified
+      <?= sv_t('%d of %d Controls Verified', (int) $stats['pass'], (int) $stats['total']) ?>
     </span>
   </div>
 
@@ -1726,15 +1729,15 @@ require __DIR__ . '/../includes/header.php';
     <div class="cia-summary-col cia-summary-col--c">
       <h3 class="cia-summary-col__title">
         <?= sv_icon('lock', 16) ?>
-        Confidentiality
+        <?= sv_t('Confidentiality') ?>
       </h3>
       <ul class="cia-check-list">
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>Protected authentication guards on all administrative routes</span></li>
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>Role-based access control isolating voters from admin controls</span></li>
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>One-way bcrypt password hashing; zero plaintext credential storage</span></li>
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>Information exposure protection: debug disabled & error logs private</span></li>
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>Hardened session lifecycle: HttpOnly, SameSite, and fingerprint binding</span></li>
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>Defensive HTTP headers and Content-Security-Policy</span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('Protected authentication guards on all administrative routes') ?></span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('Role-based access control isolating voters from admin controls') ?></span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('One-way bcrypt password hashing; zero plaintext credential storage') ?></span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('Information exposure protection: debug disabled & error logs private') ?></span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('Hardened session lifecycle: HttpOnly, SameSite, and fingerprint binding') ?></span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('Defensive HTTP headers and Content-Security-Policy') ?></span></li>
       </ul>
     </div>
 
@@ -1742,17 +1745,17 @@ require __DIR__ . '/../includes/header.php';
     <div class="cia-summary-col cia-summary-col--i">
       <h3 class="cia-summary-col__title">
         <?= sv_icon('shield-check', 16) ?>
-        Integrity
+        <?= sv_t('Integrity') ?>
       </h3>
       <ul class="cia-check-list">
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>Duplicate vote prevention via database unique composite constraints</span></li>
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>Server-side election window and active status verification</span></li>
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>Candidate-election relationship validation against tampering</span></li>
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>Positional selection limits enforced server-side (over-voting defense)</span></li>
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>Cross-Site Request Forgery (CSRF) tokens on all state-changing actions</span></li>
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>Native parameterized PDO statements (SQL injection immunity)</span></li>
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>Database transactions with automatic rollback on submission failure</span></li>
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>Append-only immutable audit logging of critical events</span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('Duplicate vote prevention via database unique composite constraints') ?></span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('Server-side election window and active status verification') ?></span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('Candidate-election relationship validation against tampering') ?></span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('Positional selection limits enforced server-side (over-voting defense)') ?></span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('Cross-Site Request Forgery (CSRF) tokens on all state-changing actions') ?></span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('Native parameterized PDO statements (SQL injection immunity)') ?></span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('Database transactions with automatic rollback on submission failure') ?></span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('Append-only immutable audit logging of critical events') ?></span></li>
       </ul>
     </div>
 
@@ -1760,16 +1763,16 @@ require __DIR__ . '/../includes/header.php';
     <div class="cia-summary-col cia-summary-col--a">
       <h3 class="cia-summary-col__title">
         <?= sv_icon('server', 16) ?>
-        Availability
+        <?= sv_t('Availability') ?>
       </h3>
       <ul class="cia-check-list">
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>Database connection operational with verified low query latency</span></li>
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>All 8 required schema tables verified and active</span></li>
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>Foreign key referential constraints intact across all entities</span></li>
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>Complete 7-step voting workflow pipeline verified available</span></li>
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>Fail-safe 503 database fallback and branded exception handlers</span></li>
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>Brute-force sign-in rate limiting and account throttling</span></li>
-        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span>Local logging subsystem writable and operational</span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('Database connection operational with verified low query latency') ?></span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('All 8 required schema tables verified and active') ?></span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('Foreign key referential constraints intact across all entities') ?></span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('Complete 7-step voting workflow pipeline verified available') ?></span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('Fail-safe 503 database fallback and branded exception handlers') ?></span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('Brute-force sign-in rate limiting and account throttling') ?></span></li>
+        <li class="cia-check-item"><?= sv_icon('check', 16) ?><span><?= sv_t('Local logging subsystem writable and operational') ?></span></li>
       </ul>
     </div>
   </div>

@@ -18,31 +18,31 @@ foreach ($chartDaily as $chartDay) {
     $chartPeak = max($chartPeak, (int) $chartDay['ballot_total']);
 }
 ?>
-<section class="result-visuals" aria-label="Election results charts">
+<section class="result-visuals" aria-label="<?= e(sv_t("Election results charts")) ?>">
   <div class="result-visuals__panel">
     <div class="result-visuals__heading">
-      <h2>Participation</h2>
-      <p>Submitted ballots compared with the eligible voter list.</p>
+      <h2><?= e(sv_t("Participation")) ?></h2>
+      <p><?= e(sv_t("Submitted ballots compared with the eligible voter list.")) ?></p>
     </div>
     <?php if ($chartEligible > 0): ?>
       <div class="result-visuals__turnout">
         <div class="result-donut" role="img" aria-label="<?= e((string) $chartTurnout) ?> percent turnout, <?= e((string) $chartBallots) ?> of <?= e((string) $chartEligible) ?> eligible voters"
              style="--result-share: <?= e((string) $chartTurnout) ?>%">
-          <span><strong><?= e((string) $chartTurnout) ?>%</strong><small>turnout</small></span>
+          <span><strong><?= e((string) $chartTurnout) ?>%</strong><small><?= e(sv_t("turnout")) ?></small></span>
         </div>
         <dl class="result-visuals__legend">
-          <div><dt><i class="result-dot result-dot--cast"></i> Voted</dt><dd><?= e((string) $chartBallots) ?></dd></div>
-          <div><dt><i class="result-dot result-dot--remaining"></i> Not yet voted</dt><dd><?= e((string) $chartRemaining) ?></dd></div>
+          <div><dt><i class="result-dot result-dot--cast"></i> <?= e(sv_t("Voted")) ?></dt><dd><?= e((string) $chartBallots) ?></dd></div>
+          <div><dt><i class="result-dot result-dot--remaining"></i> <?= e(sv_t("Not yet voted")) ?></dt><dd><?= e((string) $chartRemaining) ?></dd></div>
         </dl>
       </div>
     <?php else: ?>
-      <p class="result-visuals__empty">No eligible voter count is available for this election.</p>
+      <p class="result-visuals__empty"><?= e(sv_t("No eligible voter count is available for this election.")) ?></p>
     <?php endif; ?>
   </div>
   <div class="result-visuals__panel">
     <div class="result-visuals__heading">
-      <h2>Ballot activity</h2>
-      <p><?= $chartDaily === [] ? 'Daily totals will appear after the first ballot.' : 'Submitted ballots on the most recent ' . count($chartDaily) . ' voting day' . (count($chartDaily) === 1 ? '' : 's') . '.' ?></p>
+      <h2><?= e(sv_t("Ballot activity")) ?></h2>
+      <p><?= $chartDaily === [] ? e(sv_t('Daily totals will appear after the first ballot.')) : (count($chartDaily) === 1 ? sprintf(sv_t('Submitted ballots on the most recent 1 voting day.')) : sprintf(sv_t('Submitted ballots on the most recent %d voting days.'), count($chartDaily))) ?></p>
     </div>
     <?php if ($chartDaily !== []): ?>
       <div class="result-days" role="img" aria-label="<?= e(implode(', ', array_map(static fn (array $day): string => date('M j', strtotime((string) $day['vote_day'])) . ': ' . (int) $day['ballot_total'] . ' ballots', $chartDaily))) ?>">
@@ -56,15 +56,15 @@ foreach ($chartDaily as $chartDay) {
         <?php endforeach; ?>
       </div>
     <?php else: ?>
-      <p class="result-visuals__empty">No ballots have been submitted yet.</p>
+      <p class="result-visuals__empty"><?= e(sv_t("No ballots have been submitted yet.")) ?></p>
     <?php endif; ?>
   </div>
 </section>
 <?php if ($chartPositions !== []): ?>
 <section class="result-visuals__panel result-visuals__panel--wide" aria-labelledby="position-participation-heading">
   <div class="result-visuals__heading">
-    <h2 id="position-participation-heading">Choices by position</h2>
-    <p>How many submitted ballots included a choice for each position.</p>
+    <h2 id="position-participation-heading"><?= e(sv_t("Choices by position")) ?></h2>
+    <p><?= e(sv_t("How many submitted ballots included a choice for each position.")) ?></p>
   </div>
   <div class="result-position-chart">
     <?php foreach ($chartPositions as $chartPosition): ?>

@@ -40,28 +40,28 @@ if (is_post()) {
 
     // Validation
     if (mb_strlen($form['first_name']) < 1 || mb_strlen($form['first_name']) > 80) {
-        $errors['first_name'] = 'Enter your first name (1 to 80 characters).';
+        $errors['first_name'] = sv_t('Enter your first name (1 to 80 characters).');
     }
     if (mb_strlen($form['last_name']) < 1 || mb_strlen($form['last_name']) > 80) {
-        $errors['last_name'] = 'Enter your last name (1 to 80 characters).';
+        $errors['last_name'] = sv_t('Enter your last name (1 to 80 characters).');
     }
     if (!preg_match('/^[a-z0-9._-]{3,50}$/', $form['username'])) {
-        $errors['username'] = 'Use 3 to 50 characters: letters, numbers, dot, underscore or hyphen.';
+        $errors['username'] = sv_t('Use 3 to 50 characters: letters, numbers, dot, underscore or hyphen.');
     }
     if (!filter_var($form['email'], FILTER_VALIDATE_EMAIL) || mb_strlen($form['email']) > 150) {
-        $errors['email'] = 'Enter a valid email address.';
+        $errors['email'] = sv_t('Enter a valid email address.');
     }
 
     if (mb_strlen($password) < 8) {
-        $errors['password'] = 'Use at least 8 characters.';
+        $errors['password'] = sv_t('Use at least 8 characters.');
     } elseif (mb_strlen($password) > 200) {
-        $errors['password'] = 'Keep the password under 200 characters.';
+        $errors['password'] = sv_t('Keep the password under 200 characters.');
     } elseif (!preg_match('/[A-Za-z]/', $password) || !preg_match('/[0-9]/', $password)) {
-        $errors['password'] = 'Include at least one letter and one number.';
+        $errors['password'] = sv_t('Include at least one letter and one number.');
     }
 
     if ($password !== $passwordConfirm) {
-        $errors['password_confirm'] = 'The two passwords do not match.';
+        $errors['password_confirm'] = sv_t('The two passwords do not match.');
     }
 
     // Unique username check
@@ -69,7 +69,7 @@ if (is_post()) {
         $dupeUser = $pdo->prepare('SELECT id FROM users WHERE username = ? LIMIT 1');
         $dupeUser->execute([$form['username']]);
         if ($dupeUser->fetchColumn() !== false) {
-            $errors['username'] = 'That username is already taken.';
+            $errors['username'] = sv_t('That username is already taken.');
         }
     }
 
@@ -78,7 +78,7 @@ if (is_post()) {
         $dupeEmail = $pdo->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
         $dupeEmail->execute([$form['email']]);
         if ($dupeEmail->fetchColumn() !== false) {
-            $errors['email'] = 'That email address is already registered.';
+            $errors['email'] = sv_t('That email address is already registered.');
         }
     }
 
@@ -127,10 +127,10 @@ if (is_post()) {
 
         if ($newUser) {
             login_user($newUser);
-            flash_success('Welcome to SecureVote, ' . $form['first_name'] . '! Your voter account is active. Your personal Voter Code is: ' . $voterCode);
+            flash_success(sprintf(sv_t('Welcome to SecureVote, %s! Your voter account is active. Your personal Voter Code is: %s'), $form['first_name'], $voterCode));
             redirect('voter/dashboard.php');
         } else {
-            flash_success('Registration successful! Please sign in to your new voter account.');
+            flash_success(sv_t('Registration successful! Please sign in to your new voter account.'));
             redirect('auth/login.php');
         }
     }
@@ -145,9 +145,9 @@ require __DIR__ . '/../includes/header.php';
 <section class="auth-story" aria-labelledby="auth-story-title">
   <a class="brand auth-story__brand" href="<?= e(url('index.php')) ?>"><?= sv_logo_mark(34) ?><span class="brand__word">Secure<span>Vote</span></span></a>
   <div class="auth-story__content">
-    <h2 id="auth-story-title">Be part of what comes next.</h2>
-    <p>Create your account so you are ready when an election opens on campus.</p>
-    <div class="auth-story__steps"><span>Explore elections</span><span>Choose candidates</span><span>Keep your receipt</span></div>
+    <h2 id="auth-story-title"><?= e(sv_t("Be part of what comes next.")) ?></h2>
+    <p><?= e(sv_t("Create your account so you are ready when an election opens on campus.")) ?></p>
+    <div class="auth-story__steps"><span><?= e(sv_t("Explore elections")) ?></span><span><?= e(sv_t("Choose candidates")) ?></span><span><?= e(sv_t("Keep your receipt")) ?></span></div>
   </div>
   <div class="auth-story__mark" aria-hidden="true"><?= sv_icon('vote', 86) ?></div>
 </section>
@@ -159,16 +159,16 @@ require __DIR__ . '/../includes/header.php';
         <?= sv_logo_mark(32) ?>
         <span class="brand__word">Secure<span>Vote</span></span>
       </a>
-      <h1 class="auth-card__title">Join SecureVote</h1>
+      <h1 class="auth-card__title"><?= e(sv_t("Join SecureVote")) ?></h1>
       <p class="auth-card__text">
-        Use Google or fill in your details to create a voter account.
+        <?= e(sv_t("Use Google or fill in your details to create a voter account.")) ?>
       </p>
     </div>
 
     <?php if ($errors !== []): ?>
       <div class="alert alert--danger" role="alert">
         <span class="alert__icon" aria-hidden="true"><?= sv_icon('x-circle', 18) ?></span>
-        <div class="alert__text">Please check the highlighted fields below to continue.</div>
+        <div class="alert__text"><?= e(sv_t("Please check the highlighted fields below to continue.")) ?></div>
       </div>
       <div class="divider" role="presentation"></div>
     <?php endif; ?>
@@ -177,13 +177,13 @@ require __DIR__ . '/../includes/header.php';
     <div class="stack-sm">
       <a href="<?= e(url('auth/google-login.php')) ?>" class="btn btn--google btn--lg btn--block" id="btn-google-signup">
         <?= sv_icon('google', 18, 'btn__icon') ?>
-        <span>Sign up with Google</span>
+        <span><?= e(sv_t("Sign up with Google")) ?></span>
       </a>
     </div>
 
     <!-- Divider -->
     <div class="auth-separator">
-      <span>or register with email</span>
+      <span><?= e(sv_t("or register with email")) ?></span>
     </div>
 
     <form class="form" method="post" action="<?= e(post_url('auth/register.php')) ?>" novalidate>
@@ -192,7 +192,7 @@ require __DIR__ . '/../includes/header.php';
       <div class="form-grid">
         <div class="form-field">
           <label class="label" for="first_name">
-            First name <span class="label__required" aria-hidden="true">*</span>
+            <?= e(sv_t("First name")) ?> <span class="label__required" aria-hidden="true">*</span>
           </label>
           <input
             class="input<?= isset($errors['first_name']) ? ' is-invalid' : '' ?>"
@@ -216,7 +216,7 @@ require __DIR__ . '/../includes/header.php';
 
         <div class="form-field">
           <label class="label" for="last_name">
-            Last name <span class="label__required" aria-hidden="true">*</span>
+            <?= e(sv_t("Last name")) ?> <span class="label__required" aria-hidden="true">*</span>
           </label>
           <input
             class="input<?= isset($errors['last_name']) ? ' is-invalid' : '' ?>"
@@ -241,7 +241,7 @@ require __DIR__ . '/../includes/header.php';
 
       <div class="form-field">
         <label class="label" for="username">
-          Username <span class="label__required" aria-hidden="true">*</span>
+          <?= e(sv_t("Username")) ?> <span class="label__required" aria-hidden="true">*</span>
         </label>
         <input
           class="input<?= isset($errors['username']) ? ' is-invalid' : '' ?>"
@@ -267,7 +267,7 @@ require __DIR__ . '/../includes/header.php';
 
       <div class="form-field">
         <label class="label" for="email">
-          Email address <span class="label__required" aria-hidden="true">*</span>
+          <?= e(sv_t("Email address")) ?> <span class="label__required" aria-hidden="true">*</span>
         </label>
         <input
           class="input<?= isset($errors['email']) ? ' is-invalid' : '' ?>"
@@ -293,7 +293,7 @@ require __DIR__ . '/../includes/header.php';
       <div class="form-grid">
         <div class="form-field">
           <label class="label" for="password">
-            Password <span class="label__required" aria-hidden="true">*</span>
+            <?= e(sv_t("Password")) ?> <span class="label__required" aria-hidden="true">*</span>
           </label>
           <div class="input-password-wrap">
             <input
@@ -304,9 +304,9 @@ require __DIR__ . '/../includes/header.php';
               autocomplete="new-password"
               required
               aria-required="true"
-              placeholder="Min. 8 characters"
+              placeholder="<?= e(sv_t("Min. 8 characters")) ?>"
               <?= isset($errors['password']) ? 'aria-describedby="password-error" aria-invalid="true"' : '' ?>>
-            <button type="button" class="btn-password-toggle" data-toggle-password="#password" aria-label="Show password" aria-pressed="false" title="Show password">
+            <button type="button" class="btn-password-toggle" data-toggle-password="#password" aria-label="<?= e(sv_t("Show password")) ?>" aria-pressed="false" title="<?= e(sv_t("Show password")) ?>">
               <span class="icon-eye"><?= sv_icon('eye', 18) ?></span>
               <span class="icon-eye-off" hidden><?= sv_icon('eye-off', 18) ?></span>
             </button>
@@ -317,13 +317,13 @@ require __DIR__ . '/../includes/header.php';
               <span><?= e($errors['password']) ?></span>
             </p>
           <?php else: ?>
-            <p class="help">At least 8 characters with 1 letter & 1 number.</p>
+            <p class="help"><?= e(sv_t("At least 8 characters with 1 letter & 1 number.")) ?></p>
           <?php endif; ?>
         </div>
 
         <div class="form-field">
           <label class="label" for="password_confirm">
-            Confirm password <span class="label__required" aria-hidden="true">*</span>
+            <?= e(sv_t("Confirm password")) ?> <span class="label__required" aria-hidden="true">*</span>
           </label>
           <div class="input-password-wrap">
             <input
@@ -334,9 +334,9 @@ require __DIR__ . '/../includes/header.php';
               autocomplete="new-password"
               required
               aria-required="true"
-              placeholder="Repeat password"
+              placeholder="<?= e(sv_t("Repeat password")) ?>"
               <?= isset($errors['password_confirm']) ? 'aria-describedby="password_confirm-error" aria-invalid="true"' : '' ?>>
-            <button type="button" class="btn-password-toggle" data-toggle-password="#password_confirm" aria-label="Show password confirmation" aria-pressed="false" title="Show password">
+            <button type="button" class="btn-password-toggle" data-toggle-password="#password_confirm" aria-label="<?= e(sv_t("Show password confirmation")) ?>" aria-pressed="false" title="<?= e(sv_t("Show password")) ?>">
               <span class="icon-eye"><?= sv_icon('eye', 18) ?></span>
               <span class="icon-eye-off" hidden><?= sv_icon('eye-off', 18) ?></span>
             </button>
@@ -352,9 +352,9 @@ require __DIR__ . '/../includes/header.php';
 
       <div class="form-actions">
         <button class="btn btn--primary btn--lg btn--block" type="submit" data-submit-once
-                data-submitting-label="Creating account…">
+                data-submitting-label="<?= e(sv_t("Creating account…")) ?>">
           <?= sv_icon('user-plus', 18, 'btn__icon') ?>
-          <span>Create Voter Account</span>
+          <span><?= e(sv_t("Create Voter Account")) ?></span>
         </button>
       </div>
     </form>
@@ -362,22 +362,22 @@ require __DIR__ . '/../includes/header.php';
     <div class="divider" role="presentation"></div>
 
     <div class="text-center stack-xs">
-      <p class="text-sm text-muted">Already registered?</p>
+      <p class="text-sm text-muted"><?= e(sv_t("Already registered?")) ?></p>
       <a class="btn btn--secondary btn--block" href="<?= e(url('auth/login.php')) ?>">
         <?= sv_icon('lock', 16, 'btn__icon') ?>
-        <span>Sign in to your account</span>
+        <span><?= e(sv_t("Sign in to your account")) ?></span>
       </a>
     </div>
   </div>
 
   <p class="text-muted text-xs text-center auth-footnote">
     <?= sv_icon('shield', 14) ?>
-    <span>Protected by bcrypt password hashing and TLS/HTTPS session binding.</span>
+    <span><?= e(sv_t("Protected by bcrypt password hashing and TLS/HTTPS session binding.")) ?></span>
   </p>
   <p class="text-muted text-xs text-center auth-footnote-sub">
-    By registering, you agree to our 
-    <a href="<?= e(url('terms.php')) ?>" class="link" target="_blank" rel="noopener noreferrer">Terms of Service</a> and 
-    <a href="<?= e(url('privacy.php')) ?>" class="link" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+    <?= e(sv_t("By registering, you agree to our")) ?> 
+    <a href="<?= e(url('terms.php')) ?>" class="link" target="_blank" rel="noopener noreferrer"><?= e(sv_t("Terms of Service")) ?></a> <?= e(sv_t("and")) ?> 
+    <a href="<?= e(url('privacy.php')) ?>" class="link" target="_blank" rel="noopener noreferrer"><?= e(sv_t("Privacy Policy")) ?></a>.
   </p>
 </div>
 

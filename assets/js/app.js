@@ -370,7 +370,9 @@
 
         if (count > max && warning) {
           warning.hidden = false;
-          warning.textContent = 'Maximum ' + max + ' candidates allowed.';
+          warning.textContent = document.documentElement.lang === 'fil'
+            ? 'Hindi hihigit sa ' + max + ' kandidato ang pinapayagan.'
+            : 'Maximum ' + max + ' candidates allowed.';
         } else if (warning) {
           warning.hidden = true;
         }
@@ -471,10 +473,10 @@
       var labelSpan = btn.querySelector('[data-copy-label]') || btn.querySelector('span:not(.btn__icon)');
       var originalText = labelSpan ? labelSpan.textContent : '';
 
-      if (labelSpan) labelSpan.textContent = 'Copied!';
+      if (labelSpan) labelSpan.textContent = document.documentElement.lang === 'fil' ? 'Nakopya!' : 'Copied!';
       btn.classList.add('btn--success');
 
-      announce('Copied to clipboard');
+      announce(document.documentElement.lang === 'fil' ? 'Nakopya sa clipboard' : 'Copied to clipboard');
 
       window.setTimeout(function () {
         if (labelSpan) labelSpan.textContent = originalText;

@@ -57,19 +57,19 @@ $breadcrumb = [['label' => 'Dashboard', 'href' => 'voter/dashboard.php']];
 $reminderCount=count(sv_reminders(sv_engagement_db(),$userId));
 require __DIR__ . '/../includes/header.php';
 ?>
-<nav class="dashboard-resources" aria-label="Voting resources">
-  <a class="btn btn--secondary dashboard-resource" href="<?= e(url('guide.php')) ?>"><?= sv_icon('file', 18) ?><span>Election guide</span></a>
-  <a class="btn btn--secondary dashboard-resource" href="<?= e(url('voter/reminders.php')) ?>"><?= sv_icon('bell', 18) ?><span>Reminders</span><span class="dashboard-resource__count" aria-label="<?= (int) $reminderCount ?> reminders"><?= (int) $reminderCount ?></span></a>
+<nav class="dashboard-resources" aria-label="<?= e(sv_t("Voting resources")) ?>">
+  <a class="btn btn--secondary dashboard-resource" href="<?= e(url('guide.php')) ?>"><?= sv_icon('file', 18) ?><span><?= e(sv_t("Election guide")) ?></span></a>
+  <a class="btn btn--secondary dashboard-resource" href="<?= e(url('voter/reminders.php')) ?>"><?= sv_icon('bell', 18) ?><span><?= e(sv_t("Reminders")) ?></span><span class="dashboard-resource__count" aria-label="<?= sprintf(sv_t('%d reminders'), (int) $reminderCount) ?>"><?= (int) $reminderCount ?></span></a>
 </nav>
 <?php
 ?>
 
 <section class="voter-welcome" aria-labelledby="voter-welcome-title">
   <div class="voter-welcome__main">
-    <h2 id="voter-welcome-title">Hi, <?= e((string) $voter['first_name']) ?>! <span><?= e(sv_t("Your vote starts here.")) ?></span></h2>
+    <h2 id="voter-welcome-title"><?= sprintf(sv_t("Hi, %s!"), e((string) $voter['first_name'])) ?> <span><?= e(sv_t("Your vote starts here.")) ?></span></h2>
     <p>
       <?php if ($awaiting !== []): ?>
-        <?= e((string) count($awaiting)) ?> election<?= count($awaiting) === 1 ? ' is' : 's are' ?> ready for your vote. Take a look and choose when you are ready.
+        <?= e(sprintf(count($awaiting) === 1 ? sv_t('%d election is ready for your vote. Take a look and choose when you are ready.') : sv_t('%d elections are ready for your vote. Take a look and choose when you are ready.'), count($awaiting))) ?>
       <?php else: ?>
         <?= e(sv_t("You are all caught up for now. Explore elections or check the receipts from ballots you have submitted.")) ?>
       <?php endif; ?>
@@ -94,13 +94,13 @@ require __DIR__ . '/../includes/header.php';
     </div>
     <div class="voter-pass__code">
       <div><small><?= e(sv_t("Your voter code")) ?></small><strong class="mono" id="my-voter-code"><?= e((string) ($voter['voter_code'] ?? '')) ?></strong></div>
-      <button class="icon-btn" type="button" data-copy="#my-voter-code" aria-label="Copy voter code"><?= sv_icon('copy', 17) ?></button>
+      <button class="icon-btn" type="button" data-copy="#my-voter-code" aria-label="<?= e(sv_t("Copy voter code")) ?>"><?= sv_icon('copy', 17) ?></button>
     </div>
     <span class="voter-pass__verified"><?= sv_icon('check-circle', 15) ?> <?= e(sv_t("Verified voter")) ?></span>
   </div>
 </section>
 
-<div class="voter-snapshot" aria-label="Your voting summary">
+<div class="voter-snapshot" aria-label="<?= e(sv_t("Your voting summary")) ?>">
   <div><strong><?= e((string) count($awaiting)) ?></strong><span><?= e(sv_t("Ready for your vote")) ?></span></div>
   <div><strong><?= e((string) count($voted)) ?></strong><span><?= e(sv_t("Ballots submitted")) ?></span></div>
   <div><strong><?= e((string) count($elections)) ?></strong><span><?= e(sv_t("Elections on the registry")) ?></span></div>
@@ -112,7 +112,7 @@ require __DIR__ . '/../includes/header.php';
       <h2 id="ready-to-vote-heading"><?= e(sv_t("Ready for your vote")) ?></h2>
       <p><?= e(sv_t("See what is open and cast your ballot when you are ready.")) ?></p>
     </div>
-    <?php if ($awaiting !== []): ?><span class="badge badge--success"><?= count($awaiting) ?> open</span><?php endif; ?>
+    <?php if ($awaiting !== []): ?><span class="badge badge--success"><?= sprintf(sv_t('%d open'), count($awaiting)) ?></span><?php endif; ?>
   </div>
   <?php if ($awaiting === []): ?>
     <div class="student-empty">
@@ -128,7 +128,7 @@ require __DIR__ . '/../includes/header.php';
             <span class="badge badge--success"><?= sv_icon('vote', 13) ?> <?= e(sv_t("Voting open")) ?></span>
             <h3><?= e($election['title']) ?></h3>
             <p><?= e(fmt_range($election['start_datetime'], $election['end_datetime'])) ?></p>
-            <span class="voter-election__meta"><?= e((string) $election['position_count']) ?> positions &middot; <?= e(countdown_text($election)) ?></span>
+            <span class="voter-election__meta"><?= sprintf(sv_t('%d positions'), (int) $election['position_count']) ?> &middot; <?= e(countdown_text($election)) ?></span>
           </div>
           <div class="voter-election__actions">
             <a class="btn btn--primary" href="<?= e(url('voter/ballot.php?election_id=' . (int) $election['id'])) ?>"><?= e(sv_t("Open ballot")) ?> <?= sv_icon('arrow-right', 16) ?></a>
@@ -149,7 +149,7 @@ require __DIR__ . '/../includes/header.php';
         <span class="receipt-item__icon" aria-hidden="true"><?= sv_icon('check-circle', 22) ?></span>
         <div class="receipt-item__main">
           <h3><?= e($election['title']) ?></h3>
-          <p>Submitted <?= e(fmt_datetime((string) $election['ballot_submitted_at'])) ?></p>
+          <p><?= sprintf(sv_t('Submitted %s'), e(fmt_datetime((string) $election['ballot_submitted_at']))) ?></p>
           <code><?= e((string) $election['ballot_reference']) ?></code><a class="link" href="<?= e(url('voter/confirmation.php?election_id=' . (int)$election['id'])) ?>"><?= e(sv_t('View receipt')) ?></a>
         </div>
         <a class="btn btn--secondary btn--sm" href="<?= e(url('voter/results.php?election_id=' . (int) $election['id'])) ?>"><?= e(sv_t("View results")) ?></a>

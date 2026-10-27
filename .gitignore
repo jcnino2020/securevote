@@ -4,6 +4,8 @@ config/config.local.php
 # Runtime
 storage/
 *.log
+output/
+tmp/
 
 # OS / editor noise
 .DS_Store

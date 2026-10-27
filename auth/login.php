@@ -30,9 +30,9 @@ require __DIR__ . '/../includes/header.php';
 <section class="auth-story" aria-labelledby="auth-story-title">
   <a class="brand auth-story__brand" href="<?= e(url('index.php')) ?>"><?= sv_logo_mark(34) ?><span class="brand__word">Secure<span>Vote</span></span></a>
   <div class="auth-story__content">
-    <h2 id="auth-story-title">Your voice belongs here.</h2>
-    <p>Sign in, see the elections open to you, and make your choices with confidence.</p>
-    <div class="auth-story__steps"><span>Explore elections</span><span>Choose candidates</span><span>Keep your receipt</span></div>
+    <h2 id="auth-story-title"><?= e(sv_t("Your voice belongs here.")) ?></h2>
+    <p><?= e(sv_t("Sign in, see the elections open to you, and make your choices with confidence.")) ?></p>
+    <div class="auth-story__steps"><span><?= e(sv_t("Explore elections")) ?></span><span><?= e(sv_t("Choose candidates")) ?></span><span><?= e(sv_t("Keep your receipt")) ?></span></div>
   </div>
   <div class="auth-story__mark" aria-hidden="true"><?= sv_icon('vote', 86) ?></div>
 </section>
@@ -44,16 +44,16 @@ require __DIR__ . '/../includes/header.php';
         <?= sv_logo_mark(32) ?>
         <span class="brand__word">Secure<span>Vote</span></span>
       </a>
-      <h1 class="auth-card__title">Welcome back</h1>
+      <h1 class="auth-card__title"><?= e(sv_t("Welcome back")) ?></h1>
       <p class="auth-card__text">
-        Sign in to see your elections and get your ballot.
+        <?= e(sv_t("Sign in to see your elections and get your ballot.")) ?>
       </p>
     </div>
 
     <?php if ($formMessage !== ''): ?>
       <div class="alert alert--danger" role="alert">
         <span class="alert__icon" aria-hidden="true"><?= sv_icon('x-circle', 18) ?></span>
-        <div class="alert__text"><?= e($formMessage) ?></div>
+        <div class="alert__text"><?= e(sv_t($formMessage)) ?></div>
       </div>
       <div class="divider" role="presentation"></div>
     <?php endif; ?>
@@ -62,13 +62,13 @@ require __DIR__ . '/../includes/header.php';
     <div class="stack-sm">
       <a href="<?= e(url('auth/google-login.php')) ?>" class="btn btn--google btn--lg btn--block" id="btn-google-login">
         <?= sv_icon('google', 18, 'btn__icon') ?>
-        <span>Continue with Google</span>
+        <span><?= e(sv_t("Continue with Google")) ?></span>
       </a>
     </div>
 
     <!-- Divider -->
     <div class="auth-separator">
-      <span>or sign in with credentials</span>
+      <span><?= e(sv_t("or sign in with credentials")) ?></span>
     </div>
 
     <!-- Credentials Form -->
@@ -77,7 +77,7 @@ require __DIR__ . '/../includes/header.php';
 
       <div class="form-field">
         <label class="label" for="identifier">
-          Email, username, or voter code
+          <?= e(sv_t("Email, username, or voter code")) ?>
           <span class="label__required" aria-hidden="true">*</span>
         </label>
         <div class="input-with-icon">
@@ -87,7 +87,7 @@ require __DIR__ . '/../includes/header.php';
             id="identifier"
             name="identifier"
             value="<?= e($loginIdentifier) ?>"
-            placeholder="Email, username, or voter code"
+            placeholder="<?= e(sv_t("Email, username, or voter code")) ?>"
             autocomplete="username"
             spellcheck="false"
             autocapitalize="none"
@@ -100,14 +100,14 @@ require __DIR__ . '/../includes/header.php';
         <?php if (isset($formFields['identifier'])): ?>
           <p class="field-error" id="identifier-error">
             <?= sv_icon('alert-triangle', 14) ?>
-            <span><?= e((string) $formFields['identifier']) ?></span>
+            <span><?= e(sv_t((string) $formFields['identifier'])) ?></span>
           </p>
         <?php endif; ?>
       </div>
 
       <div class="form-field">
         <label class="label" for="password">
-          Password <span class="text-muted text-sm">(leave blank for code-only accounts)</span>
+          <?= e(sv_t("Password")) ?> <span class="text-muted text-sm">(<?= e(sv_t("leave blank for code-only accounts")) ?>)</span>
         </label>
         <div class="input-password-wrap">
           <input
@@ -120,7 +120,7 @@ require __DIR__ . '/../includes/header.php';
             <?= isset($formFields['password'])
                 ? 'aria-describedby="password-error" aria-invalid="true"'
                 : '' ?>>
-          <button type="button" class="btn-password-toggle" data-toggle-password="#password" aria-label="Show password" aria-pressed="false" title="Show password">
+          <button type="button" class="btn-password-toggle" data-toggle-password="#password" aria-label="<?= e(sv_t("Show password")) ?>" aria-pressed="false" title="<?= e(sv_t("Show password")) ?>">
             <span class="icon-eye"><?= sv_icon('eye', 18) ?></span>
             <span class="icon-eye-off" hidden><?= sv_icon('eye-off', 18) ?></span>
           </button>
@@ -128,40 +128,40 @@ require __DIR__ . '/../includes/header.php';
         <?php if (isset($formFields['password'])): ?>
           <p class="field-error" id="password-error">
             <?= sv_icon('alert-triangle', 14) ?>
-            <span><?= e((string) $formFields['password']) ?></span>
+            <span><?= e(sv_t((string) $formFields['password'])) ?></span>
           </p>
         <?php endif; ?>
       </div>
 
       <div class="form-actions">
         <button class="btn btn--primary btn--lg btn--block" type="submit" data-submit-once
-                data-submitting-label="Signing in…">
+                data-submitting-label="<?= e(sv_t('Signing in…')) ?>">
           <?= sv_icon('lock', 18, 'btn__icon') ?>
-          <span>Sign In</span>
+          <span><?= e(sv_t("Sign In")) ?></span>
         </button>
       </div>
     </form>
-    <p><a class="link" href="<?= e(url('auth/forgot-password.php')) ?>">Forgot your password?</a></p>
+    <p><a class="link" href="<?= e(url('auth/forgot-password.php')) ?>"><?= e(sv_t("Forgot your password?")) ?></a></p>
 
     <div class="divider" role="presentation"></div>
 
     <div class="text-center stack-xs">
-      <p class="text-sm text-muted">Don't have a voter account yet?</p>
+      <p class="text-sm text-muted"><?= e(sv_t("Don't have a voter account yet?")) ?></p>
       <a class="btn btn--secondary btn--block" href="<?= e(url('auth/register.php')) ?>">
         <?= sv_icon('user-plus', 16, 'btn__icon') ?>
-        <span>Register New Voter Account</span>
+        <span><?= e(sv_t("Register New Voter Account")) ?></span>
       </a>
     </div>
   </div>
 
   <p class="text-muted text-xs text-center auth-footnote">
     <?= sv_icon('shield', 14) ?>
-    <span>Protected by bcrypt password hashing and TLS/HTTPS session binding.</span>
+    <span><?= e(sv_t("Protected by bcrypt password hashing and TLS/HTTPS session binding.")) ?></span>
   </p>
   <p class="text-muted text-xs text-center auth-footnote-sub">
-    By signing in, you agree to our 
-    <a href="<?= e(url('terms.php')) ?>" class="link" target="_blank" rel="noopener noreferrer">Terms of Service</a> and 
-    <a href="<?= e(url('privacy.php')) ?>" class="link" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+    <?= e(sv_t("By signing in, you agree to our")) ?> 
+    <a href="<?= e(url('terms.php')) ?>" class="link" target="_blank" rel="noopener noreferrer"><?= e(sv_t("Terms of Service")) ?></a> <?= e(sv_t("and")) ?> 
+    <a href="<?= e(url('privacy.php')) ?>" class="link" target="_blank" rel="noopener noreferrer"><?= e(sv_t("Privacy Policy")) ?></a>.
   </p>
 </div>
 

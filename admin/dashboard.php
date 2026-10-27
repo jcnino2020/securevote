@@ -38,7 +38,7 @@ if (is_post()) {
 
         if ($alertKey !== '') {
             sv_dismiss_alert($pdo, $alertKey, $alertTitle, $severity, $reason, (int) $admin['id']);
-            flash_success('Security alert "' . $alertTitle . '" marked as resolved.');
+            flash_success(sv_t('Security alert "%s" marked as resolved.', $alertTitle));
         }
         redirect('admin/dashboard.php' . $rangeQuery);
     }
@@ -61,7 +61,7 @@ if (is_post()) {
                 }
             }
         }
-        flash_success(($resolvedCount > 0 ? $resolvedCount : 'All') . ' security alert(s) marked as resolved.');
+        flash_success(sv_t('%s security alert(s) marked as resolved.', $resolvedCount > 0 ? (string)$resolvedCount : sv_t('All')));
         redirect('admin/dashboard.php' . $rangeQuery);
     }
 
@@ -69,7 +69,7 @@ if (is_post()) {
         $dismissedId = (int) input('dismissed_id', 0);
         if ($dismissedId > 0) {
             sv_restore_alert($pdo, $dismissedId, (int) $admin['id']);
-            flash_success('Security alert restored to active monitoring.');
+            flash_success(sv_t('Security alert restored to active monitoring.'));
         }
         $glue = $rangeQuery !== '' ? '&' : '?';
         redirect('admin/dashboard.php' . $rangeQuery . $glue . 'tab=resolved');
@@ -77,7 +77,7 @@ if (is_post()) {
 
     if ($postAction === 'restore_all_alerts') {
         sv_restore_all_alerts($pdo, (int) $admin['id']);
-        flash_success('All resolved alerts restored to active monitoring.');
+        flash_success(sv_t('All resolved alerts restored to active monitoring.'));
         redirect('admin/dashboard.php' . $rangeQuery);
     }
 }
@@ -96,10 +96,10 @@ if (!in_array($activeTab, ['active', 'resolved'], true)) {
 }
 
 $rangeIntervals = [
-    '24h' => ['sql' => 'NOW() - INTERVAL 24 HOUR', 'label' => 'Last 24 Hours', 'short' => '24h'],
-    '7d'  => ['sql' => 'NOW() - INTERVAL 7 DAY',   'label' => 'Last 7 Days',    'short' => '7d'],
-    '30d' => ['sql' => 'NOW() - INTERVAL 30 DAY',  'label' => 'Last 30 Days',   'short' => '30d'],
-    'all' => ['sql' => "'1970-01-01 00:00:00'",    'label' => 'All Time',       'short' => 'All'],
+    '24h' => ['sql' => 'NOW() - INTERVAL 24 HOUR', 'label' => sv_t('Last 24 Hours'), 'short' => '24h'],
+    '7d'  => ['sql' => 'NOW() - INTERVAL 7 DAY',   'label' => sv_t('Last 7 Days'),    'short' => '7d'],
+    '30d' => ['sql' => 'NOW() - INTERVAL 30 DAY',  'label' => sv_t('Last 30 Days'),   'short' => '30d'],
+    'all' => ['sql' => "'1970-01-01 00:00:00'",    'label' => sv_t('All Time'),       'short' => sv_t('All')],
 ];
 
 $sinceSql   = $rangeIntervals[$range]['sql'];
@@ -118,50 +118,50 @@ try {
     $dbLatency = round((microtime(true) - $dbStart) * 1000, 2);
     $dbOk      = true;
     $healthChecks['database'] = [
-        'label'  => 'Database (MySQL)',
-        'status' => 'Operational',
-        'meta'   => $dbLatency . ' ms latency',
+        'label'  => sv_t('Database (MySQL)'),
+        'status' => sv_t('Operational'),
+        'meta'   => sv_t('%s ms latency', (string) $dbLatency),
         'ok'     => true,
     ];
 } catch (Throwable $e) {
     $healthChecks['database'] = [
-        'label'  => 'Database (MySQL)',
-        'status' => 'Degraded',
-        'meta'   => 'Connection latency high',
+        'label'  => sv_t('Database (MySQL)'),
+        'status' => sv_t('Degraded'),
+        'meta'   => sv_t('Connection latency high'),
         'ok'     => false,
     ];
 }
 
 // Authentication & Role-Based Access Control
 $healthChecks['auth'] = [
-    'label'  => 'Authentication & RBAC',
-    'status' => 'Configured',
-    'meta'   => 'Role checks in application routes',
+    'label'  => sv_t('Authentication & RBAC'),
+    'status' => sv_t('Configured'),
+    'meta'   => sv_t('Role checks in application routes'),
     'ok'     => true,
 ];
 
 // Voting Integrity Engine
 $healthChecks['voting'] = [
-    'label'  => 'Voting System Engine',
-    'status' => 'Configured',
-    'meta'   => 'Voting workflow and unique ballot constraint',
+    'label'  => sv_t('Voting System Engine'),
+    'status' => sv_t('Configured'),
+    'meta'   => sv_t('Voting workflow and unique ballot constraint'),
     'ok'     => true,
 ];
 
 // Audit Logging Subsystem
 $totalLogsCount = (int) $pdo->query('SELECT COUNT(*) FROM audit_logs')->fetchColumn();
 $healthChecks['audit'] = [
-    'label'  => 'Audit Logging Subsystem',
-    'status' => 'Observed',
-    'meta'   => $totalLogsCount . ' recorded entries',
+    'label'  => sv_t('Audit Logging Subsystem'),
+    'status' => sv_t('Observed'),
+    'meta'   => sv_t('%d recorded entries', $totalLogsCount),
     'ok'     => true,
 ];
 
 // Session Management & CSRF Defense
 $healthChecks['session'] = [
-    'label'  => 'Session Management & CSRF',
-    'status' => 'Configured',
-    'meta'   => 'Session and CSRF controls in application',
+    'label'  => sv_t('Session Management & CSRF'),
+    'status' => sv_t('Configured'),
+    'meta'   => sv_t('Session and CSRF controls in application'),
     'ok'     => true,
 ];
 
@@ -259,10 +259,10 @@ if ($criticalFailed24h >= 5) {
         'type'     => 'danger',
         'severity' => 'High',
         'icon'     => 'ban',
-        'title'    => 'Repeated Failed Authentication',
-        'text'     => $criticalFailed24h . ' failed sign-in attempts detected in the last 24 hours.',
+        'title'    => sv_t('Repeated Failed Authentication'),
+        'text'     => sv_t('%d failed sign-in attempts detected in the last 24 hours.', $criticalFailed24h),
         'href'     => 'admin/audit-logs.php?log_action=login_failure',
-        'label'    => 'Review in Audit Log',
+        'label'    => sv_t('Review in Audit Log'),
     ];
 } elseif ($failedLoginsCount > 0) {
     $rawAlerts[] = [
@@ -270,10 +270,14 @@ if ($criticalFailed24h >= 5) {
         'type'     => 'warning',
         'severity' => 'Low',
         'icon'     => 'ban',
-        'title'    => 'Authentication Warning',
-        'text'     => $failedLoginsCount . ' failed sign-in attempt' . ($failedLoginsCount === 1 ? '' : 's') . ' recorded in ' . strtolower($rangeLabel) . '.',
+        'title'    => sv_t('Authentication Warning'),
+        'text'     => sv_t(
+            $failedLoginsCount === 1 ? '%d failed sign-in attempt recorded in %s.' : '%d failed sign-in attempts recorded in %s.',
+            $failedLoginsCount,
+            strtolower($rangeLabel)
+        ),
         'href'     => 'admin/audit-logs.php?log_action=login_failure',
-        'label'    => 'Review attempts',
+        'label'    => sv_t('Review attempts'),
     ];
 }
 
@@ -283,10 +287,13 @@ if ($unauthorizedAccessCount > 0) {
         'type'     => 'danger',
         'severity' => 'High',
         'icon'     => 'shield',
-        'title'    => 'Unauthorized Access Attempt Blocked',
-        'text'     => $unauthorizedAccessCount . ' unauthorized request' . ($unauthorizedAccessCount === 1 ? ' was' : 's were') . ' blocked by role authorization guards.',
+        'title'    => sv_t('Unauthorized Access Attempt Blocked'),
+        'text'     => sv_t(
+            $unauthorizedAccessCount === 1 ? '%d unauthorized request was blocked by role authorization guards.' : '%d unauthorized requests were blocked by role authorization guards.',
+            $unauthorizedAccessCount
+        ),
         'href'     => 'admin/audit-logs.php?log_action=unauthorized_access',
-        'label'    => 'Inspect violations',
+        'label'    => sv_t('Inspect violations'),
     ];
 }
 
@@ -296,10 +303,13 @@ if ($duplicateVoteBlocks > 0) {
         'type'     => 'warning',
         'severity' => 'Medium',
         'icon'     => 'alert-triangle',
-        'title'    => 'Duplicate Voting Attempt Prevented',
-        'text'     => $duplicateVoteBlocks . ' duplicate ballot attempt' . ($duplicateVoteBlocks === 1 ? ' was' : 's were') . ' rejected by 1-Person-1-Vote constraint.',
+        'title'    => sv_t('Duplicate Voting Attempt Prevented'),
+        'text'     => sv_t(
+            $duplicateVoteBlocks === 1 ? '%d duplicate ballot attempt was rejected by 1-Person-1-Vote constraint.' : '%d duplicate ballot attempts were rejected by 1-Person-1-Vote constraint.',
+            $duplicateVoteBlocks
+        ),
         'href'     => 'admin/audit-logs.php?log_action=ballot_rejected',
-        'label'    => 'View in Audit Log',
+        'label'    => sv_t('View in Audit Log'),
     ];
 }
 
@@ -309,10 +319,13 @@ if ($blockedUsers > 0) {
         'type'     => 'info',
         'severity' => 'Informational',
         'icon'     => 'user',
-        'title'    => 'Restricted Account Status',
-        'text'     => $blockedUsers . ' voter account' . ($blockedUsers === 1 ? ' is' : 's are') . ' currently deactivated or blocked.',
+        'title'    => sv_t('Restricted Account Status'),
+        'text'     => sv_t(
+            $blockedUsers === 1 ? '%d voter account is currently deactivated or blocked.' : '%d voter accounts are currently deactivated or blocked.',
+            $blockedUsers
+        ),
         'href'     => 'admin/voters.php?status=blocked',
-        'label'    => 'Manage accounts',
+        'label'    => sv_t('Manage accounts'),
     ];
 }
 
@@ -323,10 +336,13 @@ if ($drafts !== []) {
         'type'     => 'warning',
         'severity' => 'Low',
         'icon'     => 'file',
-        'title'    => 'Draft Elections Pending',
-        'text'     => count($drafts) . ' election' . (count($drafts) === 1 ? ' remains' : 's remain') . ' in draft mode.',
+        'title'    => sv_t('Draft Elections Pending'),
+        'text'     => sv_t(
+            count($drafts) === 1 ? '%d election remains in draft mode.' : '%d elections remain in draft mode.',
+            count($drafts)
+        ),
         'href'     => 'admin/elections.php?status=draft',
-        'label'    => 'Open setup',
+        'label'    => sv_t('Open setup'),
     ];
 }
 
@@ -341,10 +357,10 @@ foreach ($noCandidates as $ncElection) {
         'type'     => 'danger',
         'severity' => 'High',
         'icon'     => 'alert-triangle',
-        'title'    => 'Candidate Population Missing',
-        'text'     => '"' . $ncElection['title'] . '" is published without active candidates.',
+        'title'    => sv_t('Candidate Population Missing'),
+        'text'     => sv_t('"%s" is published without active candidates.', $ncElection['title']),
         'href'     => 'admin/candidates.php?election_id=' . (int) $ncElection['id'],
-        'label'    => 'Add candidates',
+        'label'    => sv_t('Add candidates'),
     ];
 }
 
@@ -386,20 +402,20 @@ if ($hasActiveCriticalAlert) {
     $systemSecurityStatus = 'CRITICAL';
     $systemStatusClass    = 'critical';
     $systemStatusIcon     = 'ban';
-    $systemStatusTitle    = 'CRITICAL SECURITY ALERT';
-    $systemStatusDesc     = 'High-severity security events or repeated unauthorized access attempts require immediate review.';
+    $systemStatusTitle    = sv_t('CRITICAL SECURITY ALERT');
+    $systemStatusDesc     = sv_t('High-severity security events or repeated unauthorized access attempts require immediate review.');
 } elseif ($hasActiveWarningAlert) {
     $systemSecurityStatus = 'WARNING';
     $systemStatusClass    = 'warning';
     $systemStatusIcon     = 'alert-triangle';
-    $systemStatusTitle    = 'SECURITY WARNING';
-    $systemStatusDesc     = 'Active authentication warnings or security incidents detected within the monitoring period.';
+    $systemStatusTitle    = sv_t('SECURITY WARNING');
+    $systemStatusDesc     = sv_t('Active authentication warnings or security incidents detected within the monitoring period.');
 } else {
     $systemSecurityStatus = 'CLEAR';
     $systemStatusClass    = 'secure';
     $systemStatusIcon     = 'shield-check';
-    $systemStatusTitle    = 'NO OPEN RULE ALERTS';
-    $systemStatusDesc     = 'No rule-based alerts are currently open. Review the event log for the full activity record.';
+    $systemStatusTitle    = sv_t('NO OPEN RULE ALERTS');
+    $systemStatusDesc     = sv_t('No rule-based alerts are currently open. Review the event log for the full activity record.');
 }
 
 /* =====================================================================
@@ -576,12 +592,12 @@ foreach ($chartBuckets as $b) {
 /* =====================================================================
  | 11. Header & Breadcrumbs
  * =================================================================== */
-$pageTitle   = 'Operations center';
+$pageTitle   = sv_t('Operations center');
 $activeNav   = 'dashboard.php';
 $bodyClass   = 'page-admin-dashboard';
 $breadcrumb   = [];
 $pageActions  = '<a class="btn btn--secondary btn--sm" href="' . e(url('admin/dashboard.php' . query_with())) . '">'
-    . sv_icon('refresh', 16, 'btn__icon') . '<span>Refresh telemetry</span></a>';
+    . sv_icon('refresh', 16, 'btn__icon') . '<span>' . sv_t('Refresh telemetry') . '</span></a>';
 
 require __DIR__ . '/../includes/header.php';
 ?>
@@ -589,35 +605,35 @@ require __DIR__ . '/../includes/header.php';
 <!-- Command view: alert state, scope, and immediate investigation paths. -->
 <section class="soc-command soc-command--<?= e($systemStatusClass) ?>" aria-labelledby="soc-command-heading">
   <div class="soc-command__main">
-    <div class="soc-command__eyebrow"><span class="soc-command__signal" aria-hidden="true"></span> SECUREVOTE / OPERATIONS INTELLIGENCE</div>
-    <h2 id="soc-command-heading">Election operations <span>at a glance.</span></h2>
-    <p>Investigate authentication, ballot integrity, and election activity from the audit trail and current election records.</p>
+    <div class="soc-command__eyebrow"><span class="soc-command__signal" aria-hidden="true"></span> SECUREVOTE / <?= sv_t('OPERATIONS INTELLIGENCE') ?></div>
+    <h2 id="soc-command-heading"><?= sv_t('Election operations') ?> <span><?= sv_t('at a glance.') ?></span></h2>
+    <p><?= sv_t('Investigate authentication, ballot integrity, and election activity from the audit trail and current election records.') ?></p>
     <div class="soc-command__state" role="status">
       <span class="soc-command__state-icon"><?= sv_icon($systemStatusIcon, 24) ?></span>
       <div><strong><?= e($systemStatusTitle) ?></strong><span><?= e($systemStatusDesc) ?></span></div>
     </div>
     <div class="soc-command__actions">
-      <a class="btn btn--primary" href="#alerts-heading">Review <?= e((string) count($alerts)) ?> open alert<?= count($alerts) === 1 ? '' : 's' ?> <?= sv_icon('arrow-right', 16) ?></a>
-      <a class="btn btn--secondary" href="<?= e(url('admin/audit-logs.php')) ?>">Open audit log</a>
-      <a class="btn btn--secondary" href="<?= e(url('admin/traffic.php')) ?>">Review site traffic</a>
+      <a class="btn btn--primary" href="#alerts-heading"><?= sv_t('Review %d open alert(s)', count($alerts)) ?> <?= sv_icon('arrow-right', 16) ?></a>
+      <a class="btn btn--secondary" href="<?= e(url('admin/audit-logs.php')) ?>"><?= sv_t('Open audit log') ?></a>
+      <a class="btn btn--secondary" href="<?= e(url('admin/traffic.php')) ?>"><?= sv_t('Review site traffic') ?></a>
     </div>
   </div>
-  <div class="soc-command__aside" aria-label="Monitoring context">
-    <div class="soc-command__aside-head"><span>MONITORING CONTEXT</span><?= sv_icon('audit', 18) ?></div>
+  <div class="soc-command__aside" aria-label="<?= sv_t('Monitoring context') ?>">
+    <div class="soc-command__aside-head"><span><?= sv_t('MONITORING CONTEXT') ?></span><?= sv_icon('audit', 18) ?></div>
     <dl>
-      <div><dt>Open alerts</dt><dd><?= e((string) count($alerts)) ?></dd></div>
-      <div><dt>Audit events in view</dt><dd><?= e((string) $totalSecurityEventsCount) ?></dd></div>
-      <div><dt>Open elections</dt><dd><?= e((string) $openElectionsCount) ?></dd></div>
-      <div><dt>Database response</dt><dd><?= $dbOk ? e((string) $dbLatency) . ' ms' : 'Unavailable' ?></dd></div>
-      <div><dt>Snapshot time</dt><dd><?= e((new DateTimeImmutable('now', new DateTimeZone(APP_TIMEZONE)))->format('M j, g:i A')) ?></dd></div>
+      <div><dt><?= sv_t('Open alerts') ?></dt><dd><?= e((string) count($alerts)) ?></dd></div>
+      <div><dt><?= sv_t('Audit events in view') ?></dt><dd><?= e((string) $totalSecurityEventsCount) ?></dd></div>
+      <div><dt><?= sv_t('Open elections') ?></dt><dd><?= e((string) $openElectionsCount) ?></dd></div>
+      <div><dt><?= sv_t('Database response') ?></dt><dd><?= $dbOk ? e((string) $dbLatency) . ' ms' : sv_t('Unavailable') ?></dd></div>
+      <div><dt><?= sv_t('Snapshot time') ?></dt><dd><?= e((new DateTimeImmutable('now', new DateTimeZone(APP_TIMEZONE)))->format('M j, g:i A')) ?></dd></div>
     </dl>
-    <p>Snapshot of the database at page load. Refresh to update.</p>
+    <p><?= sv_t('Snapshot of the database at page load. Refresh to update.') ?></p>
   </div>
 </section>
 
-<div class="soc-controlbar" aria-label="Monitoring controls">
-  <div class="soc-controlbar__label"><span class="soc-controlbar__dot" aria-hidden="true"></span> Event window <strong><?= e($rangeLabel) ?></strong></div>
-  <nav class="soc-range-pills" aria-label="Monitoring time range">
+<div class="soc-controlbar" aria-label="<?= sv_t('Monitoring controls') ?>">
+  <div class="soc-controlbar__label"><span class="soc-controlbar__dot" aria-hidden="true"></span> <?= sv_t('Event window') ?> <strong><?= e($rangeLabel) ?></strong></div>
+  <nav class="soc-range-pills" aria-label="<?= sv_t('Monitoring time range') ?>">
     <?php foreach ($rangeIntervals as $key => $opt): ?>
       <a class="soc-range-pill <?= $range === $key ? 'is-active' : '' ?>"
          href="<?= e(url('admin/dashboard.php?range=' . $key)) ?>"
@@ -626,46 +642,46 @@ require __DIR__ . '/../includes/header.php';
   </nav>
 </div>
 
-<nav class="soc-jumpbar" aria-label="Operations sections">
-  <a href="#signals-heading">Signals</a>
-  <a href="#health-heading">Controls</a>
-  <a href="#alerts-heading">Alerts <span><?= e((string) count($alerts)) ?></span></a>
-  <a href="#auth-heading">Identity</a>
-  <a href="#integrity-heading">Ballots</a>
-  <a href="#live-feed-heading">Event stream</a>
-  <a href="#elections-heading">Elections</a>
+<nav class="soc-jumpbar" aria-label="<?= sv_t('Operations sections') ?>">
+  <a href="#signals-heading"><?= sv_t('Signals') ?></a>
+  <a href="#health-heading"><?= sv_t('Controls') ?></a>
+  <a href="#alerts-heading"><?= sv_t('Alerts') ?> <span><?= e((string) count($alerts)) ?></span></a>
+  <a href="#auth-heading"><?= sv_t('Identity') ?></a>
+  <a href="#integrity-heading"><?= sv_t('Ballots') ?></a>
+  <a href="#live-feed-heading"><?= sv_t('Event stream') ?></a>
+  <a href="#elections-heading"><?= sv_t('Elections') ?></a>
 </nav>
 
-<h2 class="soc-section-label" id="signals-heading"><span>01 / SIGNALS</span> Snapshot metrics <small>Audit-based counts for <?= e(strtolower($rangeLabel)) ?> unless noted.</small></h2>
+<h2 class="soc-section-label" id="signals-heading"><span>01 / <?= sv_t('SIGNALS') ?></span> <?= sv_t('Snapshot metrics') ?> <small><?= sv_t('Audit-based counts for %s unless noted.', strtolower($rangeLabel)) ?></small></h2>
 
 <!-- Top Security Summary Cards (8 KPI Grid) -->
-<section class="soc-stat-grid" aria-label="Security statistics summary">
+<section class="soc-stat-grid" aria-label="<?= sv_t('Security statistics summary') ?>">
   <!-- 1. Security Status -->
   <div class="soc-stat-card">
     <div class="soc-stat-card__top">
-      <span class="soc-stat-card__label">Security Status</span>
+      <span class="soc-stat-card__label"><?= sv_t('Security Status') ?></span>
       <span class="soc-stat-card__icon soc-stat-card__icon--<?= e($systemStatusClass === 'secure' ? 'teal' : ($systemStatusClass === 'warning' ? 'warning' : 'danger')) ?>">
         <?= sv_icon($systemStatusIcon, 18) ?>
       </span>
     </div>
     <p class="soc-stat-card__value"><?= e($systemSecurityStatus) ?></p>
-    <p class="soc-stat-card__meta"><?= e($systemStatusClass === 'secure' ? 'No open rule alerts' : 'Requires admin attention') ?></p>
+    <p class="soc-stat-card__meta"><?= e($systemStatusClass === 'secure' ? sv_t('No open rule alerts') : sv_t('Requires admin attention')) ?></p>
   </div>
 
   <!-- 2. Recently Observed Actors -->
   <div class="soc-stat-card">
     <div class="soc-stat-card__top">
-      <span class="soc-stat-card__label">Recent Actors</span>
+      <span class="soc-stat-card__label"><?= sv_t('Recent Actors') ?></span>
       <span class="soc-stat-card__icon soc-stat-card__icon--blue"><?= sv_icon('fingerprint', 18) ?></span>
     </div>
     <p class="soc-stat-card__value"><?= e((string) $activeSessions) ?></p>
-    <p class="soc-stat-card__meta">Unique account or IP in audit events, 30 min</p>
+    <p class="soc-stat-card__meta"><?= sv_t('Unique account or IP in audit events, 30 min') ?></p>
   </div>
 
   <!-- 3. Failed Login Attempts -->
   <div class="soc-stat-card">
     <div class="soc-stat-card__top">
-      <span class="soc-stat-card__label">Failed Logins</span>
+      <span class="soc-stat-card__label"><?= sv_t('Failed Logins') ?></span>
       <span class="soc-stat-card__icon soc-stat-card__icon--warning"><?= sv_icon('ban', 18) ?></span>
     </div>
     <p class="soc-stat-card__value"><?= e((string) $failedLoginsCount) ?></p>
@@ -675,63 +691,63 @@ require __DIR__ . '/../includes/header.php';
   <!-- 4. Unauthorized Access Attempts -->
   <div class="soc-stat-card">
     <div class="soc-stat-card__top">
-      <span class="soc-stat-card__label">Unauthorized Access</span>
+      <span class="soc-stat-card__label"><?= sv_t('Unauthorized Access') ?></span>
       <span class="soc-stat-card__icon soc-stat-card__icon--danger"><?= sv_icon('shield', 18) ?></span>
     </div>
     <p class="soc-stat-card__value"><?= e((string) $unauthorizedAccessCount) ?></p>
-    <p class="soc-stat-card__meta">Blocked by RBAC / CSRF</p>
+    <p class="soc-stat-card__meta"><?= sv_t('Blocked by RBAC / CSRF') ?></p>
   </div>
 
   <!-- 5. Votes Submitted -->
   <div class="soc-stat-card">
     <div class="soc-stat-card__top">
-      <span class="soc-stat-card__label">Votes Submitted</span>
+      <span class="soc-stat-card__label"><?= sv_t('Votes Submitted') ?></span>
       <span class="soc-stat-card__icon soc-stat-card__icon--teal"><?= sv_icon('vote', 18) ?></span>
     </div>
     <p class="soc-stat-card__value"><?= e((string) $totalVotesSubmitted) ?></p>
-    <p class="soc-stat-card__meta">Submitted ballots in database, all time</p>
+    <p class="soc-stat-card__meta"><?= sv_t('Submitted ballots in database, all time') ?></p>
   </div>
 
   <!-- 6. Open Elections -->
   <div class="soc-stat-card">
     <div class="soc-stat-card__top">
-      <span class="soc-stat-card__label">Open Elections</span>
+      <span class="soc-stat-card__label"><?= sv_t('Open Elections') ?></span>
       <span class="soc-stat-card__icon soc-stat-card__icon--success"><?= sv_icon('check-circle', 18) ?></span>
     </div>
     <p class="soc-stat-card__value"><?= e((string) $openElectionsCount) ?></p>
-    <p class="soc-stat-card__meta"><?= e($totalElections . ' total election' . ($totalElections === 1 ? '' : 's')) ?></p>
+    <p class="soc-stat-card__meta"><?= sv_t('%d total election(s)', $totalElections) ?></p>
   </div>
 
   <!-- 7. Security Events -->
   <div class="soc-stat-card">
     <div class="soc-stat-card__top">
-      <span class="soc-stat-card__label">Audit Events</span>
+      <span class="soc-stat-card__label"><?= sv_t('Audit Events') ?></span>
       <span class="soc-stat-card__icon soc-stat-card__icon--navy"><?= sv_icon('audit', 18) ?></span>
     </div>
     <p class="soc-stat-card__value"><?= e((string) $totalSecurityEventsCount) ?></p>
-    <p class="soc-stat-card__meta">Recorded in <?= strtolower($rangeLabel) ?></p>
+    <p class="soc-stat-card__meta"><?= sv_t('Recorded in %s', strtolower($rangeLabel)) ?></p>
   </div>
 
   <!-- 8. Blocked Requests -->
   <div class="soc-stat-card">
     <div class="soc-stat-card__top">
-      <span class="soc-stat-card__label">Blocked Requests</span>
+      <span class="soc-stat-card__label"><?= sv_t('Blocked Requests') ?></span>
       <span class="soc-stat-card__icon soc-stat-card__icon--danger"><?= sv_icon('ban', 18) ?></span>
     </div>
     <p class="soc-stat-card__value"><?= e((string) $blockedRequestsCount) ?></p>
-    <p class="soc-stat-card__meta">Throttled / Access Refused</p>
+    <p class="soc-stat-card__meta"><?= sv_t('Throttled / Access Refused') ?></p>
   </div>
 </section>
 
-<p class="soc-group-label">02 / CONTROL INVENTORY</p>
+<p class="soc-group-label">02 / <?= sv_t('CONTROL INVENTORY') ?></p>
 <!-- System Health Matrix -->
 <section class="card mb-6" aria-labelledby="health-heading">
   <div class="card__header">
     <div class="card__headings">
-      <h2 class="card__title" id="health-heading">Control & Service Inventory</h2>
-      <p class="card__subtitle">Database response is measured now. Other rows describe configured application controls or observed records.</p>
+      <h2 class="card__title" id="health-heading"><?= sv_t('Control & Service Inventory') ?></h2>
+      <p class="card__subtitle"><?= sv_t('Database response is measured now. Other rows describe configured application controls or observed records.') ?></p>
     </div>
-    <span class="badge badge--neutral"><?= sv_icon('clock', 14) ?>Snapshot at page load</span>
+    <span class="badge badge--neutral"><?= sv_icon('clock', 14) ?><?= sv_t('Snapshot at page load') ?></span>
   </div>
   <div class="card__body">
     <div class="soc-health-grid">
@@ -755,15 +771,15 @@ require __DIR__ . '/../includes/header.php';
   </div>
 </section>
 
-<p class="soc-group-label">03 / DETECTION & RESPONSE</p>
+<p class="soc-group-label">03 / <?= sv_t('DETECTION & RESPONSE') ?></p>
 <!-- Security Activity Chart & Active Alerts Row -->
 <div class="grid-2 mb-6">
   <!-- Security Event Chart -->
   <section class="card" aria-labelledby="chart-heading">
     <div class="card__header">
       <div class="card__headings">
-        <h2 class="card__title" id="chart-heading">Event Activity</h2>
-        <p class="card__subtitle">Stacked audit events by time bucket<?= $range === 'all' ? ' (last six months)' : ' (' . e($rangeLabel) . ')' ?>.</p>
+        <h2 class="card__title" id="chart-heading"><?= sv_t('Event Activity') ?></h2>
+        <p class="card__subtitle"><?= sv_t('Stacked audit events by time bucket') ?><?= $range === 'all' ? ' (' . sv_t('last six months') . ')' : ' (' . e($rangeLabel) . ')' ?>.</p>
       </div>
       <span class="badge badge--neutral"><?= sv_icon('clock', 14) ?><?= e($rangeLabel) ?></span>
     </div>
@@ -782,7 +798,7 @@ require __DIR__ . '/../includes/header.php';
           $barGroupW = $bCount > 0 ? $chartW / $bCount : $chartW;
           $barWidth  = max(4, min(18, $barGroupW * 0.65));
         ?>
-        <svg class="soc-chart-svg" viewBox="0 0 <?= $svgWidth ?> <?= $svgHeight ?>" role="img" aria-label="Security events distribution chart">
+        <svg class="soc-chart-svg" viewBox="0 0 <?= $svgWidth ?> <?= $svgHeight ?>" role="img" aria-label="<?= sv_t('Security events distribution chart') ?>">
           <!-- Horizontal Grid Lines -->
           <?php for ($g = 0; $g <= 3; $g++): ?>
             <?php
@@ -823,10 +839,10 @@ require __DIR__ . '/../includes/header.php';
       </div>
 
       <div class="soc-legend">
-        <span class="soc-legend-item"><span class="soc-legend-swatch" style="background:var(--blue)"></span> Successful Sign-ins</span>
-        <span class="soc-legend-item"><span class="soc-legend-swatch" style="background:var(--warning)"></span> Failed Sign-ins</span>
-        <span class="soc-legend-item"><span class="soc-legend-swatch" style="background:var(--danger)"></span> Blocked / Security Warnings</span>
-        <span class="soc-legend-item"><span class="soc-legend-swatch" style="background:var(--teal)"></span> Ballots Submitted</span>
+        <span class="soc-legend-item"><span class="soc-legend-swatch" style="background:var(--blue)"></span> <?= sv_t('Successful Sign-ins') ?></span>
+        <span class="soc-legend-item"><span class="soc-legend-swatch" style="background:var(--warning)"></span> <?= sv_t('Failed Sign-ins') ?></span>
+        <span class="soc-legend-item"><span class="soc-legend-swatch" style="background:var(--danger)"></span> <?= sv_t('Blocked / Security Warnings') ?></span>
+        <span class="soc-legend-item"><span class="soc-legend-swatch" style="background:var(--teal)"></span> <?= sv_t('Ballots Submitted') ?></span>
       </div>
     </div>
   </section>
@@ -835,30 +851,30 @@ require __DIR__ . '/../includes/header.php';
   <section class="card" aria-labelledby="alerts-heading">
     <div class="card__header">
       <div class="card__headings">
-        <h2 class="card__title" id="alerts-heading">Security Alerts & Incidents</h2>
-        <p class="card__subtitle">Rule evaluations from audit and election records. Resolutions are recorded in the database.</p>
+        <h2 class="card__title" id="alerts-heading"><?= sv_t('Security Alerts & Incidents') ?></h2>
+        <p class="card__subtitle"><?= sv_t('Rule evaluations from audit and election records. Resolutions are recorded in the database.') ?></p>
       </div>
       <div class="row row--compact" style="gap:var(--sp-2);">
         <span class="badge badge--<?= count($alerts) > 0 ? ($alerts[0]['type'] === 'danger' ? 'danger' : 'warning') : 'success' ?>">
           <?= sv_icon(count($alerts) > 0 ? 'bell' : 'check-circle', 14) ?>
-          <?= e((string) count($alerts)) ?> active
+          <?= e((string) count($alerts)) ?> <?= sv_t('active') ?>
         </span>
         <?php if ($resolvedHistory !== []): ?>
           <span class="badge badge--neutral">
             <?= sv_icon('check', 12) ?>
-            <?= e((string) count($resolvedHistory)) ?> resolved
+            <?= e((string) count($resolvedHistory)) ?> <?= sv_t('resolved') ?>
           </span>
         <?php endif; ?>
       </div>
     </div>
     <div class="card__body stack-sm">
       <!-- Tabs for Active vs Resolved -->
-      <div class="tabs mb-4" role="tablist" aria-label="Security alerts views">
+      <div class="tabs mb-4" role="tablist" aria-label="<?= sv_t('Security alerts views') ?>">
         <button type="button" class="tab <?= $activeTab === 'active' ? 'is-active' : '' ?>" id="alert-tab-active-btn" role="tab" aria-selected="<?= $activeTab === 'active' ? 'true' : 'false' ?>" onclick="switchAlertTab('active')">
-          <?= sv_icon('bell', 14) ?> Active Alerts (<?= count($alerts) ?>)
+          <?= sv_icon('bell', 14) ?> <?= sv_t('Active Alerts (%d)', count($alerts)) ?>
         </button>
         <button type="button" class="tab <?= $activeTab === 'resolved' ? 'is-active' : '' ?>" id="alert-tab-resolved-btn" role="tab" aria-selected="<?= $activeTab === 'resolved' ? 'true' : 'false' ?>" onclick="switchAlertTab('resolved')">
-          <?= sv_icon('check-circle', 14) ?> Resolved History (<?= count($resolvedHistory) ?>)
+          <?= sv_icon('check-circle', 14) ?> <?= sv_t('Resolved History (%d)', count($resolvedHistory)) ?>
         </button>
       </div>
 
@@ -870,8 +886,8 @@ require __DIR__ . '/../includes/header.php';
               <?= csrf_field() ?>
               <input type="hidden" name="action" value="resolve_all_alerts">
               <input type="hidden" name="alerts_json" value="<?= e(json_encode($alerts)) ?>">
-              <button type="submit" class="btn btn--sm btn--outline" onclick="return confirm('Mark all <?= count($alerts) ?> active security alerts as resolved?');">
-                <?= sv_icon('check', 14) ?> Resolve All Active Alerts
+              <button type="submit" class="btn btn--sm btn--outline" onclick="return confirm('<?= sv_t('Mark all active security alerts as resolved?') ?>');">
+                <?= sv_icon('check', 14) ?> <?= sv_t('Resolve All Active Alerts') ?>
               </button>
             </form>
           </div>
@@ -880,12 +896,12 @@ require __DIR__ . '/../includes/header.php';
         <?php if ($alerts === []): ?>
           <div class="empty-state empty-state--inline">
             <span class="empty-state__icon text-success"><?= sv_icon('shield-check', 26) ?></span>
-            <p class="empty-state__title">No Active Security Alerts</p>
-            <p class="empty-state__text">No rule-based alerts are currently open. Continue reviewing the event stream for context.</p>
+            <p class="empty-state__title"><?= sv_t('No Active Security Alerts') ?></p>
+            <p class="empty-state__text"><?= sv_t('No rule-based alerts are currently open. Continue reviewing the event stream for context.') ?></p>
             <?php if ($resolvedHistory !== []): ?>
               <p class="text-xs text-muted mt-2">
-                <?= count($resolvedHistory) ?> alert(s) have been resolved by administrators.
-                <a href="javascript:void(0)" onclick="switchAlertTab('resolved')" class="font-semibold text-main">View Resolved History &rarr;</a>
+                <?= sv_t('%d alert(s) have been resolved by administrators.', count($resolvedHistory)) ?>
+                <a href="javascript:void(0)" onclick="switchAlertTab('resolved')" class="font-semibold text-main"><?= sv_t('View Resolved History') ?> &rarr;</a>
               </p>
             <?php endif; ?>
           </div>
@@ -905,8 +921,8 @@ require __DIR__ . '/../includes/header.php';
                 </div>
                 <div class="alert__actions">
                   <a class="btn btn--sm btn--secondary" href="<?= e(url($alert['href'])) ?>"><?= e($alert['label']) ?></a>
-                  <button type="button" class="btn btn--sm btn--success" onclick="openResolveModal('<?= e(addslashes($alert['key'])) ?>', '<?= e(addslashes($alert['title'])) ?>', '<?= e(addslashes($alert['severity'])) ?>', '<?= e(addslashes($alert['text'])) ?>')" title="Mark this alert as resolved">
-                    <?= sv_icon('check', 14) ?> Mark Resolved
+                  <button type="button" class="btn btn--sm btn--success" onclick="openResolveModal('<?= e(addslashes($alert['key'])) ?>', '<?= e(addslashes($alert['title'])) ?>', '<?= e(addslashes($alert['severity'])) ?>', '<?= e(addslashes($alert['text'])) ?>')" title="<?= sv_t('Mark this alert as resolved') ?>">
+                    <?= sv_icon('check', 14) ?> <?= sv_t('Mark Resolved') ?>
                   </button>
                 </div>
               </div>
@@ -920,18 +936,18 @@ require __DIR__ . '/../includes/header.php';
         <?php if ($resolvedHistory === []): ?>
           <div class="empty-state empty-state--inline">
             <span class="empty-state__icon text-muted"><?= sv_icon('archive', 26) ?></span>
-            <p class="empty-state__title">No Resolved Alerts</p>
-            <p class="empty-state__text">Acknowledged security alerts and resolution records will be saved here persistently.</p>
+            <p class="empty-state__title"><?= sv_t('No Resolved Alerts') ?></p>
+            <p class="empty-state__text"><?= sv_t('Acknowledged security alerts and resolution records will be saved here persistently.') ?></p>
           </div>
         <?php else: ?>
           <div class="stack-sm">
             <div class="row mb-2" style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--sp-2);">
-              <span class="text-xs text-muted">Showing <?= count($resolvedHistory) ?> alert(s) resolved in database.</span>
-              <form method="post" action="<?= e(post_url('admin/dashboard.php' . ($range !== '24h' ? '?range=' . urlencode($range) . '&tab=resolved' : '?tab=resolved'))) ?>" onsubmit="return confirm('Restore all resolved alerts back to active status?');">
+              <span class="text-xs text-muted"><?= sv_t('Showing %d alert(s) resolved in database.', count($resolvedHistory)) ?></span>
+              <form method="post" action="<?= e(post_url('admin/dashboard.php' . ($range !== '24h' ? '?range=' . urlencode($range) . '&tab=resolved' : '?tab=resolved'))) ?>" onsubmit="return confirm('<?= sv_t('Restore all resolved alerts back to active status?') ?>');">
                 <?= csrf_field() ?>
                 <input type="hidden" name="action" value="restore_all_alerts">
                 <button type="submit" class="btn btn--sm btn--ghost text-xs">
-                  <?= sv_icon('refresh', 13) ?> Restore All to Active
+                  <?= sv_icon('refresh', 13) ?> <?= sv_t('Restore All to Active') ?>
                 </button>
               </form>
             </div>
@@ -939,12 +955,12 @@ require __DIR__ . '/../includes/header.php';
               <table class="table table--compact">
                 <thead>
                   <tr>
-                    <th scope="col">Incident</th>
-                    <th scope="col">Severity</th>
-                    <th scope="col">Resolved By</th>
-                    <th scope="col">Date Resolved</th>
-                    <th scope="col">Note</th>
-                    <th scope="col" style="text-align: right;">Action</th>
+                    <th scope="col"><?= sv_t('Incident') ?></th>
+                    <th scope="col"><?= sv_t('Severity') ?></th>
+                    <th scope="col"><?= sv_t('Resolved By') ?></th>
+                    <th scope="col"><?= sv_t('Date Resolved') ?></th>
+                    <th scope="col"><?= sv_t('Note') ?></th>
+                    <th scope="col" style="text-align: right;"><?= sv_t('Action') ?></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -963,15 +979,15 @@ require __DIR__ . '/../includes/header.php';
                         <span class="table__cell-sub text-xs"><?= e(date('M j, g:i A', strtotime($res['dismissed_at']))) ?></span>
                       </td>
                       <td>
-                        <span class="text-xs text-muted"><?= e($res['reason'] ?: 'Acknowledged by admin') ?></span>
+                        <span class="text-xs text-muted"><?= e($res['reason'] ?: sv_t('Acknowledged by admin')) ?></span>
                       </td>
                       <td style="text-align: right;">
                         <form method="post" action="<?= e(post_url('admin/dashboard.php' . ($range !== '24h' ? '?range=' . urlencode($range) . '&tab=resolved' : '?tab=resolved'))) ?>" class="d-inline">
                           <?= csrf_field() ?>
                           <input type="hidden" name="action" value="restore_alert">
                           <input type="hidden" name="dismissed_id" value="<?= (int) $res['id'] ?>">
-                          <button type="submit" class="btn btn--sm btn--outline" title="Reopen alert">
-                            <?= sv_icon('refresh', 13) ?> Re-open
+                          <button type="submit" class="btn btn--sm btn--outline" title="<?= sv_t('Re-open') ?>">
+                            <?= sv_icon('refresh', 13) ?> <?= sv_t('Re-open') ?>
                           </button>
                         </form>
                       </td>
@@ -987,46 +1003,46 @@ require __DIR__ . '/../includes/header.php';
   </section>
 </div>
 
-<p class="soc-group-label">04 / IDENTITY ACTIVITY</p>
+<p class="soc-group-label">04 / <?= sv_t('IDENTITY ACTIVITY') ?></p>
 <!-- Authentication Monitoring & Failed Login Threat Patterns Row -->
 <div class="grid-2 mb-6">
   <!-- Authentication Activity Panel -->
   <section class="card" aria-labelledby="auth-heading">
     <div class="card__header">
       <div class="card__headings">
-        <h2 class="card__title" id="auth-heading">Authentication Activity</h2>
-        <p class="card__subtitle">Identity validation telemetry & session lifecycle (<?= e($rangeLabel) ?>).</p>
+        <h2 class="card__title" id="auth-heading"><?= sv_t('Authentication Activity') ?></h2>
+        <p class="card__subtitle"><?= sv_t('Identity validation telemetry & session lifecycle (%s).', e($rangeLabel)) ?></p>
       </div>
-      <span class="badge badge--teal"><?= sv_icon('key', 14) ?><?= $authSuccessRate === null ? 'No attempts' : e((string) $authSuccessRate) . '% success' ?></span>
+      <span class="badge badge--teal"><?= sv_icon('key', 14) ?><?= $authSuccessRate === null ? sv_t('No attempts') : sv_t('%s%% success', e((string) $authSuccessRate)) ?></span>
     </div>
     <div class="card__body">
       <div class="soc-metric-list mb-4">
         <div class="soc-metric-row">
-          <span class="soc-metric-label"><?= sv_icon('check', 16, 'text-success') ?> Successful Sign-ins</span>
+          <span class="soc-metric-label"><?= sv_icon('check', 16, 'text-success') ?> <?= sv_t('Successful Sign-ins') ?></span>
           <span class="soc-metric-value text-success"><?= e((string) $successfulLoginsCount) ?></span>
         </div>
         <div class="soc-metric-row">
-          <span class="soc-metric-label"><?= sv_icon('x', 16, 'text-warning') ?> Failed Sign-in Attempts</span>
+          <span class="soc-metric-label"><?= sv_icon('x', 16, 'text-warning') ?> <?= sv_t('Failed Sign-in Attempts') ?></span>
           <span class="soc-metric-value text-warning"><?= e((string) $failedLoginsCount) ?></span>
         </div>
         <div class="soc-metric-row">
-          <span class="soc-metric-label"><?= sv_icon('logout', 16, 'text-muted') ?> Recorded Sign-outs / Idle Expirations</span>
+          <span class="soc-metric-label"><?= sv_icon('logout', 16, 'text-muted') ?> <?= sv_t('Recorded Sign-outs / Idle Expirations') ?></span>
           <span class="soc-metric-value"><?= e((string) $authLogouts) ?></span>
         </div>
         <div class="soc-metric-row">
-          <span class="soc-metric-label"><?= sv_icon('ban', 16, 'text-danger') ?> Throttled / Blocked Authentication Requests</span>
+          <span class="soc-metric-label"><?= sv_icon('ban', 16, 'text-danger') ?> <?= sv_t('Throttled / Blocked Authentication Requests') ?></span>
           <span class="soc-metric-value text-danger"><?= e((string) $authThrottled) ?></span>
         </div>
       </div>
 
       <!-- Authentication Ratio Progress Bar -->
-      <div class="progress mb-4" role="img" aria-label="Authentication success ratio: <?= $authSuccessRate === null ? 'No attempts recorded' : e((string) $authSuccessRate) . '%' ?>">
+      <div class="progress mb-4" role="img" aria-label="<?= sv_t('Authentication success ratio: %s', $authSuccessRate === null ? sv_t('No attempts recorded') : e((string) $authSuccessRate) . '%') ?>">
         <span class="progress__bar progress__bar--winner" style="width: <?= e((string) min(100, $authSuccessRate ?? 0)) ?>%"></span>
       </div>
 
-      <h3 class="card__title text-sm mb-3">Recent Authenticated Logins</h3>
+      <h3 class="card__title text-sm mb-3"><?= sv_t('Recent Authenticated Logins') ?></h3>
       <?php if ($recentLogins === []): ?>
-        <p class="text-sm text-muted">No sign-in events logged recently.</p>
+        <p class="text-sm text-muted"><?= sv_t('No sign-in events logged recently.') ?></p>
       <?php else: ?>
         <ul class="soc-feed-list">
           <?php foreach ($recentLogins as $login): ?>
@@ -1036,7 +1052,7 @@ require __DIR__ . '/../includes/header.php';
                 <span class="soc-feed-user"><?= e($login['username']) ?></span>
                 <span class="soc-feed-role">(<?= e((string) $login['role']) ?>)</span>
               </span>
-              <span class="soc-feed-desc">Signed in successfully via bcrypt/OAuth</span>
+              <span class="soc-feed-desc"><?= sv_t('Signed in successfully via bcrypt/OAuth') ?></span>
               <span class="soc-feed-ip"><?= e((string) ($login['ip_address'] ?? '127.0.0.1')) ?></span>
             </li>
           <?php endforeach; ?>
@@ -1049,28 +1065,28 @@ require __DIR__ . '/../includes/header.php';
   <section class="card" aria-labelledby="failed-auth-heading">
     <div class="card__header">
       <div class="card__headings">
-        <h2 class="card__title" id="failed-auth-heading">Failed Login Monitoring</h2>
-        <p class="card__subtitle">Repeated authentication failures and origin IPs flagged for review.</p>
+        <h2 class="card__title" id="failed-auth-heading"><?= sv_t('Failed Login Monitoring') ?></h2>
+        <p class="card__subtitle"><?= sv_t('Repeated authentication failures and origin IPs flagged for review.') ?></p>
       </div>
-      <a class="btn btn--sm btn--secondary" href="<?= e(url('admin/audit-logs.php?log_action=login_failure')) ?>">View all</a>
+      <a class="btn btn--sm btn--secondary" href="<?= e(url('admin/audit-logs.php?log_action=login_failure')) ?>"><?= sv_t('View all') ?></a>
     </div>
     <div class="card__body">
       <?php if ($failedLoginAttempts === []): ?>
         <div class="empty-state empty-state--inline">
           <span class="empty-state__icon text-success"><?= sv_icon('check-circle', 26) ?></span>
-          <p class="empty-state__title">Zero Failed Sign-ins</p>
-          <p class="empty-state__text">No failed login attempts recorded in <?= e(strtolower($rangeLabel)) ?>.</p>
+          <p class="empty-state__title"><?= sv_t('Zero Failed Sign-ins') ?></p>
+          <p class="empty-state__text"><?= sv_t('No failed login attempts recorded in %s.', e(strtolower($rangeLabel))) ?></p>
         </div>
       <?php else: ?>
         <div class="table-wrap">
           <table class="table">
             <thead>
               <tr>
-                <th scope="col">Target User</th>
-                <th scope="col">Attempts</th>
-                <th scope="col">Classification</th>
-                <th scope="col">Origin IP</th>
-                <th scope="col">Latest</th>
+                <th scope="col"><?= sv_t('Target User') ?></th>
+                <th scope="col"><?= sv_t('Attempts') ?></th>
+                <th scope="col"><?= sv_t('Classification') ?></th>
+                <th scope="col"><?= sv_t('Origin IP') ?></th>
+                <th scope="col"><?= sv_t('Latest') ?></th>
               </tr>
             </thead>
             <tbody>
@@ -1078,20 +1094,20 @@ require __DIR__ . '/../includes/header.php';
                 <?php
                   $attempts = (int) $fla['attempt_count'];
                   if ($attempts >= 5) {
-                      $classification = 'Suspicious Login Pattern';
+                      $classification = sv_t('Suspicious Login Pattern');
                       $sev = 'High';
                   } elseif ($attempts >= 2) {
-                      $classification = 'Repeated Failed Authentication';
+                      $classification = sv_t('Repeated Failed Authentication');
                       $sev = 'Medium';
                   } else {
-                      $classification = 'Single Authentication Failure';
+                      $classification = sv_t('Single Authentication Failure');
                       $sev = 'Low';
                   }
                 ?>
                 <tr>
                   <td>
                     <span class="table__cell-strong"><?= e((string) $fla['attempt_user']) ?></span>
-                    <span class="table__cell-sub">Account: <?= e((string) $fla['account_status']) ?></span>
+                    <span class="table__cell-sub"><?= sv_t('Account: %s', e((string) $fla['account_status'])) ?></span>
                   </td>
                   <td>
                     <span class="table__cell-strong text-danger"><?= e((string) $attempts) ?></span>
@@ -1116,50 +1132,50 @@ require __DIR__ . '/../includes/header.php';
   </section>
 </div>
 
-<p class="soc-group-label">05 / BALLOT & ACCESS INTEGRITY</p>
+<p class="soc-group-label">05 / <?= sv_t('BALLOT & ACCESS INTEGRITY') ?></p>
 <!-- Unauthorized Access & Voting Integrity Row -->
 <div class="grid-2 mb-6">
   <!-- Unauthorized Access Attempts Panel -->
   <section class="card" aria-labelledby="unauth-heading">
     <div class="card__header">
       <div class="card__headings">
-        <h2 class="card__title" id="unauth-heading">Unauthorized Access Attempts</h2>
-        <p class="card__subtitle">Role-based authorization (RBAC) and CSRF security boundary enforcement.</p>
+        <h2 class="card__title" id="unauth-heading"><?= sv_t('Unauthorized Access Attempts') ?></h2>
+        <p class="card__subtitle"><?= sv_t('Role-based authorization (RBAC) and CSRF security boundary enforcement.') ?></p>
       </div>
-      <a class="btn btn--sm btn--secondary" href="<?= e(url('admin/audit-logs.php?severity=high')) ?>">Security logs</a>
+      <a class="btn btn--sm btn--secondary" href="<?= e(url('admin/audit-logs.php?severity=high')) ?>"><?= sv_t('Security logs') ?></a>
     </div>
     <div class="card__body">
       <?php if ($unauthorizedEvents === []): ?>
         <div class="empty-state empty-state--inline">
           <span class="empty-state__icon text-success"><?= sv_icon('shield-check', 26) ?></span>
-          <p class="empty-state__title">No blocked boundary events</p>
-          <p class="empty-state__text">No unauthorized page requests or CSRF token mismatches were recorded in <?= e(strtolower($rangeLabel)) ?>.</p>
+          <p class="empty-state__title"><?= sv_t('No blocked boundary events') ?></p>
+          <p class="empty-state__text"><?= sv_t('No unauthorized page requests or CSRF token mismatches were recorded in %s.', e(strtolower($rangeLabel))) ?></p>
         </div>
       <?php else: ?>
         <div class="table-wrap">
           <table class="table">
             <thead>
               <tr>
-                <th scope="col">Actor</th>
-                <th scope="col">Action / Target</th>
-                <th scope="col">Result</th>
-                <th scope="col">Severity</th>
-                <th scope="col">When</th>
+                <th scope="col"><?= sv_t('Actor') ?></th>
+                <th scope="col"><?= sv_t('Action / Target') ?></th>
+                <th scope="col"><?= sv_t('Result') ?></th>
+                <th scope="col"><?= sv_t('Severity') ?></th>
+                <th scope="col"><?= sv_t('When') ?></th>
               </tr>
             </thead>
             <tbody>
               <?php foreach ($unauthorizedEvents as $ue): ?>
                 <tr>
                   <td>
-                    <span class="table__cell-strong"><?= e($ue['username'] ?? 'Anonymous') ?></span>
-                    <span class="table__cell-sub"><?= e($ue['role'] ?? 'Unauthenticated') ?></span>
+                    <span class="table__cell-strong"><?= e($ue['username'] ?? sv_t('Anonymous')) ?></span>
+                    <span class="table__cell-sub"><?= e($ue['role'] ?? sv_t('Unauthenticated')) ?></span>
                   </td>
                   <td>
                     <span><?= e(str_limit($ue['description'], 60)) ?></span>
                     <span class="table__cell-sub mono"><?= e((string) ($ue['ip_address'] ?? '—')) ?></span>
                   </td>
                   <td>
-                    <span class="badge badge--danger"><?= sv_icon('ban', 12) ?>BLOCKED</span>
+                    <span class="badge badge--danger"><?= sv_icon('ban', 12) ?><?= sv_t('BLOCKED') ?></span>
                   </td>
                   <td>
                     <?= security_severity_badge('High') ?>
@@ -1180,23 +1196,23 @@ require __DIR__ . '/../includes/header.php';
   <section class="card" aria-labelledby="integrity-heading">
     <div class="card__header">
       <div class="card__headings">
-        <h2 class="card__title" id="integrity-heading">Ballot Submissions & Rejections</h2>
-        <p class="card__subtitle">Submission counts and rejection events recorded by the voting workflow.</p>
+        <h2 class="card__title" id="integrity-heading"><?= sv_t('Ballot Submissions & Rejections') ?></h2>
+        <p class="card__subtitle"><?= sv_t('Submission counts and rejection events recorded by the voting workflow.') ?></p>
       </div>
-      <a class="btn btn--sm btn--secondary" href="<?= e(url('admin/security-testing.php')) ?>">Open security checks</a>
+      <a class="btn btn--sm btn--secondary" href="<?= e(url('admin/security-testing.php')) ?>"><?= sv_t('Open security checks') ?></a>
     </div>
     <div class="card__body">
       <div class="soc-metric-list mb-4">
         <div class="soc-metric-row">
-          <span class="soc-metric-label"><?= sv_icon('check-circle', 16, 'text-success') ?> Submitted Ballots Recorded</span>
+          <span class="soc-metric-label"><?= sv_icon('check-circle', 16, 'text-success') ?> <?= sv_t('Submitted Ballots Recorded') ?></span>
           <span class="soc-metric-value text-success"><?= e((string) $totalVotesSubmitted) ?></span>
         </div>
         <div class="soc-metric-row">
-          <span class="soc-metric-label"><?= sv_icon('ban', 16, 'text-warning') ?> Duplicate Vote Attempts Blocked</span>
+          <span class="soc-metric-label"><?= sv_icon('ban', 16, 'text-warning') ?> <?= sv_t('Duplicate Vote Attempts Blocked') ?></span>
           <span class="soc-metric-value text-warning"><?= e((string) $duplicateVoteBlocks) ?></span>
         </div>
         <div class="soc-metric-row">
-          <span class="soc-metric-label"><?= sv_icon('ban', 16, 'text-danger') ?> Invalid Ballot Requests Refused</span>
+          <span class="soc-metric-label"><?= sv_icon('ban', 16, 'text-danger') ?> <?= sv_t('Invalid Ballot Requests Refused') ?></span>
           <span class="soc-metric-value text-danger"><?= e((string) $invalidBallotBlocks) ?></span>
         </div>
       </div>
@@ -1205,43 +1221,43 @@ require __DIR__ . '/../includes/header.php';
       <div class="alert alert--info" style="background:var(--surface-2);border-color:var(--border);">
         <span class="alert__icon" aria-hidden="true"><?= sv_icon('shield', 18) ?></span>
         <div class="alert__text text-xs">
-          <strong>What this panel measures:</strong> submitted ballot rows and recorded rejection events. It does not independently certify anonymity or detect every database integrity fault.
+          <strong><?= sv_t('What this panel measures:') ?></strong> <?= sv_t('submitted ballot rows and recorded rejection events. It does not independently certify anonymity or detect every database integrity fault.') ?>
         </div>
       </div>
     </div>
   </section>
 </div>
 
-<p class="soc-group-label">06 / EVIDENCE STREAM</p>
+<p class="soc-group-label">06 / <?= sv_t('EVIDENCE STREAM') ?></p>
 <!-- Recent Security Events Feed / Audit Timeline -->
 <section class="card mb-6" aria-labelledby="live-feed-heading">
   <div class="card__header">
     <div class="card__headings">
-      <h2 class="card__title" id="live-feed-heading">Recent Security Events Timeline</h2>
-      <p class="card__subtitle">Chronological audit stream of authentications, administrative actions, and security events.</p>
+      <h2 class="card__title" id="live-feed-heading"><?= sv_t('Recent Security Events Timeline') ?></h2>
+      <p class="card__subtitle"><?= sv_t('Chronological audit stream of authentications, administrative actions, and security events.') ?></p>
     </div>
-    <a class="btn btn--sm btn--secondary" href="<?= e(url('admin/audit-logs.php')) ?>">View full audit log</a>
+    <a class="btn btn--sm btn--secondary" href="<?= e(url('admin/audit-logs.php')) ?>"><?= sv_t('View full audit log') ?></a>
   </div>
 
   <?php if ($recentSecurityLogs === []): ?>
     <div class="card__body empty-state empty-state--inline">
       <span class="empty-state__icon"><?= sv_icon('audit', 24) ?></span>
-      <p class="empty-state__title">No Audit Events Logged</p>
-      <p class="empty-state__text">System events appear here automatically as they occur.</p>
+      <p class="empty-state__title"><?= sv_t('No Audit Events Logged') ?></p>
+      <p class="empty-state__text"><?= sv_t('System events appear here automatically as they occur.') ?></p>
     </div>
   <?php else: ?>
     <div class="card__body">
       <div class="table-wrap">
         <table class="table">
-          <caption class="visually-hidden">Chronological security events with timestamp, severity, actor, action, and description</caption>
+          <caption class="visually-hidden"><?= sv_t('Chronological security events with timestamp, severity, actor, action, and description') ?></caption>
           <thead>
             <tr>
-              <th scope="col">When</th>
-              <th scope="col">Severity</th>
-              <th scope="col">Actor</th>
-              <th scope="col">Event Type</th>
-              <th scope="col">Description</th>
-              <th scope="col">Source IP</th>
+              <th scope="col"><?= sv_t('When') ?></th>
+              <th scope="col"><?= sv_t('Severity') ?></th>
+              <th scope="col"><?= sv_t('Actor') ?></th>
+              <th scope="col"><?= sv_t('Event Type') ?></th>
+              <th scope="col"><?= sv_t('Description') ?></th>
+              <th scope="col"><?= sv_t('Source IP') ?></th>
             </tr>
           </thead>
           <tbody>
@@ -1262,7 +1278,7 @@ require __DIR__ . '/../includes/header.php';
                     <span class="table__cell-strong"><?= e($log['username']) ?></span>
                     <span class="table__cell-sub"><?= e(ucfirst((string) ($log['role'] ?? 'user'))) ?></span>
                   <?php else: ?>
-                    <span class="table__cell-strong">System / Anonymous</span>
+                    <span class="table__cell-strong"><?= sv_t('System / Anonymous') ?></span>
                   <?php endif; ?>
                 </td>
                 <td>
@@ -1283,39 +1299,39 @@ require __DIR__ . '/../includes/header.php';
   <?php endif; ?>
 </section>
 
-<p class="soc-group-label">07 / ELECTION OPERATIONS</p>
+<p class="soc-group-label">07 / <?= sv_t('ELECTION OPERATIONS') ?></p>
 <!-- Election Security Overview Table -->
 <section class="card" aria-labelledby="elections-heading">
   <div class="card__header">
     <div class="card__headings">
-      <h2 class="card__title" id="elections-heading">Election Security & Turnout Overview</h2>
-      <p class="card__subtitle">Election status, eligible voters, submitted ballots, and turnout from current records.</p>
+      <h2 class="card__title" id="elections-heading"><?= sv_t('Election Security & Turnout Overview') ?></h2>
+      <p class="card__subtitle"><?= sv_t('Election status, eligible voters, submitted ballots, and turnout from current records.') ?></p>
     </div>
-    <a class="btn btn--sm btn--secondary" href="<?= e(url('admin/elections.php')) ?>">Manage elections</a>
+    <a class="btn btn--sm btn--secondary" href="<?= e(url('admin/elections.php')) ?>"><?= sv_t('Manage elections') ?></a>
   </div>
 
   <?php if ($elections === []): ?>
     <div class="empty-state empty-state--inline">
       <span class="empty-state__icon"><?= sv_icon('vote', 24) ?></span>
-      <p class="empty-state__title">No elections found</p>
-      <p class="empty-state__text">Create an election to begin monitoring voting integrity.</p>
+      <p class="empty-state__title"><?= sv_t('No elections found') ?></p>
+      <p class="empty-state__text"><?= sv_t('Create an election to begin monitoring voting integrity.') ?></p>
       <a class="btn btn--accent" href="<?= e(url('admin/elections.php?action=create')) ?>">
-        <?= sv_icon('plus', 16, 'btn__icon') ?><span>Create election</span>
+        <?= sv_icon('plus', 16, 'btn__icon') ?><span><?= sv_t('Create election') ?></span>
       </a>
     </div>
   <?php else: ?>
     <div class="table-wrap">
       <table class="table">
-        <caption class="visually-hidden">Elections overview table with status, eligible voters, votes cast, turnout, and security state</caption>
+        <caption class="visually-hidden"><?= sv_t('Elections overview table with status, eligible voters, votes cast, turnout, and security state') ?></caption>
         <thead>
           <tr>
-            <th scope="col">Election</th>
-            <th scope="col">Status</th>
-            <th scope="col">Voters</th>
-            <th scope="col">Votes Cast</th>
-            <th scope="col">Turnout</th>
-            <th scope="col">Operations State</th>
-            <th scope="col">Actions</th>
+            <th scope="col"><?= sv_t('Election') ?></th>
+            <th scope="col"><?= sv_t('Status') ?></th>
+            <th scope="col"><?= sv_t('Voters') ?></th>
+            <th scope="col"><?= sv_t('Votes Cast') ?></th>
+            <th scope="col"><?= sv_t('Turnout') ?></th>
+            <th scope="col"><?= sv_t('Operations State') ?></th>
+            <th scope="col"><?= sv_t('Actions') ?></th>
           </tr>
         </thead>
         <tbody>
@@ -1327,11 +1343,11 @@ require __DIR__ . '/../includes/header.php';
               $turnout = $eligible > 0 ? percent($voted, $eligible) : null;
 
               $secState = match ($effective) {
-                  'open'      => ['Voting open', 'teal'],
-                  'scheduled' => ['Scheduled', 'info'],
-                  'closed'    => ['Voting closed', 'neutral'],
-                  'draft'     => ['Draft setup', 'warning'],
-                  default     => ['Archived', 'neutral'],
+                  'open'      => [sv_t('Voting open'), 'teal'],
+                  'scheduled' => [sv_t('Scheduled'), 'info'],
+                  'closed'    => [sv_t('Voting closed'), 'neutral'],
+                  'draft'     => [sv_t('Draft setup'), 'warning'],
+                  default     => [sv_t('Archived'), 'neutral'],
               };
             ?>
             <tr>
@@ -1348,10 +1364,10 @@ require __DIR__ . '/../includes/header.php';
               <td><span class="mono table__cell-strong"><?= e((string) $voted) ?></span></td>
               <td>
                 <?php if ($turnout === null): ?>
-                  <span class="text-muted">No eligible voters</span>
+                  <span class="text-muted"><?= sv_t('No eligible voters') ?></span>
                 <?php else: ?>
                   <span class="mono font-bold"><?= e((string) $turnout) ?>%</span>
-                  <div class="progress" role="img" aria-label="<?= e((string) $turnout) ?>% turnout" style="margin-top:4px;min-width:70px;">
+                  <div class="progress" role="img" aria-label="<?= sv_t('%s%% turnout', (string) $turnout) ?>" style="margin-top:4px;min-width:70px;">
                     <span class="progress__bar <?= $turnout >= 50 ? 'progress__bar--winner' : '' ?>" style="width: <?= e((string) min(100, $turnout)) ?>%"></span>
                   </div>
                 <?php endif; ?>
@@ -1363,10 +1379,10 @@ require __DIR__ . '/../includes/header.php';
               </td>
               <td>
                 <div class="row row--compact">
-                  <a class="btn btn--sm btn--ghost" href="<?= e(url('admin/candidates.php?election_id=' . (int) $el['id'])) ?>" title="View Candidates">
+                  <a class="btn btn--sm btn--ghost" href="<?= e(url('admin/candidates.php?election_id=' . (int) $el['id'])) ?>" title="<?= sv_t('View Candidates') ?>">
                     <?= sv_icon('users', 14) ?>
                   </a>
-                  <a class="btn btn--sm btn--ghost" href="<?= e(url('admin/audit-logs.php?q=' . urlencode($el['title']))) ?>" title="Filter Audit Log">
+                  <a class="btn btn--sm btn--ghost" href="<?= e(url('admin/audit-logs.php?q=' . urlencode($el['title']))) ?>" title="<?= sv_t('Filter Audit Log') ?>">
                     <?= sv_icon('audit', 14) ?>
                   </a>
                 </div>
@@ -1391,32 +1407,32 @@ require __DIR__ . '/../includes/header.php';
     <div class="modal__header">
       <div class="row row--compact" style="gap:var(--sp-2);">
         <span class="text-success"><?= sv_icon('check-circle', 20) ?></span>
-        <h3 class="modal__title">Resolve Security Alert</h3>
+        <h3 class="modal__title"><?= sv_t('Resolve Security Alert') ?></h3>
       </div>
-      <button type="button" class="btn btn--sm btn--ghost" onclick="document.getElementById('resolveAlertModal').close();" aria-label="Close dialog">
+      <button type="button" class="btn btn--sm btn--ghost" onclick="document.getElementById('resolveAlertModal').close();" aria-label="<?= sv_t('Close dialog') ?>">
         <?= sv_icon('x', 18) ?>
       </button>
     </div>
 
     <div class="modal__body stack-md">
-      <p class="text-sm">You are recording this security alert / incident as acknowledged and resolved in the database:</p>
+      <p class="text-sm"><?= sv_t('You are recording this security alert / incident as acknowledged and resolved in the database:') ?></p>
       
       <div class="notice" style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:var(--sp-3) var(--sp-4);">
-        <strong id="resolveModalDisplayTitle" class="font-semibold text-main">Alert Title</strong>
-        <p id="resolveModalDisplayText" class="text-xs text-muted" style="margin-top:4px;">Alert Description</p>
+        <strong id="resolveModalDisplayTitle" class="font-semibold text-main"><?= sv_t('Alert Title') ?></strong>
+        <p id="resolveModalDisplayText" class="text-xs text-muted" style="margin-top:4px;"><?= sv_t('Alert Description') ?></p>
       </div>
 
       <div class="field">
-        <label for="resolveModalReason" class="field__label">Resolution Note / Action Taken (Optional)</label>
-        <textarea id="resolveModalReason" name="reason" class="input" rows="3" placeholder="e.g. Reviewed IP activity and confirmed legitimate administration access."></textarea>
-        <p class="field__help">This explanation and your admin username will be saved in the persistent security alert registry.</p>
+        <label for="resolveModalReason" class="field__label"><?= sv_t('Resolution Note / Action Taken (Optional)') ?></label>
+        <textarea id="resolveModalReason" name="reason" class="input" rows="3" placeholder="<?= e(sv_t('e.g. Reviewed IP activity and confirmed legitimate administration access.')) ?>"></textarea>
+        <p class="field__help"><?= sv_t('This explanation and your admin username will be saved in the persistent security alert registry.') ?></p>
       </div>
     </div>
 
     <div class="modal__footer">
-      <button type="button" class="btn btn--secondary" onclick="document.getElementById('resolveAlertModal').close();">Cancel</button>
+      <button type="button" class="btn btn--secondary" onclick="document.getElementById('resolveAlertModal').close();"><?= sv_t('Cancel') ?></button>
       <button type="submit" class="btn btn--success">
-        <?= sv_icon('check', 16) ?> Confirm & Mark Resolved
+        <?= sv_icon('check', 16) ?> <?= sv_t('Confirm & Mark Resolved') ?>
       </button>
     </div>
   </form>

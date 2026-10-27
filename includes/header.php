@@ -139,13 +139,13 @@ $flashes = take_flashes();
 
 ob_start();
 if ($flashes !== []) {
-    echo '<div class="flash-stack" role="region" aria-label="System notifications">';
+    echo '<div class="flash-stack" role="region" aria-label="' . e(sv_t('System notifications')) . '">';
     foreach ($flashes as $flashMessage) {
         $type = (string) $flashMessage['type'];
         echo '<div class="alert alert--' . e($type) . '" role="' . ($type === 'danger' ? 'alert' : 'status') . '">'
             . '<span class="alert__icon" aria-hidden="true">' . sv_icon(flash_icon($type), 18) . '</span>'
-            . '<div class="alert__text">' . e((string) $flashMessage['message']) . '</div>'
-            . '<button type="button" class="alert__close" data-dismiss-alert aria-label="Dismiss notification">'
+            . '<div class="alert__text">' . e(sv_t((string) $flashMessage['message'])) . '</div>'
+            . '<button type="button" class="alert__close" data-dismiss-alert aria-label="' . e(sv_t('Dismiss notification')) . '">'
             . sv_icon('x', 14)
             . '</button>'
             . '</div>';
@@ -160,7 +160,7 @@ $flashHtml = ob_get_clean();
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<title><?= e($pageTitle) ?> &middot; <?= e(APP_NAME) ?></title>
+<title><?= e(sv_t($pageTitle)) ?> &middot; <?= e(APP_NAME) ?></title>
 <meta name="description" content="<?= e(APP_TAGLINE) ?>">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#f6f7ff" media="(prefers-color-scheme: light)">
@@ -187,30 +187,30 @@ $flashHtml = ob_get_clean();
 <body class="<?= e($shellClass . ($bodyClass !== '' ? ' ' . $bodyClass : '')) ?>">
 <div id="traffic-config" data-endpoint="<?= e(post_url('includes/traffic-event.php')) ?>" data-token="<?= e(csrf_token()) ?>" hidden></div>
 
-<a class="skip-link" href="#main-content">Skip to main content</a>
+<a class="skip-link" href="#main-content"><?= e(sv_t("Skip to main content")) ?></a>
 
 <?php if ($layout !== 'auth'): ?>
 
 <?php if ($hasSidebar): ?>
 <div class="sidebar-backdrop" data-sidebar-close hidden aria-hidden="true"></div>
 
-<aside class="sidebar" id="sidebar" aria-label="Main navigation">
+<aside class="sidebar" id="sidebar" aria-label="<?= e(sv_t('Main navigation')) ?>">
   <div class="sidebar__head">
-    <a class="brand" href="<?= e(url(dashboard_path_for_current_user())) ?>" title="SecureVote Home">
+    <a class="brand" href="<?= e(url(dashboard_path_for_current_user())) ?>" title="<?= e(sv_t('SecureVote Home')) ?>">
       <?= sv_logo_mark(32) ?>
       <span class="brand__word">Secure<span>Vote</span></span>
     </a>
     <button class="icon-btn sidebar__close" type="button" data-sidebar-close
-            aria-label="Close navigation" title="Close navigation"><?= sv_icon('x', 18) ?></button>
+            aria-label="<?= e(sv_t('Close navigation')) ?>" title="<?= e(sv_t('Close navigation')) ?>"><?= sv_icon('x', 18) ?></button>
     <button class="icon-btn sidebar__collapse" type="button" data-sidebar-collapse
-            aria-controls="sidebar" aria-expanded="true" aria-label="Collapse navigation" title="Collapse navigation"><?= sv_icon('chevron-left', 18) ?></button>
+            aria-controls="sidebar" aria-expanded="true" aria-label="<?= e(sv_t('Collapse navigation')) ?>" title="<?= e(sv_t('Collapse navigation')) ?>"><?= sv_icon('chevron-left', 18) ?></button>
   </div>
 
-  <nav class="nav" aria-label="Application sections">
+  <nav class="nav" aria-label="<?= e(sv_t('Application sections')) ?>">
     <?php foreach ($navGroups as $group): ?>
       <?php $groupId = 'nav-' . e(strtolower(preg_replace('/[^a-z0-9]+/i', '-', $group['label']))); ?>
       <p class="nav__group" id="<?= $groupId ?>">
-        <?= e($group['label']) ?>
+        <?= e(sv_t($group['label'])) ?>
       </p>
       <ul class="nav__list" aria-labelledby="<?= $groupId ?>">
         <?php foreach ($group['items'] as $item): ?>
@@ -237,13 +237,13 @@ $flashHtml = ob_get_clean();
         <span class="user-chip__name"><?= e(user_full_name($user)) ?></span>
         <span class="user-chip__meta">
           <span class="status-dot status-dot--online" aria-hidden="true"></span>
-          <?= e(ucfirst((string) ($user['role'] ?? ''))) ?>
+          <?= e(sv_t(ucfirst((string) ($user['role'] ?? '')))) ?>
         </span>
       </span>
     </div>
     <form method="post" action="<?= e(post_url('auth/logout.php')) ?>" class="logout-form">
       <?= csrf_field() ?>
-      <button class="nav__item nav__item--button" type="submit" title="Sign out of your session">
+      <button class="nav__item nav__item--button" type="submit" title="<?= e(sv_t('Sign out of your session')) ?>">
         <?= sv_icon('logout', 18, 'nav__icon') ?>
         <span class="nav__label"><?= e(sv_t("Sign Out")) ?></span>
       </button>
@@ -257,7 +257,7 @@ $flashHtml = ob_get_clean();
     <div class="topbar__left">
       <?php if ($hasSidebar): ?>
         <button class="icon-btn topbar__menu" type="button" data-sidebar-toggle
-                aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation menu">
+                aria-controls="sidebar" aria-expanded="false" aria-label="<?= e(sv_t('Open navigation menu')) ?>">
           <?= sv_icon('menu', 20) ?>
         </button>
         <div class="topbar__titles"><?= sv_breadcrumbs($breadcrumb) ?></div>
@@ -266,7 +266,7 @@ $flashHtml = ob_get_clean();
           <?= sv_logo_mark(30) ?>
           <span class="brand__word">Secure<span>Vote</span></span>
         </a>
-        <nav class="public-nav" aria-label="Explore SecureVote">
+        <nav class="public-nav" aria-label="<?= e(sv_t('Explore SecureVote')) ?>">
           <a href="<?= e(url('index.php')) ?>"><?= e(sv_t("Home")) ?></a>
           <a href="<?= e($bodyClass === 'page-home' ? '#open-elections' : url('index.php') . '#open-elections') ?>"><?= e(sv_t("Elections")) ?></a>
           <a href="<?= e($bodyClass === 'page-home' ? '#how-it-works' : url('index.php') . '#how-it-works') ?>"><?= e(sv_t("How it works")) ?></a>
@@ -282,12 +282,12 @@ $flashHtml = ob_get_clean();
       <?php if (!$hasSidebar): ?>
         <div class="public-menu" data-public-menu>
           <button class="public-menu__toggle" type="button" data-public-menu-toggle
-                  aria-label="Open navigation menu" aria-controls="public-menu-panel" aria-expanded="false">
+                  aria-label="<?= e(sv_t('Open navigation menu')) ?>" aria-controls="public-menu-panel" aria-expanded="false">
             <?= sv_icon('menu', 19, 'public-menu__icon--open') ?>
             <?= sv_icon('x', 19, 'public-menu__icon--close') ?>
-            <span>Menu</span>
+            <span><?= e(sv_t("Menu")) ?></span>
           </button>
-          <nav class="public-menu__panel" id="public-menu-panel" aria-label="Explore SecureVote on mobile" hidden>
+          <nav class="public-menu__panel" id="public-menu-panel" aria-label="<?= e(sv_t('Explore SecureVote on mobile')) ?>" hidden>
             <a href="<?= e(url('index.php')) ?>"><?= e(sv_t("Home")) ?></a>
             <a href="<?= e($bodyClass === 'page-home' ? '#open-elections' : url('index.php') . '#open-elections') ?>"><?= e(sv_t("Elections")) ?></a>
             <a href="<?= e($bodyClass === 'page-home' ? '#how-it-works' : url('index.php') . '#how-it-works') ?>"><?= e(sv_t("How it works")) ?></a>

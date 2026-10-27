@@ -85,9 +85,9 @@ if ($electionId > 0) {
     if ($focus === null) {
         sv_error_page(
             404,
-            'Election not found',
-            'That election does not exist, or it has been removed.',
-            [['label' => 'Back to results', 'href' => url('voter/results.php')]]
+            sv_t('Election not found'),
+            sv_t('That election does not exist, or it has been removed.'),
+            [['label' => sv_t('Back to results'), 'href' => url('voter/results.php')]]
         );
     }
 }
@@ -108,26 +108,26 @@ $finalSummary = $focusFinal && $focusMaySee ? sv_final_result_summary($tally) : 
  | Header
  * =================================================================== */
 
-$pageTitle  = 'Results';
+$pageTitle  = sv_t('Results');
 $activeNav  = 'results.php';
 $breadcrumb = $focus !== null
-    ? [['label' => 'Results', 'href' => 'voter/results.php'], ['label' => (string) $focus['title']]]
-    : [['label' => 'Results', 'href' => 'voter/results.php']];
+    ? [['label' => sv_t('Results'), 'href' => 'voter/results.php'], ['label' => (string) $focus['title']]]
+    : [['label' => sv_t('Results'), 'href' => 'voter/results.php']];
 
 
 require __DIR__ . '/../includes/header.php';
 ?>
-<?php if($focusMaySee): ?><p class="report-download"><a class="link" href="<?= e(url('results-report.php?election_id='.(int)$focus['id'])) ?>">Download PDF report</a></p><?php endif; ?>
+<?php if($focusMaySee): ?><p class="report-download"><a class="link" href="<?= e(url('results-report.php?election_id='.(int)$focus['id'])) ?>"><?= e(sv_t("Download PDF report")) ?></a></p><?php endif; ?>
 
 <?php if ($elections === []): ?>
   <section class="card">
     <div class="empty-state">
       <span class="empty-state__icon"><?= sv_icon('results', 26) ?></span>
-      <p class="empty-state__title">No elections on your list</p>
+      <p class="empty-state__title"><?= e(sv_t("No elections on your list")) ?></p>
       <p class="empty-state__text">
-        Results appear here for the elections your account is registered for.
+        <?= e(sv_t("Results appear here for the elections your account is registered for.")) ?>
       </p>
-      <a class="btn btn--secondary" href="<?= e(url('voter/dashboard.php')) ?>">Back to my dashboard</a>
+      <a class="btn btn--secondary" href="<?= e(url('voter/dashboard.php')) ?>"><?= e(sv_t("Back to my dashboard")) ?></a>
     </div>
   </section>
 <?php elseif ($focus === null): ?>
@@ -135,22 +135,22 @@ require __DIR__ . '/../includes/header.php';
   <section class="card">
     <div class="card__header">
       <div class="card__headings">
-        <h2 class="card__title">Election results</h2>
+        <h2 class="card__title"><?= e(sv_t("Election results")) ?></h2>
         <p class="card__subtitle">
-          See live totals after you vote. Completed elections show their final outcomes.
+          <?= e(sv_t("See live totals after you vote. Completed elections show their final outcomes.")) ?>
         </p>
       </div>
     </div>
 
     <div class="table-wrap voter-results-list-wrap">
       <table class="table voter-results-list-table">
-        <caption class="visually-hidden">Elections you are registered for and whether their results are published</caption>
+        <caption class="visually-hidden"><?= e(sv_t("Elections you are registered for and whether their results are published")) ?></caption>
         <thead>
           <tr>
-            <th scope="col">Election</th>
-            <th scope="col">Status</th>
-            <th scope="col">Availability</th>
-            <th scope="col" class="table__actions-col">Actions</th>
+            <th scope="col"><?= e(sv_t("Election")) ?></th>
+            <th scope="col"><?= e(sv_t("Status")) ?></th>
+            <th scope="col"><?= e(sv_t("Availability")) ?></th>
+            <th scope="col" class="table__actions-col"><?= e(sv_t("Actions")) ?></th>
           </tr>
         </thead>
         <tbody>
@@ -163,40 +163,40 @@ require __DIR__ . '/../includes/header.php';
               $note    = results_policy_notice($election, $voted);
             ?>
             <tr>
-              <td data-label="Election"><span class="table__cell-strong"><?= e($election['title']) ?></span></td>
-              <td data-label="Status"><?= election_badge($status) ?></td>
-              <td data-label="Availability">
+              <td data-label="<?= e(sv_t("Election")) ?>"><span class="table__cell-strong"><?= e($election['title']) ?></span></td>
+              <td data-label="<?= e(sv_t("Status")) ?>"><?= election_badge($status) ?></td>
+              <td data-label="<?= e(sv_t("Availability")) ?>">
                 <?php if ($maySee): ?>
-                  <span class="badge badge--teal"><?= sv_icon('check', 13) ?>Available</span>
+                  <span class="badge badge--teal"><?= sv_icon('check', 13) ?><?= e(sv_t("Available")) ?></span>
                 <?php else: ?>
                   <?php if ($canVote): ?>
-                    <span class="badge badge--neutral"><?= sv_icon('clock', 13) ?>Vote to unlock</span>
+                    <span class="badge badge--neutral"><?= sv_icon('clock', 13) ?><?= e(sv_t("Vote to unlock")) ?></span>
                   <?php elseif ($status === 'scheduled'): ?>
-                    <span class="badge badge--neutral">Not open yet</span>
+                    <span class="badge badge--neutral"><?= e(sv_t("Not open yet")) ?></span>
                   <?php else: ?>
-                    <span class="badge badge--neutral">Not on voter list</span>
+                    <span class="badge badge--neutral"><?= e(sv_t("Not on voter list")) ?></span>
                   <?php endif; ?>
                   <?php if ($canVote && $note !== null): ?>
                     <span class="table__cell-sub"><?= e($note) ?></span>
                   <?php endif; ?>
                 <?php endif; ?>
               </td>
-              <td class="table__actions-col" data-label="Results">
+              <td class="table__actions-col" data-label="<?= e(sv_t("Results")) ?>">
                 <div class="table__actions">
                   <?php if ($maySee): ?>
                     <a class="btn btn--secondary btn--sm"
                        href="<?= e(url('voter/results.php?election_id=' . (int) $election['id'])) ?>">
-                      <?= sv_icon('results', 14, 'btn__icon') ?><span>View results</span>
+                      <?= sv_icon('results', 14, 'btn__icon') ?><span><?= e(sv_t("View results")) ?></span>
                     </a>
                   <?php elseif ($canVote): ?>
                     <a class="btn btn--primary btn--sm"
                        href="<?= e(url('voter/ballot.php?election_id=' . (int) $election['id'])) ?>">
-                      <?= sv_icon('vote', 14, 'btn__icon') ?><span>Vote now</span>
+                      <?= sv_icon('vote', 14, 'btn__icon') ?><span><?= e(sv_t("Vote now")) ?></span>
                     </a>
                   <?php elseif ($status === 'scheduled'): ?>
-                    <span class="text-sm text-muted">Not open yet</span>
+                    <span class="text-sm text-muted"><?= e(sv_t("Not open yet")) ?></span>
                   <?php else: ?>
-                    <span class="text-sm text-muted">Not on voter list</span>
+                    <span class="text-sm text-muted"><?= e(sv_t("Not on voter list")) ?></span>
                   <?php endif; ?>
                 </div>
               </td>
@@ -207,7 +207,7 @@ require __DIR__ . '/../includes/header.php';
     </div>
 
     <div class="card__footer">
-      <p class="text-sm text-muted">Live tallies become visible after your ballot is submitted. Final outcomes appear when voting closes.</p>
+      <p class="text-sm text-muted"><?= e(sv_t("Live tallies become visible after your ballot is submitted. Final outcomes appear when voting closes.")) ?></p>
     </div>
   </section>
 
@@ -217,52 +217,52 @@ require __DIR__ . '/../includes/header.php';
     <div class="empty-state">
       <span class="empty-state__icon"><?= sv_icon('lock', 26) ?></span>
       <?php $focusCanVote = election_effective_status($focus) === 'open' && !$focusVoted && (int) ($focus['is_eligible'] ?? 0) === 1; ?>
-      <p class="empty-state__title"><?= $focusCanVote ? 'Vote to see live results' : 'Results are not available yet' ?></p>
+      <p class="empty-state__title"><?= $focusCanVote ? e(sv_t('Vote to see live results')) : e(sv_t('Results are not available yet')) ?></p>
       <p class="empty-state__text">
-        <?= e($focusCanVote ? (results_policy_notice($focus, $focusVoted) ?? 'Submit your ballot to unlock the live tally.') : (election_effective_status($focus) === 'scheduled' ? 'Voting has not opened yet.' : 'Results become available after an eligible ballot is submitted.')) ?>
+        <?= e($focusCanVote ? (results_policy_notice($focus, $focusVoted) ?? sv_t('Submit your ballot to unlock the live tally.')) : (election_effective_status($focus) === 'scheduled' ? sv_t('Voting has not opened yet.') : sv_t('Results become available after an eligible ballot is submitted.'))) ?>
       </p>
       <div class="row" style="justify-content:center">
         <?php if ($focusCanVote): ?>
-          <a class="btn btn--primary" href="<?= e(url('voter/ballot.php?election_id=' . (int) $focus['id'])) ?>">Vote now</a>
+          <a class="btn btn--primary" href="<?= e(url('voter/ballot.php?election_id=' . (int) $focus['id'])) ?>"><?= e(sv_t("Vote now")) ?></a>
         <?php endif; ?>
-        <a class="btn btn--secondary" href="<?= e(url('voter/results.php')) ?>">All elections</a>
-        <a class="btn btn--ghost" href="<?= e(url('voter/elections.php')) ?>">My elections</a>
+        <a class="btn btn--secondary" href="<?= e(url('voter/results.php')) ?>"><?= e(sv_t("All elections")) ?></a>
+        <a class="btn btn--ghost" href="<?= e(url('voter/elections.php')) ?>"><?= e(sv_t("My elections")) ?></a>
       </div>
     </div>
   </section>
 
 <?php else: ?>
 
-  <section class="stat-grid" aria-label="Result summary">
+  <section class="stat-grid" aria-label="<?= e(sv_t('Result summary')) ?>">
     <div class="stat-card">
       <span class="stat-card__icon stat-card__icon--navy"><?= sv_icon('vote', 20) ?></span>
       <div class="stat-card__body">
-        <p class="stat-card__label">Ballots counted</p>
+        <p class="stat-card__label"><?= e(sv_t("Ballots counted")) ?></p>
         <p class="stat-card__value"><?= e((string) $focus['ballot_count']) ?></p>
-        <p class="stat-card__meta">Submitted ballots in this election</p>
+        <p class="stat-card__meta"><?= e(sv_t("Submitted ballots in this election")) ?></p>
       </div>
     </div>
 
     <div class="stat-card">
       <span class="stat-card__icon stat-card__icon--success"><?= sv_icon('positions', 20) ?></span>
       <div class="stat-card__body">
-        <p class="stat-card__label">Positions</p>
+        <p class="stat-card__label"><?= e(sv_t("Positions")) ?></p>
         <p class="stat-card__value"><?= e((string) count($tally)) ?></p>
-        <p class="stat-card__meta">Counted separately</p>
+        <p class="stat-card__meta"><?= e(sv_t("Counted separately")) ?></p>
       </div>
     </div>
 
     <div class="stat-card">
       <span class="stat-card__icon stat-card__icon--teal"><?= sv_icon('check-circle', 20) ?></span>
       <div class="stat-card__body">
-        <p class="stat-card__label">Your ballot</p>
+        <p class="stat-card__label"><?= e(sv_t("Your ballot")) ?></p>
         <p class="stat-card__value" style="font-size:1rem">
-          <?= $focusVoted ? e((string) $focus['ballot_reference']) : 'Not submitted' ?>
+          <?= $focusVoted ? e((string) $focus['ballot_reference']) : e(sv_t('Not submitted')) ?>
         </p>
         <p class="stat-card__meta">
           <?= $focusVoted
-              ? e('Recorded ' . fmt_datetime((string) $focus['ballot_submitted_at']))
-              : 'You did not vote in this election' ?>
+              ? e(sprintf(sv_t('Recorded %s'), fmt_datetime((string) $focus['ballot_submitted_at'])))
+              : e(sv_t('You did not vote in this election')) ?>
         </p>
       </div>
     </div>
@@ -280,13 +280,13 @@ require __DIR__ . '/../includes/header.php';
     <section class="card" aria-labelledby="final-results-heading">
       <div class="card__header">
         <div class="card__headings">
-          <h2 class="card__title" id="final-results-heading">Final election summary</h2>
-          <p class="card__subtitle">Voting closed <?= e(fmt_datetime((string) $focus['end_datetime'])) ?>. Outcomes below use recorded ballots only.</p>
+          <h2 class="card__title" id="final-results-heading"><?= e(sv_t("Final election summary")) ?></h2>
+          <p class="card__subtitle"><?= e(sprintf(sv_t('Voting closed %s. Outcomes below use recorded ballots only.'), fmt_datetime((string) $focus['end_datetime']))) ?></p>
         </div>
       </div>
       <div class="card__body stack-sm">
         <?php if ($finalSummary === []): ?>
-          <p class="text-muted">No positions were configured for this election.</p>
+          <p class="text-muted"><?= e(sv_t("No positions were configured for this election.")) ?></p>
         <?php else: ?>
           <?php foreach ($finalSummary as $item): ?>
             <p><strong><?= e($item['position']) ?> — <?= e($item['outcome']) ?>:</strong> <?= e($item['detail']) ?></p>
@@ -300,8 +300,8 @@ require __DIR__ . '/../includes/header.php';
     <section class="card">
       <div class="empty-state">
         <span class="empty-state__icon"><?= sv_icon('positions', 26) ?></span>
-        <p class="empty-state__title">Nothing to count yet</p>
-        <p class="empty-state__text">This election has no positions.</p>
+        <p class="empty-state__title"><?= e(sv_t("Nothing to count yet")) ?></p>
+        <p class="empty-state__text"><?= e(sv_t("This election has no positions.")) ?></p>
       </div>
     </section>
   <?php else: ?>
@@ -321,12 +321,12 @@ require __DIR__ . '/../includes/header.php';
             </h2>
             <p class="card__subtitle">
               <?= (int) $position['max_selections'] === 1
-                  ? 'Single choice'
-                  : 'Up to ' . (int) $position['max_selections'] . ' selections per voter' ?>
+                  ? e(sv_t('Single choice'))
+                  : e(sprintf(sv_t('Up to %d selections per voter'), (int) $position['max_selections'])) ?>
             </p>
           </div>
           <span class="badge badge--neutral">
-            <?= e((string) $total) ?> selection<?= $total === 1 ? '' : 's' ?> recorded
+            <?= e(sprintf(sv_t('%d selection(s) recorded'), $total)) ?>
           </span>
         </div>
 
@@ -334,9 +334,9 @@ require __DIR__ . '/../includes/header.php';
           <?php if ($total === 0): ?>
             <div class="empty-state empty-state--inline">
               <span class="empty-state__icon"><?= sv_icon('clock', 24) ?></span>
-              <p class="empty-state__title">No votes recorded for this position</p>
+              <p class="empty-state__title"><?= e(sv_t("No votes recorded for this position")) ?></p>
               <p class="empty-state__text">
-                Either nobody has voted yet, or every voter left this position blank.
+                <?= e(sv_t("Either nobody has voted yet, or every voter left this position blank.")) ?>
               </p>
             </div>
           <?php else: ?>
@@ -356,16 +356,16 @@ require __DIR__ . '/../includes/header.php';
                           <span class="badge badge--teal"><?= sv_icon('trophy', 13) ?><?= e(sv_result_badge_label($entry, $row, $focusFinal)) ?></span>
                         <?php endif; ?>
                       </span>
-                      <span class="result-row__meta"><?= e($row['party'] ?: 'No party listed') ?></span>
+                      <span class="result-row__meta"><?= e($row['party'] ?: sv_t('No party listed')) ?></span>
                     </div>
                     <span class="result-row__count">
-                      <?= e((string) $count) ?> vote<?= $count === 1 ? '' : 's' ?>
+                      <?= e(sprintf(sv_t('%d vote(s)'), $count)) ?>
                       <span class="result-row__meta">(<?= e((string) $share) ?>%)</span>
                     </span>
                   </div>
 
                   <div class="progress" role="img"
-                       aria-label="<?= e($row['first_name'] . ' ' . $row['last_name'] . ': ' . $count . ' votes, ' . $share . '%') ?>">
+                       aria-label="<?= e(sprintf(sv_t('%s: %d votes, %s%%'), $row['first_name'] . ' ' . $row['last_name'], $count, $share)) ?>">
                     <span class="progress__bar<?= $isLeading ? ' progress__bar--winner' : '' ?>"
                           style="width: <?= e((string) min(100, max($share, $count > 0 ? 1 : 0))) ?>%"></span>
                   </div>
@@ -374,9 +374,7 @@ require __DIR__ . '/../includes/header.php';
             </div>
 
             <p class="progress__label">
-              <?= e((string) $withChoice) ?> of <?= e((string) $focus['ballot_count']) ?> ballots carried a
-              choice for this position<?= $blank > 0 ? ', ' . e((string) $blank) . ' left it blank' : '' ?>.
-              Percentages are of the <?= e((string) $total) ?> selections recorded for this position.
+              <?= e(sprintf(sv_t('%d of %d ballots carried a choice for this position%s. Percentages are of the %d selections recorded for this position.'), $withChoice, $focus['ballot_count'], $blank > 0 ? sprintf(sv_t(', %d left it blank'), $blank) : '', $total)) ?>
             </p>
           <?php endif; ?>
         </div>
@@ -389,13 +387,13 @@ require __DIR__ . '/../includes/header.php';
       <div class="row row--between">
         <p class="text-sm text-muted">
           <?php if ($focusFinal): ?>
-            Final results reflect submitted ballots. A tie at the cutoff needs an administrator's review before a winner can be declared.
+            <?= e(sv_t("Final results reflect submitted ballots. A tie at the cutoff needs an administrator's review before a winner can be declared.")) ?>
           <?php else: ?>
-            <strong>Leading</strong> shows who is ahead at this moment. Counting continues while the election is open, so these numbers can change until it closes.
+            <?= sv_t("<strong>Leading</strong> shows who is ahead at this moment. Counting continues while the election is open, so these numbers can change until it closes.") ?>
           <?php endif; ?>
         </p>
         <a class="btn btn--secondary btn--sm" href="<?= e(url('voter/results.php')) ?>">
-          <?= sv_icon('arrow-left', 14, 'btn__icon') ?><span>All elections</span>
+          <?= sv_icon('arrow-left', 14, 'btn__icon') ?><span><?= e(sv_t("All elections")) ?></span>
         </a>
       </div>
     </div>

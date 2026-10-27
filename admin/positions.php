@@ -59,25 +59,25 @@ if (is_post()) {
         $election = $electionStmt->fetch();
 
         if (!$election) {
-            $errors['election_id'] = 'Choose the election this position belongs to.';
+            $errors['election_id'] = sv_t('Choose the election this position belongs to.');
         }
 
         if (mb_strlen($name) < 2 || mb_strlen($name) > 100) {
-            $errors['name'] = 'Enter a position name between 2 and 100 characters.';
+            $errors['name'] = sv_t('Enter a position name between 2 and 100 characters.');
         }
         if (mb_strlen($form['description']) > 255) {
-            $errors['description'] = 'Keep the description under 255 characters.';
+            $errors['description'] = sv_t('Keep the description under 255 characters.');
         }
         if ($form['max_selections'] < 1 || $form['max_selections'] > 20) {
-            $errors['max_selections'] = 'Allow between 1 and 20 selections.';
+            $errors['max_selections'] = sv_t('Allow between 1 and 20 selections.');
         }
         if ($form['display_order'] < 0 || $form['display_order'] > 999) {
-            $errors['display_order'] = 'Use a display order between 0 and 999.';
+            $errors['display_order'] = sv_t('Use a display order between 0 and 999.');
         }
 
         // Only draft or scheduled elections may still be reshaped.
         if ($election !== false && $election !== null && $election['status'] === 'open' && $form['id'] === 0) {
-            $errors['form'] = 'This election is already open. Add positions before opening it.';
+            $errors['form'] = sv_t('This election is already open. Add positions before opening it.');
         }
 
         // Unique name inside the election (mirrors uq_positions_election_name).
@@ -85,7 +85,7 @@ if (is_post()) {
             $dupe = $pdo->prepare('SELECT id FROM positions WHERE election_id = ? AND name = ? AND id <> ? LIMIT 1');
             $dupe->execute([$form['election_id'], $name, $form['id']]);
             if ($dupe->fetchColumn() !== false) {
-                $errors['name'] = 'That election already has a position with this name.';
+                $errors['name'] = sv_t('That election already has a position with this name.');
             }
         }
 
@@ -109,7 +109,7 @@ if (is_post()) {
                 audit_log('position_updated', 'Updated position #' . $form['id'] . ' "' . $name
                     . '" in election #' . $form['election_id'] . '.');
 
-                flash_success('Position "' . $name . '" was updated.');
+                flash_success(sprintf(sv_t('Position "%s" was updated.'), $name));
             } else {
                 $insert = $pdo->prepare(
                     'INSERT INTO positions (election_id, name, description, max_selections, display_order)
@@ -128,7 +128,7 @@ if (is_post()) {
                     . '" in election #' . $form['election_id'] . ' (up to '
                     . $form['max_selections'] . ' selection(s)).');
 
-                flash_success('Position "' . $name . '" was created. Add its candidates next.');
+                flash_success(sprintf(sv_t('Position "%s" was created. Add its candidates next.'), $name));
             }
 
             redirect('admin/positions.php?election_id=' . $form['election_id']);
@@ -148,14 +148,17 @@ if (is_post()) {
         $position = $stmt->fetch();
 
         if (!$position) {
-            flash_error('That position no longer exists.');
+            flash_error(sv_t('That position no longer exists.'));
             redirect('admin/positions.php');
         }
 
         // Recorded votes are kept: a position with votes is part of history.
         if ((int) $position['vote_count'] > 0) {
-            flash_error('"' . $position['name'] . '" already holds ' . (int) $position['vote_count']
-                . ' recorded vote(s) and cannot be deleted.');
+            flash_error(sprintf(
+                sv_t('"%s" already holds %d recorded vote(s) and cannot be deleted.'),
+                $position['name'],
+                (int) $position['vote_count']
+            ));
             redirect('admin/positions.php?election_id=' . (int) $position['election_id']);
         }
 
@@ -165,7 +168,7 @@ if (is_post()) {
         audit_log('position_deleted', 'Deleted position #' . $id . ' "' . $position['name']
             . '" (and its ' . (int) $position['candidate_count'] . ' candidate record(s)).');
 
-        flash_success('Position "' . $position['name'] . '" was deleted.');
+        flash_success(sprintf(sv_t('Position "%s" was deleted.'), $position['name']));
         redirect('admin/positions.php?election_id=' . (int) $position['election_id']);
     }
 }
@@ -209,9 +212,9 @@ if ($isForm) {
         if (!$editing) {
             sv_error_page(
                 404,
-                'Position not found',
-                'That position does not exist, or it was deleted by another administrator.',
-                [['label' => 'Back to positions', 'href' => url('admin/positions.php')]]
+                sv_t('Position not found'),
+                sv_t('That position does not exist, or it was deleted by another administrator.'),
+                [['label' => sv_t('Back to positions'), 'href' => url('admin/positions.php')]]
             );
         }
 
@@ -242,20 +245,20 @@ if ($isForm) {
 $isNew = (int) $form['id'] === 0;
 
 if ($isForm) {
-    $pageTitle   = $isNew ? 'New position' : 'Edit position';
+    $pageTitle   = $isNew ? sv_t('New position') : sv_t('Edit position');
     $pageActions = '<a class="btn btn--secondary btn--sm" href="' . e(url('admin/positions.php?election_id=' . $filterId)) . '">'
-        . sv_icon('arrow-left', 16, 'btn__icon') . '<span>Back to positions</span></a>';
+        . sv_icon('arrow-left', 16, 'btn__icon') . '<span>' . e(sv_t('Back to positions')) . '</span></a>';
 } else {
-    $pageTitle   = 'Positions';
+    $pageTitle   = sv_t('Positions');
     $pageActions = '<a class="btn btn--accent btn--sm" href="'
         . e(url('admin/positions.php?action=create' . ($filterId > 0 ? '&election_id=' . $filterId : ''))) . '">'
-        . sv_icon('plus', 16, 'btn__icon') . '<span>New position</span></a>';
+        . sv_icon('plus', 16, 'btn__icon') . '<span>' . e(sv_t('New position')) . '</span></a>';
 }
 
 $activeNav  = 'positions.php';
 $breadcrumb = $isForm
-    ? [['label' => 'Positions', 'href' => 'admin/positions.php'], ['label' => $isNew ? 'New' : 'Edit']]
-    : [['label' => 'Positions', 'href' => 'admin/positions.php']];
+    ? [['label' => sv_t('Positions'), 'href' => 'admin/positions.php'], ['label' => $isNew ? sv_t('New') : sv_t('Edit')]]
+    : [['label' => sv_t('Positions'), 'href' => 'admin/positions.php']];
 
 require __DIR__ . '/../includes/header.php';
 
@@ -272,25 +275,25 @@ if ($isForm):
     <?php elseif ($errors !== []): ?>
       <div class="alert alert--danger" role="alert">
         <span class="alert__icon" aria-hidden="true"><?= sv_icon('alert-triangle', 18) ?></span>
-        <p class="alert__text">The position was not saved. Please correct the highlighted fields.</p>
+        <p class="alert__text"><?= e(sv_t('The position was not saved. Please correct the highlighted fields.')) ?></p>
       </div>
     <?php endif; ?>
 
     <?php if ($elections === []): ?>
       <div class="empty-state">
         <span class="empty-state__icon"><?= sv_icon('vote', 26) ?></span>
-        <p class="empty-state__title">Create an election first</p>
-        <p class="empty-state__text">A position always belongs to an election.</p>
+        <p class="empty-state__title"><?= e(sv_t('Create an election first')) ?></p>
+        <p class="empty-state__text"><?= e(sv_t('A position always belongs to an election.')) ?></p>
         <a class="btn btn--accent" href="<?= e(url('admin/elections.php?action=create')) ?>">
-          <?= sv_icon('plus', 16, 'btn__icon') ?><span>New election</span>
+          <?= sv_icon('plus', 16, 'btn__icon') ?><span><?= e(sv_t('New election')) ?></span>
         </a>
       </div>
     <?php else: ?>
       <section class="card">
         <div class="card__header">
           <div class="card__headings">
-            <h2 class="card__title"><?= e($isNew ? 'Position details' : 'Edit position') ?></h2>
-            <p class="card__subtitle">Required fields are marked with an asterisk.</p>
+            <h2 class="card__title"><?= e($isNew ? sv_t('Position details') : sv_t('Edit position')) ?></h2>
+            <p class="card__subtitle"><?= e(sv_t('Required fields are marked with an asterisk.')) ?></p>
           </div>
         </div>
 
@@ -303,15 +306,15 @@ if ($isForm):
             <div class="form-grid">
               <div class="form-field">
                 <label class="label" for="election_id">
-                  Election <span class="label__required" aria-hidden="true">*</span>
+                  <?= e(sv_t('Election')) ?> <span class="label__required" aria-hidden="true">*</span>
                 </label>
                 <select class="select<?= isset($errors['election_id']) ? ' is-invalid' : '' ?>"
                         id="election_id" name="election_id" required aria-required="true">
-                  <option value="">Select an election…</option>
+                  <option value=""><?= e(sv_t('Select an election…')) ?></option>
                   <?php foreach ($elections as $election): ?>
                     <option value="<?= e((string) $election['id']) ?>"
                       <?= (int) $form['election_id'] === (int) $election['id'] ? 'selected' : '' ?>>
-                      <?= e($election['title']) ?> (<?= e((string) $election['status']) ?>)
+                      <?= e($election['title']) ?> (<?= e(sv_t(ucfirst((string) $election['status']))) ?>)
                     </option>
                   <?php endforeach; ?>
                 </select>
@@ -324,27 +327,27 @@ if ($isForm):
 
               <div class="form-field">
                 <label class="label" for="name">
-                  Position name <span class="label__required" aria-hidden="true">*</span>
+                  <?= e(sv_t('Position name')) ?> <span class="label__required" aria-hidden="true">*</span>
                 </label>
                 <input class="input<?= isset($errors['name']) ? ' is-invalid' : '' ?>"
                        type="text" id="name" name="name" maxlength="100"
                        value="<?= e($form['name']) ?>" required aria-required="true"
-                       placeholder="e.g. President"
+                       placeholder="<?= e(sv_t('e.g. President')) ?>"
                        <?= isset($errors['name']) ? 'aria-describedby="name-error" aria-invalid="true"' : '' ?>>
                 <?php if (isset($errors['name'])): ?>
                   <p class="field-error" id="name-error">
                     <?= sv_icon('alert-triangle', 14) ?><span><?= e($errors['name']) ?></span>
                   </p>
                 <?php endif; ?>
-                <p class="help">Must be unique inside the election.</p>
+                <p class="help"><?= e(sv_t('Must be unique inside the election.')) ?></p>
               </div>
 
               <div class="form-field form-field--full">
-                <label class="label" for="description">Description</label>
+                <label class="label" for="description"><?= e(sv_t('Description')) ?></label>
                 <input class="input<?= isset($errors['description']) ? ' is-invalid' : '' ?>"
                        type="text" id="description" name="description" maxlength="255"
                        value="<?= e($form['description']) ?>"
-                       placeholder="Short note shown above the candidates"
+                       placeholder="<?= e(sv_t('Short note shown above the candidates')) ?>"
                        <?= isset($errors['description']) ? 'aria-describedby="description-error" aria-invalid="true"' : '' ?>>
                 <?php if (isset($errors['description'])): ?>
                   <p class="field-error" id="description-error">
@@ -355,7 +358,7 @@ if ($isForm):
 
               <div class="form-field">
                 <label class="label" for="max_selections">
-                  Selections allowed <span class="label__required" aria-hidden="true">*</span>
+                  <?= e(sv_t('Selections allowed')) ?> <span class="label__required" aria-hidden="true">*</span>
                 </label>
                 <input class="input<?= isset($errors['max_selections']) ? ' is-invalid' : '' ?>"
                        type="number" id="max_selections" name="max_selections"
@@ -367,11 +370,11 @@ if ($isForm):
                     <?= sv_icon('alert-triangle', 14) ?><span><?= e($errors['max_selections']) ?></span>
                   </p>
                 <?php endif; ?>
-                <p class="help">1 for a single-choice race. The server rejects a ballot that exceeds this.</p>
+                <p class="help"><?= e(sv_t('1 for a single-choice race. The server rejects a ballot that exceeds this.')) ?></p>
               </div>
 
               <div class="form-field">
-                <label class="label" for="display_order">Display order</label>
+                <label class="label" for="display_order"><?= e(sv_t('Display order')) ?></label>
                 <input class="input<?= isset($errors['display_order']) ? ' is-invalid' : '' ?>"
                        type="number" id="display_order" name="display_order"
                        min="0" max="999" step="1" value="<?= e((string) $form['display_order']) ?>"
@@ -381,22 +384,22 @@ if ($isForm):
                     <?= sv_icon('alert-triangle', 14) ?><span><?= e($errors['display_order']) ?></span>
                   </p>
                 <?php endif; ?>
-                <p class="help">Lower numbers appear first on the ballot.</p>
+                <p class="help"><?= e(sv_t('Lower numbers appear first on the ballot.')) ?></p>
               </div>
             </div>
 
             <div class="form-actions">
-              <button class="btn btn--primary" type="submit" data-submit-once data-submitting-label="Saving…">
-                <?= sv_icon('check', 16, 'btn__icon') ?><span><?= e($isNew ? 'Create position' : 'Save changes') ?></span>
+              <button class="btn btn--primary" type="submit" data-submit-once data-submitting-label="<?= e(sv_t('Saving…')) ?>">
+                <?= sv_icon('check', 16, 'btn__icon') ?><span><?= e($isNew ? sv_t('Create position') : sv_t('Save changes')) ?></span>
               </button>
               <a class="btn btn--secondary"
-                 href="<?= e(url('admin/positions.php' . ($form['election_id'] > 0 ? '?election_id=' . (int) $form['election_id'] : ''))) ?>">Cancel</a>
+                 href="<?= e(url('admin/positions.php' . ($form['election_id'] > 0 ? '?election_id=' . (int) $form['election_id'] : ''))) ?>"><?= e(sv_t('Cancel')) ?></a>
 
               <?php if (!$isNew): ?>
                 <span class="form-actions__spacer"></span>
                 <a class="btn btn--secondary btn--sm"
                    href="<?= e(url('admin/candidates.php?position_id=' . (int) $form['id'])) ?>">
-                  <?= sv_icon('users', 16, 'btn__icon') ?><span>Manage candidates</span>
+                  <?= sv_icon('users', 16, 'btn__icon') ?><span><?= e(sv_t('Manage candidates')) ?></span>
                 </a>
               <?php endif; ?>
             </div>
@@ -408,18 +411,18 @@ if ($isForm):
         <section class="card">
           <div class="card__header">
             <div class="card__headings">
-              <h2 class="card__title">Delete this position</h2>
-              <p class="card__subtitle">Only possible while no ballot has been recorded against it.</p>
+              <h2 class="card__title"><?= e(sv_t('Delete this position')) ?></h2>
+              <p class="card__subtitle"><?= e(sv_t('Only possible while no ballot has been recorded against it.')) ?></p>
             </div>
           </div>
           <div class="card__body">
             <form method="post" action="<?= e(post_url('admin/positions.php')) ?>"
-                  data-confirm="Delete “<?= e($form['name']) ?>” and all of its candidates? This cannot be undone.">
+                  data-confirm="<?= e(sprintf(sv_t('Delete “%s” and all of its candidates? This cannot be undone.'), $form['name'])) ?>">
               <?= csrf_field() ?>
               <input type="hidden" name="action" value="delete">
               <input type="hidden" name="id" value="<?= e((string) $form['id']) ?>">
               <button class="btn btn--danger btn--sm" type="submit">
-                <?= sv_icon('trash', 16, 'btn__icon') ?><span>Delete position</span>
+                <?= sv_icon('trash', 16, 'btn__icon') ?><span><?= e(sv_t('Delete position')) ?></span>
               </button>
             </form>
           </div>
@@ -465,20 +468,20 @@ $headingElection = $filterId > 0 ? ($electionTitles[$filterId] ?? null) : null;
   <div class="card__header">
     <div class="card__headings">
       <h2 class="card__title">
-        <?= e($headingElection !== null ? $headingElection : 'All positions') ?>
+        <?= e($headingElection !== null ? $headingElection : sv_t('All positions')) ?>
       </h2>
       <p class="card__subtitle">
-        <?= e((string) count($positions)) ?> position<?= count($positions) === 1 ? '' : 's' ?>
-        <?= e($headingElection !== null ? 'in this election' : 'across every election') ?>
+        <?= e((string) count($positions)) ?> <?= e(count($positions) === 1 ? sv_t('position') : sv_t('positions')) ?>
+        <?= e($headingElection !== null ? sv_t('in this election') : sv_t('across every election')) ?>
       </p>
     </div>
   </div>
 
   <form class="table-toolbar" method="get" action="<?= e(url('admin/positions.php')) ?>">
     <div class="row">
-      <label class="label" for="election_id">Election</label>
+      <label class="label" for="election_id"><?= e(sv_t('Election')) ?></label>
       <select class="select" id="election_id" name="election_id" data-auto-submit>
-        <option value="">All elections</option>
+        <option value=""><?= e(sv_t('All elections')) ?></option>
         <?php foreach ($elections as $election): ?>
           <option value="<?= e((string) $election['id']) ?>"
             <?= $filterId === (int) $election['id'] ? 'selected' : '' ?>>
@@ -486,9 +489,9 @@ $headingElection = $filterId > 0 ? ($electionTitles[$filterId] ?? null) : null;
           </option>
         <?php endforeach; ?>
       </select>
-      <button class="btn btn--secondary btn--sm" type="submit">Apply</button>
+      <button class="btn btn--secondary btn--sm" type="submit"><?= e(sv_t('Apply')) ?></button>
       <?php if ($filterId > 0): ?>
-        <a class="btn btn--ghost btn--sm" href="<?= e(url('admin/positions.php')) ?>">Clear</a>
+        <a class="btn btn--ghost btn--sm" href="<?= e(url('admin/positions.php')) ?>"><?= e(sv_t('Clear')) ?></a>
       <?php endif; ?>
     </div>
   </form>
@@ -497,29 +500,28 @@ $headingElection = $filterId > 0 ? ($electionTitles[$filterId] ?? null) : null;
     <div class="empty-state">
       <span class="empty-state__icon"><?= sv_icon('positions', 26) ?></span>
       <p class="empty-state__title">
-        <?= e($headingElection !== null ? 'This election has no positions yet' : 'No positions yet') ?>
+        <?= e($headingElection !== null ? sv_t('This election has no positions yet') : sv_t('No positions yet')) ?>
       </p>
       <p class="empty-state__text">
-        A position is one contest on the ballot, for example President or Senator.
-        Each position needs at least two candidates before the election can be opened.
+        <?= e(sv_t('A position is one contest on the ballot, for example President or Senator. Each position needs at least two candidates before the election can be opened.')) ?>
       </p>
       <a class="btn btn--accent"
          href="<?= e(url('admin/positions.php?action=create' . ($filterId > 0 ? '&election_id=' . $filterId : ''))) ?>">
-        <?= sv_icon('plus', 16, 'btn__icon') ?><span>Create a position</span>
+        <?= sv_icon('plus', 16, 'btn__icon') ?><span><?= e(sv_t('Create a position')) ?></span>
       </a>
     </div>
   <?php else: ?>
     <div class="table-wrap">
       <table class="table">
-        <caption class="visually-hidden">Positions with their election, selection limit and candidate count</caption>
+        <caption class="visually-hidden"><?= e(sv_t('Positions with their election, selection limit and candidate count')) ?></caption>
         <thead>
           <tr>
-            <th scope="col">Order</th>
-            <th scope="col">Position</th>
-            <th scope="col">Election</th>
-            <th scope="col">Selections</th>
-            <th scope="col">Candidates</th>
-            <th scope="col" class="table__actions-col">Actions</th>
+            <th scope="col"><?= e(sv_t('Order')) ?></th>
+            <th scope="col"><?= e(sv_t('Position')) ?></th>
+            <th scope="col"><?= e(sv_t('Election')) ?></th>
+            <th scope="col"><?= e(sv_t('Selections')) ?></th>
+            <th scope="col"><?= e(sv_t('Candidates')) ?></th>
+            <th scope="col" class="table__actions-col"><?= e(sv_t('Actions')) ?></th>
           </tr>
         </thead>
         <tbody>
@@ -528,7 +530,7 @@ $headingElection = $filterId > 0 ? ($electionTitles[$filterId] ?? null) : null;
               <td class="mono"><?= e((string) $position['display_order']) ?></td>
               <td>
                 <span class="table__cell-strong"><?= e($position['name']) ?></span>
-                <span class="table__cell-sub"><?= e(str_limit($position['description'], 60) ?: 'No description') ?></span>
+                <span class="table__cell-sub"><?= e(str_limit($position['description'], 60) ?: sv_t('No description')) ?></span>
               </td>
               <td>
                 <span class="table__cell-strong">
@@ -536,29 +538,29 @@ $headingElection = $filterId > 0 ? ($electionTitles[$filterId] ?? null) : null;
                     <?= e(str_limit($position['election_title'], 40)) ?>
                   </a>
                 </span>
-                <span class="table__cell-sub"><?= e(ucfirst((string) $position['election_status'])) ?></span>
+                <span class="table__cell-sub"><?= e(sv_t(ucfirst((string) $position['election_status']))) ?></span>
               </td>
               <td>
                 <span class="table__cell-strong"><?= e((string) $position['max_selections']) ?></span>
                 <span class="table__cell-sub">
-                  <?= (int) $position['max_selections'] === 1 ? 'Single choice' : 'Choose up to ' . (int) $position['max_selections'] ?>
+                  <?= (int) $position['max_selections'] === 1 ? e(sv_t('Single choice')) : e(sprintf(sv_t('Choose up to %d'), (int) $position['max_selections'])) ?>
                 </span>
               </td>
               <td>
-                <span class="table__cell-strong"><?= e((string) $position['candidate_count']) ?> candidate<?= (int) $position['candidate_count'] === 1 ? '' : 's' ?></span>
+                <span class="table__cell-strong"><?= e(sprintf(sv_t('%d candidate%s'), (int) $position['candidate_count'], (int) $position['candidate_count'] === 1 ? '' : 's')) ?></span>
                 <?php if ((int) $position['vote_count'] > 0): ?>
-                  <span class="table__cell-sub"><?= e((string) $position['vote_count']) ?> votes recorded</span>
+                  <span class="table__cell-sub"><?= e(sprintf(sv_t('%d votes recorded'), (int) $position['vote_count'])) ?></span>
                 <?php endif; ?>
               </td>
               <td class="table__actions-col">
                 <div class="table__actions">
                   <a class="btn btn--secondary btn--sm"
                      href="<?= e(url('admin/positions.php?action=edit&id=' . (int) $position['id'])) ?>">
-                    <?= sv_icon('edit', 14, 'btn__icon') ?><span>Edit</span>
+                    <?= sv_icon('edit', 14, 'btn__icon') ?><span><?= e(sv_t('Edit')) ?></span>
                   </a>
                   <a class="btn btn--secondary btn--sm"
                      href="<?= e(url('admin/candidates.php?position_id=' . (int) $position['id'])) ?>">
-                    <?= sv_icon('users', 14, 'btn__icon') ?><span>Candidates</span>
+                    <?= sv_icon('users', 14, 'btn__icon') ?><span><?= e(sv_t('Candidates')) ?></span>
                   </a>
                 </div>
               </td>

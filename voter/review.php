@@ -30,14 +30,14 @@ $election = $electionStmt->fetch();
 if (!$election) {
     sv_error_page(
         404,
-        'Election not found',
-        'That election does not exist, or it has been removed.',
-        [['label' => 'Back to my elections', 'href' => url('voter/elections.php')]]
+        sv_t('Election not found'),
+        sv_t('That election does not exist, or it has been removed.'),
+        [['label' => sv_t('Back to my elections'), 'href' => url('voter/elections.php')]]
     );
 }
 
 if (has_voted($electionId, $userId)) {
-    flash_warning('A ballot for "' . $election['title'] . '" has already been recorded on your account.');
+    flash_warning(sprintf(sv_t('A ballot for "%s" has already been recorded on your account.'), $election['title']));
     redirect('voter/dashboard.php');
 }
 
@@ -48,7 +48,7 @@ if (has_voted($electionId, $userId)) {
 $plan = sv_pending_ballot($electionId);
 
 if ($plan === null) {
-    flash_error('There is nothing to review yet. Please fill in the ballot first.');
+    flash_error(sv_t('There is nothing to review yet. Please fill in the ballot first.'));
     redirect('voter/ballot.php?election_id=' . $electionId);
 }
 
@@ -92,7 +92,7 @@ if (is_post()) {
         $userId
     );
 
-    flash_error((string) ($result['error'] ?? 'The ballot could not be recorded.'));
+    flash_error((string) ($result['error'] ?? sv_t('The ballot could not be recorded.')));
 
     if (in_array($result['code'] ?? '', ['already_voted', 'not_open'], true)) {
         sv_clear_pending_ballot($electionId);
@@ -106,18 +106,18 @@ if (is_post()) {
  | 4. Header
  * =================================================================== */
 
-$pageTitle = 'Review your ballot';
+$pageTitle = sv_t('Review your ballot');
 $activeNav = 'elections.php';
 $breadcrumb   = [
-    ['label' => 'Elections', 'href' => 'voter/elections.php'],
-    ['label' => 'Ballot', 'href' => 'voter/ballot.php?election_id=' . $electionId],
-    ['label' => 'Review'],
+    ['label' => sv_t('Elections'), 'href' => 'voter/elections.php'],
+    ['label' => sv_t('Ballot'), 'href' => 'voter/ballot.php?election_id=' . $electionId],
+    ['label' => sv_t('Review')],
 ];
 
 require __DIR__ . '/../includes/header.php';
 ?>
 
-<nav class="vote-progress" aria-label="Voting progress">
+<nav class="vote-progress" aria-label="<?= e(sv_t('Voting progress')) ?>">
   <ol>
     <li class="is-complete"><span><?= sv_icon('check', 15) ?></span> <?= e(sv_t("Choose")) ?></li>
     <li class="is-current" aria-current="step"><span>2</span> <?= e(sv_t("Review")) ?></li>
@@ -128,7 +128,7 @@ require __DIR__ . '/../includes/header.php';
 <section class="vote-intro" aria-labelledby="vote-intro-title">
   <div>
     <h2 id="vote-intro-title"><?= e(sv_t("Take one last look")) ?></h2>
-    <p>Review your choices for <?= e($election['title']) ?>. <?= e(sv_t('You can go back and change your choices before submitting. After submission, your ballot cannot be changed.')) ?></p>
+    <p><?= e(sv_t("Review your choices for")) ?> <?= e($election['title']) ?>. <?= e(sv_t('You can go back and change your choices before submitting. After submission, your ballot cannot be changed.')) ?></p>
   </div>
   <span class="badge badge--success"><?= sv_icon('shield-check', 14) ?> <?= e(sv_t("Ready to submit")) ?></span>
 </section>
@@ -160,11 +160,11 @@ require __DIR__ . '/../includes/header.php';
         <div class="card__headings">
           <h3 class="card__title"><?= e($position['name']) ?></h3>
           <p class="card__subtitle">
-            <?= $max === 1 ? '1 candidate allowed' : 'Up to ' . $max . ' candidates allowed' ?>
+            <?= $max === 1 ? e(sv_t('1 candidate allowed')) : e(sprintf(sv_t('Up to %d candidates allowed'), $max)) ?>
           </p>
         </div>
         <span class="badge badge--<?= $chosen === [] ? 'warning' : 'primary' ?>">
-          <?= $chosen === [] ? 'Abstained' : count($chosen) . ' selected' ?>
+          <?= $chosen === [] ? e(sv_t('Abstained')) : e(sprintf(sv_t('%d selected'), count($chosen))) ?>
         </span>
       </div>
 
@@ -172,7 +172,7 @@ require __DIR__ . '/../includes/header.php';
         <?php if ($chosen === []): ?>
           <p class="text-sm text-muted" style="font-style:italic">
             <?= sv_icon('info', 14) ?>
-            No candidate selected for this position (abstained).
+            <?= e(sv_t("No candidate selected for this position (abstained).")) ?>
           </p>
         <?php else: ?>
           <div class="candidate-summary-list">
@@ -190,7 +190,7 @@ require __DIR__ . '/../includes/header.php';
                   <?php endif; ?>
                 </div>
                 <span class="candidate-summary-item__badge">
-                  <?= sv_icon('check', 14) ?> Selected
+                  <?= sv_icon('check', 14) ?> <?= e(sv_t("Selected")) ?>
                 </span>
               </div>
             <?php endforeach; ?>
@@ -213,7 +213,7 @@ require __DIR__ . '/../includes/header.php';
         </a>
 
         <button class="btn btn--success btn--lg" type="submit" data-submit-once
-                data-submitting-label="Recording your ballot…">
+                data-submitting-label="<?= e(sv_t("Recording your ballot…")) ?>">
           <?= sv_icon('shield-check', 18, 'btn__icon') ?>
           <span><?= e(sv_t("Confirm and submit my ballot")) ?></span>
         </button>

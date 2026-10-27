@@ -30,9 +30,9 @@ $election = $electionStmt->fetch();
 if (!$election) {
     sv_error_page(
         404,
-        'Election not found',
-        'That election does not exist, or it has been removed.',
-        [['label' => 'Back to my elections', 'href' => url('voter/elections.php')]]
+        sv_t('Election not found'),
+        sv_t('That election does not exist, or it has been removed.'),
+        [['label' => sv_t('Back to my elections'), 'href' => url('voter/elections.php')]]
     );
 }
 
@@ -41,14 +41,14 @@ $effective    = election_effective_status($election);
 
 // Already voted: send them to their receipt / dashboard
 if ($alreadyVoted) {
-    flash_warning('You have already submitted your ballot for "' . $election['title'] . '". Each voter may submit exactly one ballot.');
+    flash_warning(sprintf(sv_t('You have already submitted your ballot for "%s". Each voter may submit exactly one ballot.'), $election['title']));
     redirect('voter/dashboard.php');
 }
 
 // Check if open
 if ($effective !== 'open') {
     [$denialTitle, $denialMessage] = election_state_denial($effective, $election);
-    sv_error_page(403, $denialTitle, $denialMessage, [['label' => 'Back to my elections', 'href' => url('voter/elections.php')]]);
+    sv_error_page(403, $denialTitle, $denialMessage, [['label' => sv_t('Back to my elections'), 'href' => url('voter/elections.php')]]);
 }
 
 /* =====================================================================
@@ -101,14 +101,14 @@ foreach ($ballot as $entry) {
  | Header
  * =================================================================== */
 
-$pageTitle   = 'Your ballot';
+$pageTitle   = sv_t('Your ballot');
 $activeNav   = 'elections.php';
 $bodyClass   = 'page-voter-ballot';
 $pageActions  = '<a class="btn btn--secondary btn--sm" href="' . e(url('voter/elections.php')) . '">'
     . sv_icon('arrow-left', 16, 'btn__icon') . '<span>' . e(sv_t('Leave without voting')) . '</span></a>';
 $breadcrumb   = [
-    ['label' => 'Elections', 'href' => 'voter/elections.php'],
-    ['label' => 'Ballot'],
+    ['label' => sv_t('Elections'), 'href' => 'voter/elections.php'],
+    ['label' => sv_t('Ballot')],
 ];
 
 require __DIR__ . '/../includes/header.php';
@@ -126,14 +126,14 @@ echo '<aside class="notice"><div><strong>'.e(sv_t('Voting instructions')).'</str
       <p class="alert__text"><?= e(sv_t("Your selections need correction. Nothing has been recorded yet.")) ?></p>
       <ul class="stack-sm" style="margin-top:var(--sp-2)">
         <?php foreach ($errors as $message): ?>
-          <li class="text-sm">&bull; <?= e($message) ?></li>
+          <li class="text-sm">&bull; <?= e(sv_t($message)) ?></li>
         <?php endforeach; ?>
       </ul>
     </div>
   </div>
 <?php endif; ?>
 
-<nav class="vote-progress" aria-label="Voting progress">
+<nav class="vote-progress" aria-label="<?= e(sv_t('Voting progress')) ?>">
   <ol>
     <li class="is-current" aria-current="step"><span>1</span> <?= e(sv_t("Choose")) ?></li>
     <li><span>2</span> <?= e(sv_t("Review")) ?></li>
@@ -155,9 +155,9 @@ echo '<aside class="notice"><div><strong>'.e(sv_t('Voting instructions')).'</str
       <span class="empty-state__icon"><?= sv_icon('positions', 26) ?></span>
       <p class="empty-state__title"><?= e(sv_t("This election has no positions yet")) ?></p>
       <p class="empty-state__text">
-        An administrator has not added active positions or candidates yet.
+        <?= e(sv_t("An administrator has not added active positions or candidates yet.")) ?>
       </p>
-      <a class="btn btn--secondary" href="<?= e(url('voter/elections.php')) ?>">Back to my elections</a>
+      <a class="btn btn--secondary" href="<?= e(url('voter/elections.php')) ?>"><?= e(sv_t("Back to my elections")) ?></a>
     </div>
   </section>
 <?php else: ?>
@@ -193,7 +193,7 @@ echo '<aside class="notice"><div><strong>'.e(sv_t('Voting instructions')).'</str
             </div>
             <span class="ballot__counter<?= $chosenHere >= $max ? ' is-full' : '' ?>"
                   aria-live="polite">
-              <?= e((string) $chosenHere) ?> of <?= e((string) $max) ?> selected
+              <?= e(sprintf(sv_t('%d of %d selected'), $chosenHere, $max)) ?>
             </span>
           </div>
 
@@ -255,7 +255,7 @@ echo '<aside class="notice"><div><strong>'.e(sv_t('Voting instructions')).'</str
                         <?php if ($hasBio): ?>
                           <?= e(str_limit((string) $candidate['biography'], 120)) ?>
                         <?php elseif ($hasPlatform): ?>
-                          <strong>Platform:</strong> <?= e(str_limit((string) $candidate['platform'], 120)) ?>
+                          <strong><?= e(sv_t("Platform:")) ?></strong> <?= e(str_limit((string) $candidate['platform'], 120)) ?>
                         <?php endif; ?>
                       </span>
                       <?php if (strlen((string) ($candidate['biography'] . $candidate['platform'])) > 120): ?>
@@ -288,12 +288,12 @@ echo '<aside class="notice"><div><strong>'.e(sv_t('Voting instructions')).'</str
     <div class="ballot__foot" style="background:var(--bg-card); border-radius:12px; box-shadow:var(--shadow-md); border:1px solid var(--border-color); padding:var(--sp-4);">
       <p class="ballot__foot-note">
         <?= sv_icon('info', 14) ?>
-        The next screen shows a review of these choices before anything is submitted.
+        <?= e(sv_t("The next screen shows a review of these choices before anything is submitted.")) ?>
       </p>
       <div class="btn-group">
-        <a class="btn btn--secondary" href="<?= e(url('voter/elections.php')) ?>">Cancel</a>
+        <a class="btn btn--secondary" href="<?= e(url('voter/elections.php')) ?>"><?= e(sv_t("Cancel")) ?></a>
         <button class="btn btn--primary btn--lg" type="submit" data-submit-once
-                data-submitting-label="Checking your selections…">
+                data-submitting-label="<?= e(sv_t("Checking your selections…")) ?>">
           <?= sv_icon('check-circle', 18, 'btn__icon') ?>
           <span><?= e(sv_t("Review my ballot")) ?></span>
         </button>

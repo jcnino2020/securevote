@@ -44,8 +44,8 @@ if (($result['ok'] ?? false) === true) {
     $user = $result['user'];
     login_user($user);
 
-    flash_success('Welcome back, ' . $user['first_name'] . '. You are signed in as '
-        . $user['role'] . '.');
+    $roleName = sv_language() === 'fil' ? ($user['role'] === 'admin' ? 'tagapangasiwa (admin)' : 'botante') : $user['role'];
+    flash_success(sprintf(sv_t('Welcome back, %s. You are signed in as %s.'), $user['first_name'], $roleName));
 
     // Return the visitor to the page they were trying to open, but only if it
     // is a path inside this application. Anything that could be read as an
@@ -71,14 +71,14 @@ if (($result['ok'] ?? false) === true) {
 //    the visitor back to the form.
 $fields = [];
 if ($identifier === '') {
-    $fields['identifier'] = 'Enter your username or email address.';
+    $fields['identifier'] = sv_t('Enter your username or email address.');
 }
 if ($password === '') {
-    $fields['password'] = 'Enter your password.';
+    $fields['password'] = sv_t('Enter your password.');
 }
 
 $_SESSION['_login_error'] = [
-    'message' => (string) ($result['error'] ?? 'Sign-in failed. Please try again.'),
+    'message' => sv_t((string) ($result['error'] ?? 'Sign-in failed. Please try again.')),
     'fields'  => $fields,
 ];
 // Keep the typed identifier so the visitor does not have to retype it. The

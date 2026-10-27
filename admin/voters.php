@@ -33,9 +33,9 @@ $form   = [
 ];
 
 $statusOptions = [
-    'active'   => 'Active — can sign in and vote',
-    'inactive' => 'Inactive — cannot sign in',
-    'blocked'  => 'Blocked — cannot sign in, kept for the record',
+    'active'   => sv_t('Active — can sign in and vote'),
+    'inactive' => sv_t('Inactive — cannot sign in'),
+    'blocked'  => sv_t('Blocked — cannot sign in, kept for the record'),
 ];
 
 /** Load a voter account, or null when the id is not a voter. */
@@ -76,36 +76,36 @@ if (is_post()) {
         $existing = $form['id'] > 0 ? sv_find_voter($pdo, $form['id']) : null;
 
         if ($form['id'] > 0 && $existing === null) {
-            $errors['form'] = 'That voter account no longer exists, or it is not a voter.';
+            $errors['form'] = sv_t('That voter account no longer exists, or it is not a voter.');
         }
 
         if (!preg_match('/^[a-z0-9._-]{3,50}$/', $username)) {
-            $errors['username'] = 'Use 3 to 50 characters: letters, numbers, dot, underscore or hyphen.';
+            $errors['username'] = sv_t('Use 3 to 50 characters: letters, numbers, dot, underscore or hyphen.');
         }
         if (!filter_var($email, FILTER_VALIDATE_EMAIL) || mb_strlen($email) > 150) {
-            $errors['email'] = 'Enter a valid email address.';
+            $errors['email'] = sv_t('Enter a valid email address.');
         }
         if (mb_strlen(trim($form['first_name'])) < 1 || mb_strlen(trim($form['first_name'])) > 80) {
-            $errors['first_name'] = 'Enter the first name (1 to 80 characters).';
+            $errors['first_name'] = sv_t('Enter the first name (1 to 80 characters).');
         }
         if (mb_strlen(trim($form['last_name'])) < 1 || mb_strlen(trim($form['last_name'])) > 80) {
-            $errors['last_name'] = 'Enter the last name (1 to 80 characters).';
+            $errors['last_name'] = sv_t('Enter the last name (1 to 80 characters).');
         }
         if (!isset($statusOptions[$form['status']])) {
-            $errors['status'] = 'Choose a valid account status.';
+            $errors['status'] = sv_t('Choose a valid account status.');
         }
 
         // A password is required when creating, optional when editing.
         if ($form['id'] === 0 || $password !== '') {
             if (mb_strlen($password) < 8) {
-                $errors['password'] = 'Use at least 8 characters.';
+                $errors['password'] = sv_t('Use at least 8 characters.');
             } elseif (mb_strlen($password) > 200) {
-                $errors['password'] = 'Keep the password under 200 characters.';
+                $errors['password'] = sv_t('Keep the password under 200 characters.');
             } elseif (!preg_match('/[A-Za-z]/', $password) || !preg_match('/[0-9]/', $password)) {
-                $errors['password'] = 'Include at least one letter and one number.';
+                $errors['password'] = sv_t('Include at least one letter and one number.');
             }
             if ($password !== $passwordConfirm) {
-                $errors['password_confirm'] = 'The two passwords do not match.';
+                $errors['password_confirm'] = sv_t('The two passwords do not match.');
             }
         }
 
@@ -114,14 +114,14 @@ if (is_post()) {
             $dupe = $pdo->prepare('SELECT id FROM users WHERE username = ? AND id <> ? LIMIT 1');
             $dupe->execute([$username, $form['id']]);
             if ($dupe->fetchColumn() !== false) {
-                $errors['username'] = 'That username is already taken.';
+                $errors['username'] = sv_t('That username is already taken.');
             }
         }
         if ($errors === [] || !isset($errors['email'])) {
             $dupe = $pdo->prepare('SELECT id FROM users WHERE email = ? AND id <> ? LIMIT 1');
             $dupe->execute([$email, $form['id']]);
             if ($dupe->fetchColumn() !== false) {
-                $errors['email'] = 'That email address is already registered.';
+                $errors['email'] = sv_t('That email address is already registered.');
             }
         }
 
@@ -154,7 +154,7 @@ if (is_post()) {
                         . $form['id'] . ' "' . $username . '".');
                 }
 
-                flash_success('Voter account "' . $username . '" was updated.');
+                flash_success(sv_t('Voter account "%s" was updated.', $username));
             } else {
                 $hash      = password_hash($password, PASSWORD_DEFAULT);
                 $voterCode = sv_generate_voter_code();
@@ -192,7 +192,7 @@ if (is_post()) {
 
                 audit_log('voter_created', 'Created voter #' . $newId . ' "' . $username . '" (Voter Code: ' . $voterCode . ').');
 
-                flash_success('Voter account "' . $username . '" was created (Voter Code: ' . $voterCode . ') and registered for active elections.');
+                flash_success(sv_t('Voter account "%s" was created (Voter Code: %s) and registered for active elections.', $username, $voterCode));
             }
 
             redirect('admin/voters.php');
@@ -207,12 +207,12 @@ if (is_post()) {
         $status = (string) input('target_status', '');
 
         if ($target === null || !isset($statusOptions[$status])) {
-            flash_error('That status change is not valid for this account.');
+            flash_error(sv_t('That status change is not valid for this account.'));
             redirect('admin/voters.php');
         }
 
         if ((int) $target['id'] === (int) $admin['id']) {
-            flash_error('You cannot change the status of your own account from here.');
+            flash_error(sv_t('You cannot change the status of your own account from here.'));
             redirect('admin/voters.php');
         }
 
@@ -222,7 +222,7 @@ if (is_post()) {
         audit_log('voter_status_changed', 'Voter #' . (int) $target['id'] . ' "'
             . $target['username'] . '" status changed from ' . $target['status'] . ' to ' . $status . '.');
 
-        flash_success('"' . $target['username'] . '" is now ' . $status . '.');
+        flash_success(sv_t('"%s" is now %s.', $target['username'], sv_t(ucfirst($status))));
         redirect('admin/voters.php');
     }
 
@@ -233,12 +233,12 @@ if (is_post()) {
         $target = sv_find_voter($pdo, int_input('id', 0));
 
         if ($target === null) {
-            flash_error('That voter account no longer exists.');
+            flash_error(sv_t('That voter account no longer exists.'));
             redirect('admin/voters.php');
         }
 
         if ((int) $target['id'] === (int) $admin['id']) {
-            flash_error('You cannot delete your own account.');
+            flash_error(sv_t('You cannot delete your own account.'));
             redirect('admin/voters.php');
         }
 
@@ -249,9 +249,11 @@ if (is_post()) {
         $votedCount = (int) $votedStmt->fetchColumn();
 
         if ($votedCount > 0) {
-            flash_error('"' . $target['username'] . '" has already participated in ' . $votedCount
-                . ' election(s). Their participation record is preserved for election integrity. '
-                . 'Set the account status to "blocked" instead.');
+            flash_error(sv_t(
+                '"%s" has already participated in %d election(s). Their participation record is preserved for election integrity. Set the account status to "blocked" instead.',
+                $target['username'],
+                $votedCount
+            ));
             redirect('admin/voters.php');
         }
 
@@ -261,7 +263,7 @@ if (is_post()) {
         audit_log('voter_deleted', 'Deleted voter #' . (int) $target['id'] . ' "'
             . $target['username'] . '" (had not submitted ballots).');
 
-        flash_success('Voter account "' . $target['username'] . '" was deleted.');
+        flash_success(sv_t('Voter account "%s" was deleted.', $target['username']));
         redirect('admin/voters.php');
     }
 
@@ -272,7 +274,7 @@ if (is_post()) {
         $voter = sv_find_voter($pdo, int_input('id', 0));
 
         if ($voter === null) {
-            flash_error('That voter account no longer exists.');
+            flash_error(sv_t('That voter account no longer exists.'));
             redirect('admin/voters.php');
         }
 
@@ -328,9 +330,9 @@ if (is_post()) {
                 . '" removed from election #' . $electionId . '.');
         }
 
-        $message = 'Eligibility updated: ' . $added . ' added, ' . $removed . ' removed.';
+        $message = sv_t('Eligibility updated: %d added, %d removed.', $added, $removed);
         if ($protected > 0) {
-            $message .= ' ' . $protected . ' election(s) were kept because the voter has already voted.';
+            $message .= ' ' . sv_t('%d election(s) were kept because the voter has already voted.', $protected);
         }
         flash_success($message);
         redirect('admin/voters.php?action=eligibility&id=' . (int) $voter['id']);
@@ -347,7 +349,7 @@ if (is_post()) {
         $election = $stmt->fetch();
 
         if (!$election) {
-            flash_error('That election no longer exists.');
+            flash_error(sv_t('That election no longer exists.'));
             redirect('admin/voters.php');
         }
 
@@ -361,8 +363,7 @@ if (is_post()) {
         audit_log('eligibility_bulk_added', 'Registered ' . $added . ' active voter(s) for election #'
             . $electionId . ' "' . $election['title'] . '".');
 
-        flash_success($added . ' voter(s) were registered for "' . $election['title'] . '". '
-            . 'Those already registered were skipped.');
+        flash_success(sv_t('%d voter(s) were registered for "%s". Those already registered were skipped.', $added, $election['title']));
         redirect('admin/voters.php?action=eligibility&id=' . int_input('voter_id', 0));
     }
 }
@@ -391,9 +392,9 @@ if ($viewAction === 'eligibility') {
     if ($voter === null) {
         sv_error_page(
             404,
-            'Voter not found',
-            'That voter account does not exist, or it was deleted by another administrator.',
-            [['label' => 'Back to voters', 'href' => url('admin/voters.php')]]
+            sv_t('Voter not found'),
+            sv_t('That voter account does not exist, or it was deleted by another administrator.'),
+            [['label' => sv_t('Back to voters'), 'href' => url('admin/voters.php')]]
         );
     }
 
@@ -406,18 +407,18 @@ if ($viewAction === 'eligibility') {
         $eligibility[(int) $row['election_id']] = $row;
     }
 
-    $pageTitle   = 'Election eligibility';
+    $pageTitle   = sv_t('Election eligibility');
     $activeNav   = 'voters.php';
     $pageActions  = '<a class="btn btn--secondary btn--sm" href="' . e(url('admin/voters.php')) . '">'
-        . sv_icon('arrow-left', 16, 'btn__icon') . '<span>Back to voters</span></a>';
+        . sv_icon('arrow-left', 16, 'btn__icon') . '<span>' . e(sv_t('Back to voters')) . '</span></a>';
     $breadcrumb   = [
-        ['label' => 'Voters', 'href' => 'admin/voters.php'],
+        ['label' => sv_t('Voters'), 'href' => 'admin/voters.php'],
         ['label' => user_full_name($voter)],
     ];
 
     require __DIR__ . '/../includes/header.php';
 ?>
-<div class="feature-shortcuts"><a class="btn btn--secondary" href="<?= e(url('admin/import-voters.php')) ?>">Import voters from CSV</a></div>
+<div class="feature-shortcuts"><a class="btn btn--secondary" href="<?= e(url('admin/import-voters.php')) ?>"><?= e(sv_t('Import voters from CSV')) ?></a></div>
 <?php
     ?>
 
@@ -437,8 +438,7 @@ if ($viewAction === 'eligibility') {
         <div class="security-note">
           <?= sv_icon('info', 16) ?>
           <span>
-            A voter can only vote in an election they are registered for. Once a ballot has been
-            submitted the registration is locked, because it is the record that the vote was accepted.
+            <?= e(sv_t('A voter can only vote in an election they are registered for. Once a ballot has been submitted the registration is locked, because it is the record that the vote was accepted.')) ?>
           </span>
         </div>
 
@@ -450,12 +450,12 @@ if ($viewAction === 'eligibility') {
           <?php if ($elections === []): ?>
             <div class="empty-state empty-state--inline">
               <span class="empty-state__icon"><?= sv_icon('vote', 24) ?></span>
-              <p class="empty-state__title">No elections exist yet</p>
-              <p class="empty-state__text">Create an election before registering voters for one.</p>
+              <p class="empty-state__title"><?= e(sv_t('No elections exist yet')) ?></p>
+              <p class="empty-state__text"><?= e(sv_t('Create an election before registering voters for one.')) ?></p>
             </div>
           <?php else: ?>
             <fieldset>
-              <legend>Elections this voter may vote in</legend>
+              <legend><?= e(sv_t('Elections this voter may vote in')) ?></legend>
 
               <div class="stack-sm">
                 <?php foreach ($elections as $election): ?>
@@ -471,15 +471,14 @@ if ($viewAction === 'eligibility') {
                     <span class="check__text">
                       <strong><?= e($election['title']) ?></strong>
                       <span class="text-muted text-sm">
-                        &middot; <?= e(ucfirst(election_effective_status($election))) ?>
+                        &middot; <?= e(sv_t(ucfirst(election_effective_status($election)))) ?>
                         <?php if ($hasVoted): ?>
-                          &middot; <span class="badge badge--teal"><?= sv_icon('check', 12) ?>Already voted</span>
+                          &middot; <span class="badge badge--teal"><?= sv_icon('check', 12) ?><?= e(sv_t('Already voted')) ?></span>
                         <?php endif; ?>
                       </span>
                       <?php if ($hasVoted): ?>
                         <span class="help">
-                          Registration locked: this voter submitted a ballot on
-                          <?= e(fmt_datetime((string) $row['voted_at'])) ?>.
+                          <?= e(sv_t('Registration locked: this voter submitted a ballot on %s.', fmt_datetime((string) $row['voted_at']))) ?>
                         </span>
                       <?php endif; ?>
                     </span>
@@ -490,10 +489,10 @@ if ($viewAction === 'eligibility') {
           <?php endif; ?>
 
           <div class="form-actions">
-            <button class="btn btn--primary" type="submit" data-submit-once data-submitting-label="Saving…">
-              <?= sv_icon('check', 16, 'btn__icon') ?><span>Save eligibility</span>
+            <button class="btn btn--primary" type="submit" data-submit-once data-submitting-label="<?= e(sv_t('Saving…')) ?>">
+              <?= sv_icon('check', 16, 'btn__icon') ?><span><?= e(sv_t('Save eligibility')) ?></span>
             </button>
-            <a class="btn btn--secondary" href="<?= e(url('admin/voters.php')) ?>">Cancel</a>
+            <a class="btn btn--secondary" href="<?= e(url('admin/voters.php')) ?>"><?= e(sv_t('Cancel')) ?></a>
           </div>
         </form>
       </div>
@@ -501,19 +500,19 @@ if ($viewAction === 'eligibility') {
       <?php if ($elections !== []): ?>
         <div class="card__footer">
           <form method="post" action="<?= e(post_url('admin/voters.php')) ?>"
-                data-confirm="Register every active voter for the selected election?">
+                data-confirm="<?= e(sv_t('Register every active voter for the selected election?')) ?>">
             <?= csrf_field() ?>
             <input type="hidden" name="action" value="register_all">
             <input type="hidden" name="voter_id" value="<?= e((string) $voter['id']) ?>">
             <div class="row">
-              <label class="label" for="bulk_election">Bulk register all active voters</label>
+              <label class="label" for="bulk_election"><?= e(sv_t('Bulk register all active voters')) ?></label>
               <select class="select" id="bulk_election" name="election_id" required>
                 <?php foreach ($elections as $election): ?>
                   <option value="<?= e((string) $election['id']) ?>"><?= e($election['title']) ?></option>
                 <?php endforeach; ?>
               </select>
               <button class="btn btn--secondary btn--sm" type="submit">
-                <?= sv_icon('users', 16, 'btn__icon') ?><span>Register everyone</span>
+                <?= sv_icon('users', 16, 'btn__icon') ?><span><?= e(sv_t('Register everyone')) ?></span>
               </button>
             </div>
           </form>
@@ -541,9 +540,9 @@ if ($isForm) {
         if ($editing === null) {
             sv_error_page(
                 404,
-                'Voter not found',
-                'That voter account does not exist, or it was deleted by another administrator.',
-                [['label' => 'Back to voters', 'href' => url('admin/voters.php')]]
+                sv_t('Voter not found'),
+                sv_t('That voter account does not exist, or it was deleted by another administrator.'),
+                [['label' => sv_t('Back to voters'), 'href' => url('admin/voters.php')]]
             );
         }
 
@@ -561,13 +560,13 @@ if ($isForm) {
 $isNew = (int) $form['id'] === 0;
 
 if ($isForm) {
-    $pageTitle   = $isNew ? 'New voter account' : 'Edit voter account';
+    $pageTitle   = $isNew ? sv_t('New voter account') : sv_t('Edit voter account');
     $activeNav   = 'voters.php';
     $pageActions  = '<a class="btn btn--secondary btn--sm" href="' . e(url('admin/voters.php')) . '">'
-        . sv_icon('arrow-left', 16, 'btn__icon') . '<span>Back to voters</span></a>';
+        . sv_icon('arrow-left', 16, 'btn__icon') . '<span>' . e(sv_t('Back to voters')) . '</span></a>';
     $breadcrumb   = [
-        ['label' => 'Voters', 'href' => 'admin/voters.php'],
-        ['label' => $isNew ? 'New' : 'Edit'],
+        ['label' => sv_t('Voters'), 'href' => 'admin/voters.php'],
+        ['label' => $isNew ? sv_t('New') : sv_t('Edit')],
     ];
 
     require __DIR__ . '/../includes/header.php';
@@ -581,15 +580,15 @@ if ($isForm) {
     <?php elseif ($errors !== []): ?>
       <div class="alert alert--danger" role="alert">
         <span class="alert__icon" aria-hidden="true"><?= sv_icon('alert-triangle', 18) ?></span>
-        <p class="alert__text">The account was not saved. Please correct the highlighted fields.</p>
+        <p class="alert__text"><?= e(sv_t('The account was not saved. Please correct the highlighted fields.')) ?></p>
       </div>
     <?php endif; ?>
 
     <section class="card">
       <div class="card__header">
         <div class="card__headings">
-          <h2 class="card__title"><?= e($isNew ? 'Account details' : 'Edit account') ?></h2>
-          <p class="card__subtitle">Required fields are marked with an asterisk.</p>
+          <h2 class="card__title"><?= e($isNew ? sv_t('Account details') : sv_t('Edit account')) ?></h2>
+          <p class="card__subtitle"><?= e(sv_t('Required fields are marked with an asterisk.')) ?></p>
         </div>
       </div>
 
@@ -602,7 +601,7 @@ if ($isForm) {
           <div class="form-grid">
             <div class="form-field">
               <label class="label" for="first_name">
-                First name <span class="label__required" aria-hidden="true">*</span>
+                <?= e(sv_t('First name')) ?> <span class="label__required" aria-hidden="true">*</span>
               </label>
               <input class="input<?= isset($errors['first_name']) ? ' is-invalid' : '' ?>"
                      type="text" id="first_name" name="first_name" maxlength="80"
@@ -617,7 +616,7 @@ if ($isForm) {
 
             <div class="form-field">
               <label class="label" for="last_name">
-                Last name <span class="label__required" aria-hidden="true">*</span>
+                <?= e(sv_t('Last name')) ?> <span class="label__required" aria-hidden="true">*</span>
               </label>
               <input class="input<?= isset($errors['last_name']) ? ' is-invalid' : '' ?>"
                      type="text" id="last_name" name="last_name" maxlength="80"
@@ -632,7 +631,7 @@ if ($isForm) {
 
             <div class="form-field">
               <label class="label" for="username">
-                Username <span class="label__required" aria-hidden="true">*</span>
+                <?= e(sv_t('Username')) ?> <span class="label__required" aria-hidden="true">*</span>
               </label>
               <input class="input<?= isset($errors['username']) ? ' is-invalid' : '' ?>"
                      type="text" id="username" name="username" maxlength="50"
@@ -644,13 +643,13 @@ if ($isForm) {
                   <?= sv_icon('alert-triangle', 14) ?><span><?= e($errors['username']) ?></span>
                 </p>
               <?php else: ?>
-                <p class="help">Letters, numbers, dot, underscore or hyphen. Stored in lower case.</p>
+                <p class="help"><?= e(sv_t('Letters, numbers, dot, underscore or hyphen. Stored in lower case.')) ?></p>
               <?php endif; ?>
             </div>
 
             <div class="form-field">
               <label class="label" for="email">
-                Email address <span class="label__required" aria-hidden="true">*</span>
+                <?= e(sv_t('Email address')) ?> <span class="label__required" aria-hidden="true">*</span>
               </label>
               <input class="input<?= isset($errors['email']) ? ' is-invalid' : '' ?>"
                      type="email" id="email" name="email" maxlength="150"
@@ -665,7 +664,7 @@ if ($isForm) {
             </div>
 
             <div class="form-field">
-              <label class="label" for="status">Account status</label>
+              <label class="label" for="status"><?= e(sv_t('Account status')) ?></label>
               <select class="select<?= isset($errors['status']) ? ' is-invalid' : '' ?>" id="status" name="status">
                 <?php foreach ($statusOptions as $value => $label): ?>
                   <option value="<?= e($value) ?>" <?= $form['status'] === $value ? 'selected' : '' ?>>
@@ -676,35 +675,35 @@ if ($isForm) {
               <?php if (isset($errors['status'])): ?>
                 <p class="field-error"><?= sv_icon('alert-triangle', 14) ?><span><?= e($errors['status']) ?></span></p>
               <?php else: ?>
-                <p class="help">Only active accounts can sign in. Blocked accounts keep their history.</p>
+                <p class="help"><?= e(sv_t('Only active accounts can sign in. Blocked accounts keep their history.')) ?></p>
               <?php endif; ?>
             </div>
 
             <div class="form-field">
-              <span class="label">Role & Voter Passcode</span>
+              <span class="label"><?= e(sv_t('Role & Voter Passcode')) ?></span>
               <div class="panel" style="display:flex; flex-direction:column; gap:6px;">
                 <div style="display:flex; align-items:center; gap:8px;">
-                  <span class="badge badge--neutral"><?= sv_icon('user', 14) ?> Voter</span>
+                  <span class="badge badge--neutral"><?= sv_icon('user', 14) ?> <?= e(sv_t('Voter')) ?></span>
                   <?php if (!$isNew): ?>
                     <span class="voter-code-badge"><?= e((string) ($editing['voter_code'] ?? '—')) ?></span>
                     <?php if (!empty($editing['google_id'])): ?>
                       <span class="badge badge--primary"><?= sv_icon('google', 12) ?> Google Linked</span>
                     <?php endif; ?>
                   <?php else: ?>
-                    <span class="badge badge--primary">Auto-generated Voter Code</span>
+                    <span class="badge badge--primary"><?= e(sv_t('Auto-generated Voter Code')) ?></span>
                   <?php endif; ?>
                 </div>
                 <span class="help">
-                  <?= $isNew
-                      ? 'A unique personal Voter Code (e.g. VC-2026-XXXX) will be automatically generated upon creation.'
-                      : 'Personal Voter Code used by this student to sign in and cast ballots.' ?>
+                  <?= e($isNew
+                      ? sv_t('A unique personal Voter Code (e.g. VC-2026-XXXX) will be automatically generated upon creation.')
+                      : sv_t('Personal Voter Code used by this student to sign in and cast ballots.')) ?>
                 </span>
               </div>
             </div>
 
             <div class="form-field">
               <label class="label" for="password">
-                <?= e($isNew ? 'Password' : 'New password') ?>
+                <?= e($isNew ? sv_t('Password') : sv_t('New password')) ?>
                 <?php if ($isNew): ?>
                   <span class="label__required" aria-hidden="true">*</span>
                 <?php endif; ?>
@@ -714,7 +713,7 @@ if ($isForm) {
                        type="password" id="password" name="password" autocomplete="new-password"
                        <?= $isNew ? 'required aria-required="true"' : '' ?>
                        <?= isset($errors['password']) ? 'aria-describedby="password-error" aria-invalid="true"' : '' ?>>
-                <button type="button" class="btn-password-toggle" data-toggle-password="password" aria-label="Show password" aria-pressed="false">
+                <button type="button" class="btn-password-toggle" data-toggle-password="password" aria-label="<?= e(sv_t('Show password')) ?>" aria-pressed="false">
                   <span class="icon-eye"><?= sv_icon('eye', 16) ?></span>
                   <span class="icon-eye-off" style="display:none;"><?= sv_icon('eye-off', 16) ?></span>
                 </button>
@@ -726,20 +725,20 @@ if ($isForm) {
               <?php else: ?>
                 <p class="help">
                   <?= e($isNew
-                      ? 'At least 8 characters, with a letter and a number.'
-                      : 'Leave blank to keep the current password.') ?>
-                  Stored as a bcrypt hash, never as readable text.
+                      ? sv_t('At least 8 characters, with a letter and a number.')
+                      : sv_t('Leave blank to keep the current password.')) ?>
+                  <?= e(sv_t('Stored as a bcrypt hash, never as readable text.')) ?>
                 </p>
               <?php endif; ?>
             </div>
 
             <div class="form-field">
-              <label class="label" for="password_confirm">Confirm password</label>
+              <label class="label" for="password_confirm"><?= e(sv_t('Confirm password')) ?></label>
               <div class="input-password-wrap">
                 <input class="input<?= isset($errors['password_confirm']) ? ' is-invalid' : '' ?>"
                        type="password" id="password_confirm" name="password_confirm" autocomplete="new-password"
                        <?= isset($errors['password_confirm']) ? 'aria-describedby="confirm-error" aria-invalid="true"' : '' ?>>
-                <button type="button" class="btn-password-toggle" data-toggle-password="password_confirm" aria-label="Show password confirmation" aria-pressed="false">
+                <button type="button" class="btn-password-toggle" data-toggle-password="password_confirm" aria-label="<?= e(sv_t('Show password confirmation')) ?>" aria-pressed="false">
                   <span class="icon-eye"><?= sv_icon('eye', 16) ?></span>
                   <span class="icon-eye-off" style="display:none;"><?= sv_icon('eye-off', 16) ?></span>
                 </button>
@@ -753,17 +752,17 @@ if ($isForm) {
           </div>
 
           <div class="form-actions">
-            <button class="btn btn--primary" type="submit" data-submit-once data-submitting-label="Saving…">
+            <button class="btn btn--primary" type="submit" data-submit-once data-submitting-label="<?= e(sv_t('Saving…')) ?>">
               <?= sv_icon('check', 16, 'btn__icon') ?>
-              <span><?= e($isNew ? 'Create account' : 'Save changes') ?></span>
+              <span><?= e($isNew ? sv_t('Create account') : sv_t('Save changes')) ?></span>
             </button>
-            <a class="btn btn--secondary" href="<?= e(url('admin/voters.php')) ?>">Cancel</a>
+            <a class="btn btn--secondary" href="<?= e(url('admin/voters.php')) ?>"><?= e(sv_t('Cancel')) ?></a>
 
             <?php if (!$isNew): ?>
               <span class="form-actions__spacer"></span>
               <a class="btn btn--secondary btn--sm"
                  href="<?= e(url('admin/voters.php?action=eligibility&id=' . (int) $form['id'])) ?>">
-                <?= sv_icon('vote', 16, 'btn__icon') ?><span>Election eligibility</span>
+                <?= sv_icon('vote', 16, 'btn__icon') ?><span><?= e(sv_t('Election eligibility')) ?></span>
               </a>
             <?php endif; ?>
           </div>
@@ -775,25 +774,24 @@ if ($isForm) {
       <section class="card">
         <div class="card__header">
           <div class="card__headings">
-            <h2 class="card__title">Delete this account</h2>
+            <h2 class="card__title"><?= e(sv_t('Delete this account')) ?></h2>
             <p class="card__subtitle">
-              Blocked accounts are usually the better choice: they keep the audit history intact.
+              <?= e(sv_t('Blocked accounts are usually the better choice: they keep the audit history intact.')) ?>
             </p>
           </div>
         </div>
         <div class="card__body">
           <form method="post" action="<?= e(post_url('admin/voters.php')) ?>"
-                data-confirm="Delete the account “<?= e($form['username']) ?>”? This cannot be undone.">
+                data-confirm="<?= e(sv_t('Delete the account "%s"? This cannot be undone.', $form['username'])) ?>">
             <?= csrf_field() ?>
             <input type="hidden" name="action" value="delete">
             <input type="hidden" name="id" value="<?= e((string) $form['id']) ?>">
             <button class="btn btn--danger btn--sm" type="submit">
-              <?= sv_icon('trash', 16, 'btn__icon') ?><span>Delete account</span>
+              <?= sv_icon('trash', 16, 'btn__icon') ?><span><?= e(sv_t('Delete account')) ?></span>
             </button>
           </form>
           <p class="text-sm text-muted">
-            An account that has already submitted a ballot cannot be deleted, because deleting it
-            would take the recorded ballot with it.
+            <?= e(sv_t('An account that has already submitted a ballot cannot be deleted, because deleting it would take the recorded ballot with it.')) ?>
           </p>
         </div>
       </section>
@@ -848,11 +846,11 @@ $listStmt = $pdo->prepare(
 $listStmt->execute($params);
 $voters = $listStmt->fetchAll();
 
-$pageTitle   = 'Voters';
+$pageTitle   = sv_t('Voters');
 $activeNav   = 'voters.php';
 $pageActions  = '<a class="btn btn--accent btn--sm" href="' . e(url('admin/voters.php?action=create')) . '">'
-    . sv_icon('plus', 16, 'btn__icon') . '<span>New voter</span></a>';
-$breadcrumb   = [['label' => 'Voters', 'href' => 'admin/voters.php']];
+    . sv_icon('plus', 16, 'btn__icon') . '<span>' . e(sv_t('New voter')) . '</span></a>';
+$breadcrumb   = [['label' => sv_t('Voters'), 'href' => 'admin/voters.php']];
 
 require __DIR__ . '/../includes/header.php';
 ?>
@@ -860,32 +858,32 @@ require __DIR__ . '/../includes/header.php';
 <section class="card">
   <div class="card__header">
     <div class="card__headings">
-      <h2 class="card__title">Voter accounts</h2>
-      <p class="card__subtitle"><?= e((string) $total) ?> account<?= $total === 1 ? '' : 's' ?> found</p>
+      <h2 class="card__title"><?= e(sv_t('Voter accounts')) ?></h2>
+      <p class="card__subtitle"><?= e(sv_t($total === 1 ? '%d account found' : '%d accounts found', $total)) ?></p>
     </div>
   </div>
 
   <form class="table-toolbar" method="get" action="<?= e(url('admin/voters.php')) ?>" role="search">
     <div class="search-field">
       <span class="search-field__icon" aria-hidden="true"><?= sv_icon('search', 16) ?></span>
-      <label class="visually-hidden" for="q">Search voters</label>
+      <label class="visually-hidden" for="q"><?= e(sv_t('Search voters')) ?></label>
       <input class="input" type="search" id="q" name="q" value="<?= e($search) ?>"
-             placeholder="Search by name, username or email">
+             placeholder="<?= e(sv_t('Search by name, username or email')) ?>">
     </div>
 
     <div class="row">
-      <label class="visually-hidden" for="status">Filter by status</label>
+      <label class="visually-hidden" for="status"><?= e(sv_t('Filter by status')) ?></label>
       <select class="select" id="status" name="status" data-auto-submit>
-        <option value="">All statuses</option>
+        <option value=""><?= e(sv_t('All statuses')) ?></option>
         <?php foreach ($statusOptions as $value => $label): ?>
           <option value="<?= e($value) ?>" <?= $statusFilter === $value ? 'selected' : '' ?>>
-            <?= e(ucfirst($value)) ?>
+            <?= e(sv_t(ucfirst($value))) ?>
           </option>
         <?php endforeach; ?>
       </select>
-      <button class="btn btn--secondary btn--sm" type="submit"><?= sv_icon('filter', 16, 'btn__icon') ?><span>Apply</span></button>
+      <button class="btn btn--secondary btn--sm" type="submit"><?= sv_icon('filter', 16, 'btn__icon') ?><span><?= e(sv_t('Apply')) ?></span></button>
       <?php if ($search !== '' || $statusFilter !== ''): ?>
-        <a class="btn btn--ghost btn--sm" href="<?= e(url('admin/voters.php')) ?>">Clear</a>
+        <a class="btn btn--ghost btn--sm" href="<?= e(url('admin/voters.php')) ?>"><?= e(sv_t('Clear')) ?></a>
       <?php endif; ?>
     </div>
   </form>
@@ -894,28 +892,28 @@ require __DIR__ . '/../includes/header.php';
     <div class="empty-state">
       <span class="empty-state__icon"><?= sv_icon('users', 26) ?></span>
       <p class="empty-state__title">
-        <?= e($search !== '' || $statusFilter !== '' ? 'No voters match those filters' : 'No voter accounts yet') ?>
+        <?= e($search !== '' || $statusFilter !== '' ? sv_t('No voters match those filters') : sv_t('No voter accounts yet')) ?>
       </p>
       <p class="empty-state__text">
-        Create an account for each eligible voter, then register them for the election.
+        <?= e(sv_t('Create an account for each eligible voter, then register them for the election.')) ?>
       </p>
       <a class="btn btn--accent" href="<?= e(url('admin/voters.php?action=create')) ?>">
-        <?= sv_icon('plus', 16, 'btn__icon') ?><span>Create a voter account</span>
+        <?= sv_icon('plus', 16, 'btn__icon') ?><span><?= e(sv_t('Create a voter account')) ?></span>
       </a>
     </div>
   <?php else: ?>
     <div class="table-wrap">
       <table class="table">
-        <caption class="visually-hidden">Voter accounts with status, last sign-in and election registrations</caption>
+        <caption class="visually-hidden"><?= e(sv_t('Voter accounts with status, last sign-in and election registrations')) ?></caption>
         <thead>
           <tr>
-            <th scope="col">Voter</th>
-            <th scope="col">Voter Code</th>
-            <th scope="col">Email & Sign-In</th>
-            <th scope="col">Status</th>
-            <th scope="col">Elections</th>
-            <th scope="col">Last sign-in</th>
-            <th scope="col" class="table__actions-col">Actions</th>
+            <th scope="col"><?= e(sv_t('Voter')) ?></th>
+            <th scope="col"><?= e(sv_t('Voter Code')) ?></th>
+            <th scope="col"><?= e(sv_t('Email & Sign-In')) ?></th>
+            <th scope="col"><?= e(sv_t('Status')) ?></th>
+            <th scope="col"><?= e(sv_t('Elections')) ?></th>
+            <th scope="col"><?= e(sv_t('Last sign-in')) ?></th>
+            <th scope="col" class="table__actions-col"><?= e(sv_t('Actions')) ?></th>
           </tr>
         </thead>
         <tbody>
@@ -947,34 +945,34 @@ require __DIR__ . '/../includes/header.php';
               </td>
               <td><?= account_badge((string) $voter['status']) ?></td>
               <td>
-                <span class="table__cell-strong" style="white-space:nowrap;"><?= e((string) $voter['eligible_count']) ?> registered</span>
+                <span class="table__cell-strong" style="white-space:nowrap;"><?= e(sv_t('%d registered', (int) $voter['eligible_count'])) ?></span>
                 <span class="table__cell-sub">
-                  <?= e((string) $voter['ballot_count']) ?> ballot<?= (int) $voter['ballot_count'] === 1 ? '' : 's' ?> cast
+                  <?= e(sv_t((int) $voter['ballot_count'] === 1 ? '%d ballot cast' : '%d ballots cast', (int) $voter['ballot_count'])) ?>
                 </span>
               </td>
               <td>
-                <span style="white-space:nowrap; color:var(--text-secondary);"><?= e($voter['last_login'] !== null ? relative_time((string) $voter['last_login']) : 'Never') ?></span>
+                <span style="white-space:nowrap; color:var(--text-secondary);"><?= e($voter['last_login'] !== null ? relative_time((string) $voter['last_login']) : sv_t('Never')) ?></span>
               </td>
               <td class="table__actions-col">
                 <div class="table__actions">
                   <a class="btn btn--secondary btn--sm"
                      href="<?= e(url('admin/voters.php?action=edit&id=' . (int) $voter['id'])) ?>">
-                    <?= sv_icon('edit', 14, 'btn__icon') ?><span>Edit</span>
+                    <?= sv_icon('edit', 14, 'btn__icon') ?><span><?= e(sv_t('Edit')) ?></span>
                   </a>
                   <a class="btn btn--secondary btn--sm"
                      href="<?= e(url('admin/voters.php?action=eligibility&id=' . (int) $voter['id'])) ?>">
-                    <?= sv_icon('vote', 14, 'btn__icon') ?><span>Elections</span>
+                    <?= sv_icon('vote', 14, 'btn__icon') ?><span><?= e(sv_t('Elections')) ?></span>
                   </a>
 
                   <?php if ($voter['status'] === 'active'): ?>
                     <form method="post" action="<?= e(post_url('admin/voters.php')) ?>"
-                          data-confirm="Block “<?= e($voter['username']) ?>”? They will be signed out and cannot sign in again until reactivated.">
+                          data-confirm="<?= e(sv_t('Block "%s"? They will be signed out and cannot sign in again until reactivated.', $voter['username'])) ?>">
                       <?= csrf_field() ?>
                       <input type="hidden" name="action" value="set_status">
                       <input type="hidden" name="id" value="<?= e((string) $voter['id']) ?>">
                       <input type="hidden" name="target_status" value="blocked">
                       <button class="btn btn--danger btn--sm" type="submit">
-                        <?= sv_icon('ban', 14, 'btn__icon') ?><span>Block</span>
+                        <?= sv_icon('ban', 14, 'btn__icon') ?><span><?= e(sv_t('Block')) ?></span>
                       </button>
                     </form>
                   <?php else: ?>
@@ -984,7 +982,7 @@ require __DIR__ . '/../includes/header.php';
                       <input type="hidden" name="id" value="<?= e((string) $voter['id']) ?>">
                       <input type="hidden" name="target_status" value="active">
                       <button class="btn btn--success btn--sm" type="submit">
-                        <?= sv_icon('check', 14, 'btn__icon') ?><span>Activate</span>
+                        <?= sv_icon('check', 14, 'btn__icon') ?><span><?= e(sv_t('Activate')) ?></span>
                       </button>
                     </form>
                   <?php endif; ?>

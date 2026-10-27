@@ -94,29 +94,29 @@ if (is_post()) {
         $title = trim($form['title']);
 
         if (mb_strlen($title) < 3 || mb_strlen($title) > 150) {
-            $errors['title'] = 'Enter a title between 3 and 150 characters.';
+            $errors['title'] = sv_t('Enter a title between 3 and 150 characters.');
         }
         if (mb_strlen($form['description']) > 5000) {
-            $errors['description'] = 'Keep the description under 5000 characters.';
+            $errors['description'] = sv_t('Keep the description under 5000 characters.');
         }
         if (!isset($statusOptions[$form['status']])) {
-            $errors['status'] = 'Choose a valid status.';
+            $errors['status'] = sv_t('Choose a valid status.');
         }
         if ($form['id'] === 0 && $form['status'] === 'open') {
-            $errors['status'] = 'Create the election first, then use Open for voting after adding positions and candidates.';
+            $errors['status'] = sv_t('Create the election first, then use Open for voting after adding positions and candidates.');
         }
 
         $start = sv_parse_datetime_local($form['start_datetime']);
         $end   = sv_parse_datetime_local($form['end_datetime']);
 
         if ($start === null) {
-            $errors['start_datetime'] = 'Enter a valid start date and time.';
+            $errors['start_datetime'] = sv_t('Enter a valid start date and time.');
         }
         if ($end === null) {
-            $errors['end_datetime'] = 'Enter a valid end date and time.';
+            $errors['end_datetime'] = sv_t('Enter a valid end date and time.');
         }
         if ($start !== null && $end !== null && $end <= $start) {
-            $errors['end_datetime'] = 'The end must be later than the start.';
+            $errors['end_datetime'] = sv_t('The end must be later than the start.');
         }
 
         if ($errors === []) {
@@ -130,9 +130,9 @@ if (is_post()) {
                 $current = $exists->fetch();
 
                 if (!$current) {
-                    $errors['form'] = 'That election no longer exists.';
+                    $errors['form'] = sv_t('That election no longer exists.');
                 } elseif ($form['status'] === 'open' && $current['status'] !== 'open') {
-                    $errors['status'] = 'Save the election first, then use Open for voting so readiness and voter assignment are checked.';
+                    $errors['status'] = sv_t('Save the election first, then use Open for voting so readiness and voter assignment are checked.');
                 } else {
                     $update = $pdo->prepare(
                         'UPDATE elections
@@ -155,7 +155,7 @@ if (is_post()) {
                         . '" (' . $signature . ', status ' . $form['status'] . ').');
 
                     sv_record_election_change((int)$form['id']);
-                    flash_success('Election "' . $title . '" was updated.');
+                    flash_success(sprintf(sv_t('Election "%s" was updated.'), $title));
                     redirect('admin/elections.php');
                 }
             } else {
@@ -179,7 +179,7 @@ if (is_post()) {
                     . '" (' . $signature . ').');
 
                 sv_record_election_change($newId);
-                flash_success('Election "' . $title . '" was created. Add positions and candidates next.');
+                flash_success(sprintf(sv_t('Election "%s" was created. Add positions and candidates next.'), $title));
                 redirect('admin/elections.php?action=edit&id=' . $newId);
             }
         }
@@ -202,13 +202,13 @@ if (is_post()) {
         $election = $stmt->fetch();
 
         if (!$election) {
-            flash_error('That election no longer exists.');
+            flash_error(sv_t('That election no longer exists.'));
             redirect('admin/elections.php');
         }
 
         $allowed = ['open', 'closed', 'archived', 'draft', 'scheduled'];
         if (!in_array($target, $allowed, true)) {
-            flash_error('Unsupported status change.');
+            flash_error(sv_t('Unsupported status change.'));
             redirect('admin/elections.php');
         }
 
@@ -219,7 +219,7 @@ if (is_post()) {
             $blockers = [];
 
             if ((int) $election['position_count'] === 0) {
-                $blockers[] = 'it has no positions yet';
+                $blockers[] = sv_t('it has no positions yet');
             }
 
             $emptyPositions = $pdo->prepare(
@@ -235,11 +235,11 @@ if (is_post()) {
             $empty = $emptyPositions->fetchAll(PDO::FETCH_COLUMN);
 
             if ($empty !== []) {
-                $blockers[] = 'these positions have no active candidate: ' . implode(', ', $empty);
+                $blockers[] = sv_t('these positions have no active candidate: ') . implode(', ', $empty);
             }
 
             if ($blockers !== []) {
-                flash_error('Cannot open this election because ' . implode('; ', $blockers) . '.');
+                flash_error(sprintf(sv_t('Cannot open this election because %s.'), implode('; ', $blockers)));
                 redirect('admin/elections.php?action=edit&id=' . $id);
             }
 
@@ -250,14 +250,14 @@ if (is_post()) {
 
             $endDt = to_datetime($election['end_datetime']);
             if ($endDt !== null && $endDt <= $nowDt) {
-                flash_error('The end date has already passed. Edit the election and set a future end date first.');
+                flash_error(sv_t('The end date has already passed. Edit the election and set a future end date first.'));
                 redirect('admin/elections.php?action=edit&id=' . $id);
             }
 
             if ($startDt !== null && $startDt > $nowDt) {
                 $setStart = $pdo->prepare('UPDATE elections SET start_datetime = NOW() WHERE id = ?');
                 $setStart->execute([$id]);
-                $startNote = ' The start time was moved to now because it was still in the future.';
+                $startNote = ' ' . sv_t('The start time was moved to now because it was still in the future.');
                 audit_log('election_start_adjusted', 'Election #' . $id
                     . ' start time moved to now when it was opened.');
             }
@@ -283,10 +283,10 @@ if (is_post()) {
         audit_log($actionName, 'Election #' . $id . ' "' . $election['title'] . '" set to ' . $target . '.');
 
         $message = match ($target) {
-            'open'     => 'Election is now open for voting.',
-            'closed'   => 'Election closed. No further ballots can be submitted.',
-            'archived' => 'Election archived.',
-            default    => 'Election status updated.',
+            'open'     => sv_t('Election is now open for voting.'),
+            'closed'   => sv_t('Election closed. No further ballots can be submitted.'),
+            'archived' => sv_t('Election archived.'),
+            default    => sv_t('Election status updated.'),
         };
 
         sv_record_election_change($id);
@@ -309,14 +309,17 @@ if (is_post()) {
         $election = $stmt->fetch();
 
         if (!$election) {
-            flash_error('That election no longer exists.');
+            flash_error(sv_t('That election no longer exists.'));
             redirect('admin/elections.php');
         }
 
         // A submitted ballot is evidence. It is never destroyed by a click.
         if ((int) $election['ballot_count'] > 0) {
-            flash_error('"' . $election['title'] . '" already holds ' . (int) $election['ballot_count']
-                . ' submitted ballot(s), so it cannot be deleted. Archive it instead.');
+            flash_error(sprintf(
+                sv_t('"%s" already holds %d submitted ballot(s), so it cannot be deleted. Archive it instead.'),
+                $election['title'],
+                (int) $election['ballot_count']
+            ));
             redirect('admin/elections.php');
         }
 
@@ -326,7 +329,7 @@ if (is_post()) {
         audit_log('election_deleted', 'Deleted election #' . $id . ' "' . $election['title']
             . '" (status was ' . $election['status'] . ', no ballots existed).');
 
-        flash_success('Election "' . $election['title'] . '" was deleted.');
+        flash_success(sprintf(sv_t('Election "%s" was deleted.'), $election['title']));
         redirect('admin/elections.php');
     }
 }
@@ -358,9 +361,9 @@ if ($viewAction === 'create' || $viewAction === 'edit') {
         if (!$editing) {
             sv_error_page(
                 404,
-                'Election not found',
-                'That election does not exist, or it was deleted by another administrator.',
-                [['label' => 'Back to elections', 'href' => url('admin/elections.php')]]
+                sv_t('Election not found'),
+                sv_t('That election does not exist, or it was deleted by another administrator.'),
+                [['label' => sv_t('Back to elections'), 'href' => url('admin/elections.php')]]
             );
         }
 
@@ -388,25 +391,25 @@ $isForm = $viewAction === 'create' || $viewAction === 'edit';
 if ($isForm) {
     $isNew = ($form['id'] ?? 0) === 0;
 
-    $pageTitle   = $isNew ? 'New election' : 'Edit election';
+    $pageTitle   = $isNew ? sv_t('New election') : sv_t('Edit election');
     $activeNav   = 'elections.php';
     $pageActions = '<a class="btn btn--secondary btn--sm" href="' . e(url('admin/elections.php')) . '">'
-        . sv_icon('arrow-left', 16, 'btn__icon') . '<span>Back to list</span></a>';
+        . sv_icon('arrow-left', 16, 'btn__icon') . '<span>' . e(sv_t('Back to list')) . '</span></a>';
     $breadcrumb  = [
-        ['label' => 'Elections', 'href' => 'admin/elections.php'],
-        ['label' => $isNew ? 'New' : 'Edit'],
+        ['label' => sv_t('Elections'), 'href' => 'admin/elections.php'],
+        ['label' => $isNew ? sv_t('New') : sv_t('Edit')],
     ];
 } else {
-    $pageTitle   = 'Elections';
+    $pageTitle   = sv_t('Elections');
     $activeNav   = 'elections.php';
     $pageActions = '<a class="btn btn--accent btn--sm" href="' . e(url('admin/elections.php?action=create')) . '">'
-        . sv_icon('plus', 16, 'btn__icon') . '<span>New election</span></a>';
-    $breadcrumb  = [['label' => 'Elections', 'href' => 'admin/elections.php']];
+        . sv_icon('plus', 16, 'btn__icon') . '<span>' . e(sv_t('New election')) . '</span></a>';
+    $breadcrumb  = [['label' => sv_t('Elections'), 'href' => 'admin/elections.php']];
 }
 
 require __DIR__ . '/../includes/header.php';
 ?>
-<div class="feature-shortcuts"><a class="btn btn--secondary" href="<?= e(url('admin/readiness.php')) ?>">Election readiness checklist</a><a class="btn btn--secondary" href="<?= e(url('admin/announcements.php')) ?>">Manage announcements</a></div>
+<div class="feature-shortcuts"><a class="btn btn--secondary" href="<?= e(url('admin/readiness.php')) ?>"><?= e(sv_t('Election readiness checklist')) ?></a><a class="btn btn--secondary" href="<?= e(url('admin/announcements.php')) ?>"><?= e(sv_t('Manage announcements')) ?></a></div>
 <?php
 
 /* =====================================================================
@@ -424,15 +427,15 @@ if ($isForm):
     <?php if ($errors !== [] && !isset($errors['form'])): ?>
       <div class="alert alert--danger" role="alert">
         <span class="alert__icon" aria-hidden="true"><?= sv_icon('alert-triangle', 18) ?></span>
-        <p class="alert__text">The election was not saved. Please correct the highlighted fields.</p>
+        <p class="alert__text"><?= e(sv_t('The election was not saved. Please correct the highlighted fields.')) ?></p>
       </div>
     <?php endif; ?>
 
     <section class="card">
       <div class="card__header">
         <div class="card__headings">
-          <h2 class="card__title"><?= e($isNew ? 'Election details' : 'Edit “' . $form['title'] . '”') ?></h2>
-          <p class="card__subtitle">Required fields are marked with an asterisk.</p>
+          <h2 class="card__title"><?= e($isNew ? sv_t('Election details') : sprintf(sv_t('Edit “%s”'), $form['title'])) ?></h2>
+          <p class="card__subtitle"><?= e(sv_t('Required fields are marked with an asterisk.')) ?></p>
         </div>
       </div>
 
@@ -445,7 +448,7 @@ if ($isForm):
           <div class="form-grid">
             <div class="form-field form-field--full">
               <label class="label" for="title">
-                Election title <span class="label__required" aria-hidden="true">*</span>
+                <?= e(sv_t('Election title')) ?> <span class="label__required" aria-hidden="true">*</span>
               </label>
               <input class="input<?= isset($errors['title']) ? ' is-invalid' : '' ?>"
                      type="text" id="title" name="title" maxlength="150"
@@ -456,11 +459,11 @@ if ($isForm):
                   <?= sv_icon('alert-triangle', 14) ?><span><?= e($errors['title']) ?></span>
                 </p>
               <?php endif; ?>
-              <p class="help">Shown to voters on their dashboard and on the ballot.</p>
+              <p class="help"><?= e(sv_t('Shown to voters on their dashboard and on the ballot.')) ?></p>
             </div>
 
             <div class="form-field form-field--full">
-              <label class="label" for="description">Description</label>
+              <label class="label" for="description"><?= e(sv_t('Description')) ?></label>
               <textarea class="textarea<?= isset($errors['description']) ? ' is-invalid' : '' ?>"
                         id="description" name="description" maxlength="5000"
                         <?= isset($errors['description']) ? 'aria-describedby="description-error" aria-invalid="true"' : '' ?>><?= e($form['description']) ?></textarea>
@@ -469,12 +472,12 @@ if ($isForm):
                   <?= sv_icon('alert-triangle', 14) ?><span><?= e($errors['description']) ?></span>
                 </p>
               <?php endif; ?>
-              <p class="help">Optional. Explain what is being decided and who may vote.</p>
+              <p class="help"><?= e(sv_t('Optional. Explain what is being decided and who may vote.')) ?></p>
             </div>
 
             <div class="form-field">
               <label class="label" for="start_datetime">
-                Voting opens <span class="label__required" aria-hidden="true">*</span>
+                <?= e(sv_t('Voting opens')) ?> <span class="label__required" aria-hidden="true">*</span>
               </label>
               <input class="input<?= isset($errors['start_datetime']) ? ' is-invalid' : '' ?>"
                      type="datetime-local" id="start_datetime" name="start_datetime"
@@ -489,7 +492,7 @@ if ($isForm):
 
             <div class="form-field">
               <label class="label" for="end_datetime">
-                Voting closes <span class="label__required" aria-hidden="true">*</span>
+                <?= e(sv_t('Voting closes')) ?> <span class="label__required" aria-hidden="true">*</span>
               </label>
               <input class="input<?= isset($errors['end_datetime']) ? ' is-invalid' : '' ?>"
                      type="datetime-local" id="end_datetime" name="end_datetime"
@@ -500,17 +503,17 @@ if ($isForm):
                   <?= sv_icon('alert-triangle', 14) ?><span><?= e($errors['end_datetime']) ?></span>
                 </p>
               <?php endif; ?>
-              <p class="help">The server refuses votes outside this window, even if the status is open.</p>
+              <p class="help"><?= e(sv_t('The server refuses votes outside this window, even if the status is open.')) ?></p>
             </div>
 
             <div class="form-field">
-              <label class="label" for="status">Status</label>
+              <label class="label" for="status"><?= e(sv_t('Status')) ?></label>
               <select class="select<?= isset($errors['status']) ? ' is-invalid' : '' ?>"
                       id="status" name="status">
                 <?php foreach ($statusOptions as $value => $label): ?>
                   <?php if ($value === 'open' && $form['status'] !== 'open') continue; ?>
                   <option value="<?= e($value) ?>" <?= $form['status'] === $value ? 'selected' : '' ?>>
-                    <?= e($label) ?>
+                    <?= e(sv_t($label)) ?>
                   </option>
                 <?php endforeach; ?>
               </select>
@@ -518,33 +521,32 @@ if ($isForm):
                 <p class="field-error"><?= sv_icon('alert-triangle', 14) ?><span><?= e($errors['status']) ?></span></p>
               <?php endif; ?>
               <p class="help">
-                Draft and scheduled elections are not votable. Save the election,
-                then use Open for voting after adding positions and active candidates.
+                <?= e(sv_t('Draft and scheduled elections are not votable. Save the election, then use Open for voting after adding positions and active candidates.')) ?>
               </p>
             </div>
 
             <div class="form-field">
-              <p class="label">Results access</p>
-              <p class="help">Students can see the live aggregate tally after submitting their ballot. Final outcomes appear when voting closes.</p>
+              <p class="label"><?= e(sv_t('Results access')) ?></p>
+              <p class="help"><?= e(sv_t('Students can see the live aggregate tally after submitting their ballot. Final outcomes appear when voting closes.')) ?></p>
             </div>
           </div>
 
           <div class="form-actions">
-            <button class="btn btn--primary" type="submit" data-submit-once data-submitting-label="Saving…">
+            <button class="btn btn--primary" type="submit" data-submit-once data-submitting-label="<?= e(sv_t('Saving…')) ?>">
               <?= sv_icon('check', 16, 'btn__icon') ?>
-              <span><?= e($isNew ? 'Create election' : 'Save changes') ?></span>
+              <span><?= e($isNew ? sv_t('Create election') : sv_t('Save changes')) ?></span>
             </button>
-            <a class="btn btn--secondary" href="<?= e(url('admin/elections.php')) ?>">Cancel</a>
+            <a class="btn btn--secondary" href="<?= e(url('admin/elections.php')) ?>"><?= e(sv_t('Cancel')) ?></a>
 
             <?php if (!$isNew): ?>
               <span class="form-actions__spacer"></span>
               <a class="btn btn--secondary btn--sm"
                  href="<?= e(url('admin/positions.php?election_id=' . (int) $form['id'])) ?>">
-                <?= sv_icon('positions', 16, 'btn__icon') ?><span>Manage positions</span>
+                <?= sv_icon('positions', 16, 'btn__icon') ?><span><?= e(sv_t('Manage positions')) ?></span>
               </a>
               <a class="btn btn--secondary btn--sm"
                  href="<?= e(url('admin/candidates.php?election_id=' . (int) $form['id'])) ?>">
-                <?= sv_icon('users', 16, 'btn__icon') ?><span>Manage candidates</span>
+                <?= sv_icon('users', 16, 'btn__icon') ?><span><?= e(sv_t('Manage candidates')) ?></span>
               </a>
             <?php endif; ?>
           </div>
@@ -556,8 +558,8 @@ if ($isForm):
       <section class="card" aria-labelledby="danger-heading">
         <div class="card__header">
           <div class="card__headings">
-            <h2 class="card__title" id="danger-heading">Status and deletion</h2>
-            <p class="card__subtitle">These actions are recorded in the audit log.</p>
+            <h2 class="card__title" id="danger-heading"><?= e(sv_t('Status and deletion')) ?></h2>
+            <p class="card__subtitle"><?= e(sv_t('These actions are recorded in the audit log.')) ?></p>
           </div>
         </div>
         <div class="card__body stack">
@@ -565,9 +567,9 @@ if ($isForm):
             <?php
             $currentStatus = (string) $form['status'];
             $transitions = [
-                'open'     => ['label' => 'Open for voting', 'icon' => 'play', 'class' => 'btn--success', 'confirm' => 'Open this election now? Voters will be able to submit ballots immediately.'],
-                'closed'   => ['label' => 'Close voting', 'icon' => 'stop', 'class' => 'btn--secondary', 'confirm' => 'Close this election? No further ballots will be accepted.'],
-                'archived' => ['label' => 'Archive', 'icon' => 'archive', 'class' => 'btn--secondary', 'confirm' => 'Archive this election? It stays readable but is clearly finished.'],
+                'open'     => ['label' => sv_t('Open for voting'), 'icon' => 'play', 'class' => 'btn--success', 'confirm' => sv_t('Open this election now? Voters will be able to submit ballots immediately.')],
+                'closed'   => ['label' => sv_t('Close voting'), 'icon' => 'stop', 'class' => 'btn--secondary', 'confirm' => sv_t('Close this election? No further ballots will be accepted.')],
+                'archived' => ['label' => sv_t('Archive'), 'icon' => 'archive', 'class' => 'btn--secondary', 'confirm' => sv_t('Archive this election? It stays readable but is clearly finished.')],
             ];
             ?>
             <?php foreach ($transitions as $target => $meta): ?>
@@ -590,17 +592,16 @@ if ($isForm):
           <div class="divider" role="presentation"></div>
 
           <form method="post" action="<?= e(post_url('admin/elections.php')) ?>"
-                data-confirm="Delete this election permanently? Positions, candidates and eligibility records are removed too. This cannot be undone.">
+                data-confirm="<?= e(sv_t('Delete this election permanently? Positions, candidates and eligibility records are removed too. This cannot be undone.')) ?>">
             <?= csrf_field() ?>
             <input type="hidden" name="action" value="delete">
             <input type="hidden" name="id" value="<?= e((string) $form['id']) ?>">
             <button class="btn btn--danger btn--sm" type="submit">
-              <?= sv_icon('trash', 16, 'btn__icon') ?><span>Delete election</span>
+              <?= sv_icon('trash', 16, 'btn__icon') ?><span><?= e(sv_t('Delete election')) ?></span>
             </button>
           </form>
           <p class="text-sm text-muted">
-            An election that already contains submitted ballots cannot be deleted, only archived,
-            so a recorded vote can never be silently destroyed.
+            <?= e(sv_t('An election that already contains submitted ballots cannot be deleted, only archived, so a recorded vote can never be silently destroyed.')) ?>
           </p>
         </div>
       </section>
@@ -665,30 +666,30 @@ $elections = $listStmt->fetchAll();
 <section class="card">
   <div class="card__header">
     <div class="card__headings">
-      <h2 class="card__title">All elections</h2>
-      <p class="card__subtitle"><?= e((string) $total) ?> election<?= $total === 1 ? '' : 's' ?> found</p>
+      <h2 class="card__title"><?= e(sv_t('All elections')) ?></h2>
+      <p class="card__subtitle"><?= e(sprintf(sv_t('%d election%s found'), $total, $total === 1 ? '' : 's')) ?></p>
     </div>
   </div>
 
   <form class="table-toolbar" method="get" action="<?= e(url('admin/elections.php')) ?>" role="search">
     <div class="search-field">
       <span class="search-field__icon" aria-hidden="true"><?= sv_icon('search', 16) ?></span>
-      <label class="visually-hidden" for="q">Search elections</label>
+      <label class="visually-hidden" for="q"><?= e(sv_t('Search elections')) ?></label>
       <input class="input" type="search" id="q" name="q" value="<?= e($search) ?>"
-             placeholder="Search by title or description">
+             placeholder="<?= e(sv_t('Search by title or description')) ?>">
     </div>
 
     <div class="row">
-      <label class="visually-hidden" for="status">Filter by status</label>
+      <label class="visually-hidden" for="status"><?= e(sv_t('Filter by status')) ?></label>
       <select class="select" id="status" name="status" data-auto-submit>
-        <option value="">All statuses</option>
+        <option value=""><?= e(sv_t('All statuses')) ?></option>
         <?php foreach ($statusOptions as $value => $label): ?>
-          <option value="<?= e($value) ?>" <?= $statusFilter === $value ? 'selected' : '' ?>><?= e($label) ?></option>
+          <option value="<?= e($value) ?>" <?= $statusFilter === $value ? 'selected' : '' ?>><?= e(sv_t($label)) ?></option>
         <?php endforeach; ?>
       </select>
-      <button class="btn btn--secondary btn--sm" type="submit"><?= sv_icon('filter', 16, 'btn__icon') ?><span>Apply</span></button>
+      <button class="btn btn--secondary btn--sm" type="submit"><?= sv_icon('filter', 16, 'btn__icon') ?><span><?= e(sv_t('Apply')) ?></span></button>
       <?php if ($search !== '' || $statusFilter !== ''): ?>
-        <a class="btn btn--ghost btn--sm" href="<?= e(url('admin/elections.php')) ?>">Clear</a>
+        <a class="btn btn--ghost btn--sm" href="<?= e(url('admin/elections.php')) ?>"><?= e(sv_t('Clear')) ?></a>
       <?php endif; ?>
     </div>
   </form>
@@ -697,33 +698,33 @@ $elections = $listStmt->fetchAll();
     <div class="empty-state">
       <span class="empty-state__icon"><?= sv_icon('vote', 26) ?></span>
       <p class="empty-state__title">
-        <?= e($search !== '' || $statusFilter !== '' ? 'No elections match those filters' : 'No elections yet') ?>
+        <?= e($search !== '' || $statusFilter !== '' ? sv_t('No elections match those filters') : sv_t('No elections yet')) ?>
       </p>
       <p class="empty-state__text">
         <?= e($search !== '' || $statusFilter !== ''
-            ? 'Try a different search term, or clear the filters.'
-            : 'An election needs at least one position and two candidates before it can be opened.') ?>
+            ? sv_t('Try a different search term, or clear the filters.')
+            : sv_t('An election needs at least one position and two candidates before it can be opened.')) ?>
       </p>
       <?php if ($search !== '' || $statusFilter !== ''): ?>
-        <a class="btn btn--secondary" href="<?= e(url('admin/elections.php')) ?>">Clear filters</a>
+        <a class="btn btn--secondary" href="<?= e(url('admin/elections.php')) ?>"><?= e(sv_t('Clear filters')) ?></a>
       <?php else: ?>
         <a class="btn btn--accent" href="<?= e(url('admin/elections.php?action=create')) ?>">
-          <?= sv_icon('plus', 16, 'btn__icon') ?><span>Create an election</span>
+          <?= sv_icon('plus', 16, 'btn__icon') ?><span><?= e(sv_t('Create an election')) ?></span>
         </a>
       <?php endif; ?>
     </div>
   <?php else: ?>
     <div class="table-wrap">
       <table class="table">
-        <caption class="visually-hidden">Elections with schedule, status and readiness</caption>
+        <caption class="visually-hidden"><?= e(sv_t('Elections with schedule, status and readiness')) ?></caption>
         <thead>
           <tr>
-            <th scope="col">Election</th>
-            <th scope="col">Voting window</th>
-            <th scope="col">Status</th>
-            <th scope="col">Setup</th>
-            <th scope="col">Turnout</th>
-            <th scope="col" class="table__actions-col">Actions</th>
+            <th scope="col"><?= e(sv_t('Election')) ?></th>
+            <th scope="col"><?= e(sv_t('Voting window')) ?></th>
+            <th scope="col"><?= e(sv_t('Status')) ?></th>
+            <th scope="col"><?= e(sv_t('Setup')) ?></th>
+            <th scope="col"><?= e(sv_t('Turnout')) ?></th>
+            <th scope="col" class="table__actions-col"><?= e(sv_t('Actions')) ?></th>
           </tr>
         </thead>
         <tbody>
@@ -738,57 +739,57 @@ $elections = $listStmt->fetchAll();
               <td>
                 <span class="table__cell-strong"><?= e($election['title']) ?></span>
                 <span class="table__cell-sub">
-                  <?= e(str_limit($election['description'], 70)) ?: 'No description' ?>
+                  <?= e(str_limit($election['description'], 70) ?: sv_t('No description')) ?>
                 </span>
               </td>
               <td>
                 <span class="nowrap"><?= e(fmt_datetime($election['start_datetime'], 'M j, Y g:i A')) ?></span>
-                <span class="table__cell-sub">to <?= e(fmt_datetime($election['end_datetime'], 'M j, Y g:i A')) ?></span>
+                <span class="table__cell-sub"><?= e(sv_t('to')) ?> <?= e(fmt_datetime($election['end_datetime'], 'M j, Y g:i A')) ?></span>
               </td>
               <td>
                 <?= election_badge($effective) ?>
                 <?php if ($effective !== $election['status']): ?>
-                  <span class="table__cell-sub">Stored as <?= e((string) $election['status']) ?></span>
+                  <span class="table__cell-sub"><?= e(sprintf(sv_t('Stored as %s'), sv_t(ucfirst((string) $election['status'])))) ?></span>
                 <?php endif; ?>
               </td>
               <td>
-                <span class="table__cell-strong"><?= e((string) $election['position_count']) ?> position<?= (int) $election['position_count'] === 1 ? '' : 's' ?></span>
-                <span class="table__cell-sub"><?= e((string) $election['candidate_count']) ?> candidate<?= (int) $election['candidate_count'] === 1 ? '' : 's' ?></span>
+                <span class="table__cell-strong"><?= e(sprintf(sv_t('%d position%s'), (int) $election['position_count'], (int) $election['position_count'] === 1 ? '' : 's')) ?></span>
+                <span class="table__cell-sub"><?= e(sprintf(sv_t('%d candidate%s'), (int) $election['candidate_count'], (int) $election['candidate_count'] === 1 ? '' : 's')) ?></span>
               </td>
               <td>
                 <span class="table__cell-strong"><?= e((string) $voted) ?> / <?= e((string) $eligible) ?></span>
-                <span class="table__cell-sub"><?= e((string) $turnout) ?>% &middot; Results after voting</span>
+                <span class="table__cell-sub"><?= e((string) $turnout) ?>% &middot; <?= e(sv_t('Results after voting')) ?></span>
               </td>
               <td class="table__actions-col">
                 <div class="table__actions">
                   <a class="btn btn--secondary btn--sm"
                      href="<?= e(url('admin/elections.php?action=edit&id=' . (int) $election['id'])) ?>">
-                    <?= sv_icon('edit', 14, 'btn__icon') ?><span>Edit</span>
+                    <?= sv_icon('edit', 14, 'btn__icon') ?><span><?= e(sv_t('Edit')) ?></span>
                   </a>
                   <a class="btn btn--secondary btn--sm"
                      href="<?= e(url('admin/results.php?election_id=' . (int) $election['id'])) ?>">
-                    <?= sv_icon('results', 14, 'btn__icon') ?><span>Results</span>
+                    <?= sv_icon('results', 14, 'btn__icon') ?><span><?= e(sv_t('Results')) ?></span>
                   </a>
-                                <?php if (in_array($election['status'], ['draft', 'scheduled'], true)): ?>
+                  <?php if (in_array($election['status'], ['draft', 'scheduled'], true)): ?>
                     <form method="post" action="<?= e(post_url('admin/elections.php')) ?>"
-                          data-confirm="Open “<?= e($election['title']) ?>” for voting now?">
+                          data-confirm="<?= e(sprintf(sv_t('Open “%s” for voting now?'), $election['title'])) ?>">
                       <?= csrf_field() ?>
                       <input type="hidden" name="action" value="set_status">
                       <input type="hidden" name="id" value="<?= e((string) $election['id']) ?>">
                       <input type="hidden" name="target_status" value="open">
                       <button class="btn btn--success btn--sm" type="submit">
-                        <?= sv_icon('play', 14, 'btn__icon') ?><span>Open</span>
+                        <?= sv_icon('play', 14, 'btn__icon') ?><span><?= e(sv_t('Open')) ?></span>
                       </button>
                     </form>
                   <?php elseif ($election['status'] === 'open'): ?>
                     <form method="post" action="<?= e(post_url('admin/elections.php')) ?>"
-                          data-confirm="Close “<?= e($election['title']) ?>”? No further ballots will be accepted.">
+                          data-confirm="<?= e(sprintf(sv_t('Close “%s”? No further ballots will be accepted.'), $election['title'])) ?>">
                       <?= csrf_field() ?>
                       <input type="hidden" name="action" value="set_status">
                       <input type="hidden" name="id" value="<?= e((string) $election['id']) ?>">
                       <input type="hidden" name="target_status" value="closed">
                       <button class="btn btn--secondary btn--sm" type="submit">
-                        <?= sv_icon('stop', 14, 'btn__icon') ?><span>Close</span>
+                        <?= sv_icon('stop', 14, 'btn__icon') ?><span><?= e(sv_t('Close')) ?></span>
                       </button>
                     </form>
                   <?php endif; ?>

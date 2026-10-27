@@ -246,30 +246,46 @@ function relative_time(?string $value): string
     $diff = $dt->getTimestamp() - time();
     $past = $diff < 0;
     $diff = abs($diff);
+    $isFil = sv_language() === 'fil';
 
     if ($diff < 60) {
+        if ($isFil) {
+            return $past ? sv_t('just now') : sv_t('in a moment');
+        }
         return $past ? 'just now' : 'in a moment';
     }
 
     $units = [
-        31536000 => 'year',
-        2592000  => 'month',
-        604800   => 'week',
-        86400    => 'day',
-        3600     => 'hour',
-        60       => 'minute',
+        31536000 => ['year', 'taon'],
+        2592000  => ['month', 'buwan'],
+        604800   => ['week', 'linggo'],
+        86400    => ['day', 'araw'],
+        3600     => ['hour', 'oras'],
+        60       => ['minute', 'minuto'],
     ];
 
-    foreach ($units as $seconds => $name) {
+    $label = '';
+    foreach ($units as $seconds => $names) {
         if ($diff >= $seconds) {
             $count = (int) floor($diff / $seconds);
-            $label = $count . ' ' . $name . ($count > 1 ? 's' : '');
+            if ($isFil) {
+                $label = $count . ' ' . $names[1];
+            } else {
+                $label = $count . ' ' . $names[0] . ($count > 1 ? 's' : '');
+            }
             break;
         }
     }
 
     if ($diff >= 604800) {
-        return $past ? 'on ' . $dt->format('M j, Y') : 'on ' . $dt->format('M j, Y');
+        if ($isFil) {
+            return ($past ? 'noong ' : 'sa ') . $dt->format('M j, Y');
+        }
+        return ($past ? 'on ' : 'on ') . $dt->format('M j, Y');
+    }
+
+    if ($isFil) {
+        return $past ? $label . ' ang nakalipas' : 'sa loob ng ' . $label;
     }
 
     return $past ? $label . ' ago' : 'in ' . $label;
@@ -281,16 +297,16 @@ function countdown_text(array $election): string
     $status = election_effective_status($election);
 
     if ($status === 'open') {
-        return 'Closes ' . relative_time($election['end_datetime']);
+        return sprintf(sv_t('Closes %s'), relative_time($election['end_datetime']));
     }
     if ($status === 'scheduled') {
-        return 'Opens ' . relative_time($election['start_datetime']);
+        return sprintf(sv_t('Opens %s'), relative_time($election['start_datetime']));
     }
     if ($status === 'closed' || $status === 'archived') {
-        return 'Closed ' . relative_time($election['end_datetime']);
+        return sprintf(sv_t('Closed %s'), relative_time($election['end_datetime']));
     }
 
-    return 'Not yet scheduled';
+    return sv_t('Not yet scheduled');
 }
 
 /** Percentage rounded to one decimal place, safe for a zero denominator. */
@@ -322,7 +338,7 @@ function badge(string $label, string $variant = 'neutral', bool $dot = true): st
 
     $dotHtml = $dot ? '<span class="badge__dot" aria-hidden="true"></span>' : '';
 
-    return '<span class="badge badge--' . $safeVariant . '">' . $dotHtml . e($label) . '</span>';
+    return '<span class="badge badge--' . $safeVariant . '">' . $dotHtml . e(sv_t($label)) . '</span>';
 }
 
 /** Election status -> [label, badge variant]. */
@@ -498,24 +514,28 @@ function election_block_reason(array $election, bool $isEligible, bool $hasVoted
     $status = election_effective_status($election);
 
     if ($status === 'draft') {
-        return 'This election is still being prepared and is not open to voters.';
+        return sv_t('This election is still being prepared and is not open to voters.');
     }
     if ($status === 'archived') {
-        return 'This election has been archived and is no longer votable.';
+        return sv_t('This election has been archived and is no longer votable.');
     }
     if ($status === 'scheduled') {
-        return 'This election has not started yet. Voting opens on '
-            . fmt_datetime($election['start_datetime']) . '.';
+        return sprintf(
+            sv_t('This election has not started yet. Voting opens on %s.'),
+            fmt_datetime($election['start_datetime'])
+        );
     }
     if ($status === 'closed') {
-        return 'This election is closed. Voting ended on '
-            . fmt_datetime($election['end_datetime']) . '.';
+        return sprintf(
+            sv_t('This election is closed. Voting ended on %s.'),
+            fmt_datetime($election['end_datetime'])
+        );
     }
     if (!$isEligible) {
-        return 'Your account is not on the voter list for this election.';
+        return sv_t('Your account is not on the voter list for this election.');
     }
     if ($hasVoted) {
-        return 'You have already submitted your ballot for this election.';
+        return sv_t('You have already submitted your ballot for this election.');
     }
 
     return null;
@@ -532,28 +552,30 @@ function election_state_denial(string $status, array $election): array
 {
     return match ($status) {
         'scheduled' => [
-            'This election has not started yet',
-            'This election has not started yet. Voting opens on '
-                . fmt_datetime($election['start_datetime'])
-                . '. The server refused this request, so no ballot was opened.',
+            sv_t('This election has not started yet'),
+            sprintf(
+                sv_t('This election has not started yet. Voting opens on %s. The server refused this request, so no ballot was opened.'),
+                fmt_datetime($election['start_datetime'])
+            ),
         ],
         'closed' => [
-            'This election is closed',
-            'This election is closed. Voting is no longer available: it ended on '
-                . fmt_datetime($election['end_datetime'])
-                . '. The server refused this request, so no ballot was opened.',
+            sv_t('This election is closed'),
+            sprintf(
+                sv_t('This election is closed. Voting is no longer available: it ended on %s. The server refused this request, so no ballot was opened.'),
+                fmt_datetime($election['end_datetime'])
+            ),
         ],
         'archived' => [
-            'This election has been archived',
-            'This election has been archived and can no longer be voted in.',
+            sv_t('This election has been archived'),
+            sv_t('This election has been archived and can no longer be voted in.'),
         ],
         'draft' => [
-            'This election is not open yet',
-            'This election is still being prepared and has not been published to voters.',
+            sv_t('This election is not open yet'),
+            sv_t('This election is still being prepared and has not been published to voters.'),
         ],
         default => [
-            'Voting is not open',
-            'This election is not accepting ballots right now.',
+            sv_t('Voting is not open'),
+            sv_t('This election is not accepting ballots right now.'),
         ],
     };
 }
@@ -583,8 +605,8 @@ function results_policy_notice(array $election, bool $hasVoted = false): ?string
 
     if (!$hasVoted && !$closed) {
         return election_effective_status($election) === 'scheduled'
-            ? 'Results become available after voting opens and you submit your ballot.'
-            : 'Results become available after you submit your ballot.';
+            ? sv_t('Results become available after voting opens and you submit your ballot.')
+            : sv_t('Results become available after you submit your ballot.');
     }
 
     return null;
@@ -688,9 +710,9 @@ function pagination_links(array $page, string $label = 'records'): string
         return '';
     }
 
-    $html   = '<nav class="pagination" aria-label="Pagination">';
+    $html   = '<nav class="pagination" aria-label="' . e(sv_t('Pagination')) . '">';
     $html  .= '<span class="pagination__summary">'
-        . e('Showing page ' . $page['page'] . ' of ' . $page['pages'] . ' · ' . $page['total'] . ' ' . $label)
+        . e(sprintf(sv_t('Showing page %d of %d · %d %s'), $page['page'], $page['pages'], $page['total'], sv_t($label)))
         . '</span>';
     $html  .= '<span class="pagination__controls">';
 
@@ -699,7 +721,7 @@ function pagination_links(array $page, string $label = 'records'): string
 
     $html .= '<a class="btn btn--sm btn--secondary' . ($prevDisabled ? ' is-disabled' : '') . '"'
         . ($prevDisabled ? ' aria-disabled="true" tabindex="-1"' : '')
-        . ' href="' . e(query_with(['page' => $page['page'] - 1])) . '">Previous</a>';
+        . ' href="' . e(query_with(['page' => $page['page'] - 1])) . '">' . e(sv_t('Previous')) . '</a>';
 
     $start = max(1, $page['page'] - 2);
     $end   = min($page['pages'], $start + 4);
@@ -714,7 +736,7 @@ function pagination_links(array $page, string $label = 'records'): string
 
     $html .= '<a class="btn btn--sm btn--secondary' . ($nextDisabled ? ' is-disabled' : '') . '"'
         . ($nextDisabled ? ' aria-disabled="true" tabindex="-1"' : '')
-        . ' href="' . e(query_with(['page' => $page['page'] + 1])) . '">Next</a>';
+        . ' href="' . e(query_with(['page' => $page['page'] + 1])) . '">' . e(sv_t('Next')) . '</a>';
 
     $html .= '</span></nav>';
 

@@ -20,7 +20,7 @@ $breadcrumb   = [
 ];
 
 $pageActions = '<a class="btn btn--sm btn--primary" href="' . e(url('auth/login.php')) . '">'
-    . sv_icon('lock', 16, 'btn__icon') . '<span>Sign In</span></a>';
+    . sv_icon('lock', 16, 'btn__icon') . '<span>' . e(sv_t('Sign In')) . '</span></a>';
 
 require __DIR__ . '/includes/header.php';
 ?>

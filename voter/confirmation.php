@@ -23,22 +23,22 @@ $params=[(int)$user['id']];
 if ($reqElectionId>0) { $sql.=' AND b.election_id=?'; $params[]=$reqElectionId; }
 $sql.=' ORDER BY b.submitted_at DESC,b.id DESC LIMIT 1';
 $stmt=$pdo->prepare($sql); $stmt->execute($params); $receipt=$stmt->fetch();
-if (!$receipt) sv_error_page(404, 'Receipt unavailable', 'No submitted ballot was found for your account in this election.', [['label'=>'Back to elections','href'=>url('voter/elections.php')]]);
+if (!$receipt) sv_error_page(404, sv_t('Receipt unavailable'), sv_t('No submitted ballot was found for your account in this election.'), [['label'=>sv_t('Back to elections'),'href'=>url('voter/elections.php')]]);
 $receipt['voter_name']=user_full_name($user);
 $electionId=(int)$receipt['election_id']; $electionTitle=(string)$receipt['election_title'];
 
-$pageTitle = 'Ballot Recorded';
+$pageTitle = sv_t('Ballot Recorded');
 $activeNav = 'elections.php';
 $breadcrumb   = [
-    ['label' => 'Dashboard', 'href' => 'voter/dashboard.php'],
-    ['label' => 'Elections', 'href' => 'voter/elections.php'],
-    ['label' => 'Receipt'],
+    ['label' => sv_t('Dashboard'), 'href' => 'voter/dashboard.php'],
+    ['label' => sv_t('Elections'), 'href' => 'voter/elections.php'],
+    ['label' => sv_t('Receipt')],
 ];
 
 require __DIR__ . '/../includes/header.php';
 ?>
 
-<nav class="vote-progress" aria-label="Voting progress">
+<nav class="vote-progress" aria-label="<?= e(sv_t('Voting progress')) ?>">
   <ol>
     <li class="is-complete"><span><?= sv_icon('check', 15) ?></span> <?= e(sv_t("Choose")) ?></li>
     <li class="is-complete"><span><?= sv_icon('check', 15) ?></span> <?= e(sv_t("Review")) ?></li>
@@ -64,7 +64,7 @@ require __DIR__ . '/../includes/header.php';
         <h3 class="card__title" style="font-size: 1.05rem;"><?= e($electionTitle) ?></h3>
         <p class="card__subtitle"><?= e(sv_t("Official Digital Voting Receipt")) ?></p>
       </div>
-      <span class="badge badge--success"><?= sv_icon('shield-check', 14) ?> 1-Vote Verified</span>
+      <span class="badge badge--success"><?= sv_icon('shield-check', 14) ?> <?= e(sv_t("1-Vote Verified")) ?></span>
     </div>
 
     <div class="card__body">
@@ -99,7 +99,7 @@ require __DIR__ . '/../includes/header.php';
         <div class="kv__row">
           <dt class="kv__key"><?= e(sv_t("Integrity Status")) ?></dt>
           <dd class="kv__value" style="color: var(--success); font-weight: 600; display: flex; align-items: center; gap: 6px;">
-            <?= sv_icon('shield-check', 16) ?> Certified 1-Person-1-Vote Record
+            <?= sv_icon('shield-check', 16) ?> <?= e(sv_t("Certified 1-Person-1-Vote Record")) ?>
           </dd>
         </div>
       </dl>

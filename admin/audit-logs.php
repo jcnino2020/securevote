@@ -184,12 +184,12 @@ if ((string) input('export', '') === 'csv') {
 
 $hasFilters = $search !== '' || $action !== '' || $severity !== '' || $userId > 0 || $from !== null || $to !== null;
 
-$pageTitle   = 'Audit logs';
+$pageTitle   = sv_t('Audit logs');
 $activeNav   = 'audit-logs.php';
 $pageActions  = '<a class="btn btn--secondary btn--sm" href="'
     . e(url('admin/audit-logs.php' . query_with(['export' => 'csv', 'page' => null]))) . '">'
-    . sv_icon('download', 16, 'btn__icon') . '<span>Export CSV</span></a>';
-$breadcrumb   = [['label' => 'Audit logs', 'href' => 'admin/audit-logs.php']];
+    . sv_icon('download', 16, 'btn__icon') . '<span>' . e(sv_t('Export CSV')) . '</span></a>';
+$breadcrumb   = [['label' => sv_t('Audit logs'), 'href' => 'admin/audit-logs.php']];
 
 require __DIR__ . '/../includes/header.php';
 ?>
@@ -197,63 +197,63 @@ require __DIR__ . '/../includes/header.php';
 <section class="card">
   <div class="card__header">
     <div class="card__headings">
-      <h2 class="card__title">Event log</h2>
+      <h2 class="card__title"><?= e(sv_t("Event log")) ?></h2>
       <p class="card__subtitle">
-        <?= e((string) $total) ?> entr<?= $total === 1 ? 'y' : 'ies' ?><?= $hasFilters ? ' matching the filters' : '' ?>
+        <?= e(sprintf(sv_t('%d entr%s%s'), $total, $total === 1 ? 'y' : 'ies', $hasFilters ? sv_t(' matching the filters') : '')) ?>
       </p>
     </div>
-    <span class="badge badge--teal"><?= sv_icon('shield-check', 14) ?>Append-only in the interface</span>
+    <span class="badge badge--teal"><?= sv_icon('shield-check', 14) ?><?= e(sv_t("Append-only in the interface")) ?></span>
   </div>
 
   <form class="table-toolbar" method="get" action="<?= e(url('admin/audit-logs.php')) ?>" role="search">
     <div class="search-field">
       <span class="search-field__icon" aria-hidden="true"><?= sv_icon('search', 16) ?></span>
-      <label class="visually-hidden" for="q">Search the audit log</label>
+      <label class="visually-hidden" for="q"><?= e(sv_t("Search the audit log")) ?></label>
       <input class="input" type="search" id="q" name="q" value="<?= e($search) ?>"
-             placeholder="Search description, IP or username">
+             placeholder="<?= e(sv_t('Search description, IP or username')) ?>">
     </div>
 
     <div class="row">
-      <label class="visually-hidden" for="severity">Filter by severity</label>
+      <label class="visually-hidden" for="severity"><?= e(sv_t("Filter by severity")) ?></label>
       <select class="select" id="severity" name="severity" data-auto-submit>
-        <option value="">All severities</option>
-        <option value="high" <?= in_array($severity, ['high', 'critical'], true) ? 'selected' : '' ?>>Critical & High</option>
-        <option value="medium" <?= $severity === 'medium' ? 'selected' : '' ?>>Medium</option>
-        <option value="low" <?= $severity === 'low' ? 'selected' : '' ?>>Low</option>
-        <option value="informational" <?= $severity === 'informational' ? 'selected' : '' ?>>Informational</option>
+        <option value=""><?= e(sv_t("All severities")) ?></option>
+        <option value="high" <?= in_array($severity, ['high', 'critical'], true) ? 'selected' : '' ?>><?= e(sv_t("Critical & High")) ?></option>
+        <option value="medium" <?= $severity === 'medium' ? 'selected' : '' ?>><?= e(sv_t("Medium")) ?></option>
+        <option value="low" <?= $severity === 'low' ? 'selected' : '' ?>><?= e(sv_t("Low")) ?></option>
+        <option value="informational" <?= $severity === 'informational' ? 'selected' : '' ?>><?= e(sv_t("Informational")) ?></option>
       </select>
 
-      <label class="visually-hidden" for="log_action">Filter by action</label>
+      <label class="visually-hidden" for="log_action"><?= e(sv_t("Filter by action")) ?></label>
       <select class="select" id="log_action" name="log_action" data-auto-submit>
-        <option value="">All actions</option>
+        <option value=""><?= e(sv_t("All actions")) ?></option>
         <?php foreach ($actions as $option): ?>
           <option value="<?= e((string) $option) ?>" <?= $action === (string) $option ? 'selected' : '' ?>>
-            <?= e(str_replace('_', ' ', (string) $option)) ?>
+            <?= e(sv_t(str_replace('_', ' ', (string) $option))) ?>
           </option>
         <?php endforeach; ?>
       </select>
 
-      <label class="visually-hidden" for="user_id">Filter by account</label>
+      <label class="visually-hidden" for="user_id"><?= e(sv_t("Filter by account")) ?></label>
       <select class="select" id="user_id" name="user_id" data-auto-submit>
-        <option value="">Any account</option>
+        <option value=""><?= e(sv_t("Any account")) ?></option>
         <?php foreach ($users as $option): ?>
           <option value="<?= e((string) $option['id']) ?>" <?= $userId === (int) $option['id'] ? 'selected' : '' ?>>
-            <?= e($option['username']) ?> (<?= e((string) $option['role']) ?>)
+            <?= e($option['username']) ?> (<?= e(sv_t((string) $option['role'])) ?>)
           </option>
         <?php endforeach; ?>
       </select>
 
-      <label class="visually-hidden" for="date_from">From date</label>
+      <label class="visually-hidden" for="date_from"><?= e(sv_t("From date")) ?></label>
       <input class="input" type="date" id="date_from" name="date_from" value="<?= e((string) $from) ?>">
 
-      <label class="visually-hidden" for="date_to">To date</label>
+      <label class="visually-hidden" for="date_to"><?= e(sv_t("To date")) ?></label>
       <input class="input" type="date" id="date_to" name="date_to" value="<?= e((string) $to) ?>">
 
       <button class="btn btn--secondary btn--sm" type="submit">
-        <?= sv_icon('filter', 16, 'btn__icon') ?><span>Apply</span>
+        <?= sv_icon('filter', 16, 'btn__icon') ?><span><?= e(sv_t("Apply")) ?></span>
       </button>
       <?php if ($hasFilters): ?>
-        <a class="btn btn--ghost btn--sm" href="<?= e(url('admin/audit-logs.php')) ?>">Clear</a>
+        <a class="btn btn--ghost btn--sm" href="<?= e(url('admin/audit-logs.php')) ?>"><?= e(sv_t("Clear")) ?></a>
       <?php endif; ?>
     </div>
   </form>
@@ -262,29 +262,29 @@ require __DIR__ . '/../includes/header.php';
     <div class="empty-state">
       <span class="empty-state__icon"><?= sv_icon('audit', 26) ?></span>
       <p class="empty-state__title">
-        <?= e($hasFilters ? 'No audit entries match those filters' : 'Nothing logged yet') ?>
+        <?= e($hasFilters ? sv_t('No audit entries match those filters') : sv_t('Nothing logged yet')) ?>
       </p>
       <p class="empty-state__text">
         <?= e($hasFilters
-            ? 'Try a wider date range, or clear the filters.'
-            : 'Sign-ins, failed attempts, election changes and submitted ballots are written here as they happen.') ?>
+            ? sv_t('Try a wider date range, or clear the filters.')
+            : sv_t('Sign-ins, failed attempts, election changes and submitted ballots are written here as they happen.')) ?>
       </p>
       <?php if ($hasFilters): ?>
-        <a class="btn btn--secondary" href="<?= e(url('admin/audit-logs.php')) ?>">Clear filters</a>
+        <a class="btn btn--secondary" href="<?= e(url('admin/audit-logs.php')) ?>"><?= e(sv_t("Clear filters")) ?></a>
       <?php endif; ?>
     </div>
   <?php else: ?>
     <div class="table-wrap">
       <table class="table">
-        <caption class="visually-hidden">Audit entries with time, severity, actor, action, description and source address</caption>
+        <caption class="visually-hidden"><?= e(sv_t("Audit entries with time, severity, actor, action, description and source address")) ?></caption>
         <thead>
           <tr>
-            <th scope="col">When</th>
-            <th scope="col">Severity</th>
-            <th scope="col">Actor</th>
-            <th scope="col">Action</th>
-            <th scope="col">Description</th>
-            <th scope="col">Source</th>
+            <th scope="col"><?= e(sv_t("When")) ?></th>
+            <th scope="col"><?= e(sv_t("Severity")) ?></th>
+            <th scope="col"><?= e(sv_t("Actor")) ?></th>
+            <th scope="col"><?= e(sv_t("Action")) ?></th>
+            <th scope="col"><?= e(sv_t("Description")) ?></th>
+            <th scope="col"><?= e(sv_t("Source")) ?></th>
           </tr>
         </thead>
         <tbody>
@@ -300,14 +300,14 @@ require __DIR__ . '/../includes/header.php';
               <td>
                 <?php if ($log['username'] !== null): ?>
                   <span class="table__cell-strong"><?= e($log['username']) ?></span>
-                  <span class="table__cell-sub"><?= e(ucfirst((string) $log['role'])) ?></span>
+                  <span class="table__cell-sub"><?= e(sv_t(ucfirst((string) $log['role']))) ?></span>
                 <?php else: ?>
-                  <span class="table__cell-strong">Anonymous</span>
-                  <span class="table__cell-sub">No account matched</span>
+                  <span class="table__cell-strong"><?= e(sv_t("Anonymous")) ?></span>
+                  <span class="table__cell-sub"><?= e(sv_t("No account matched")) ?></span>
                 <?php endif; ?>
               </td>
               <td>
-                <span class="badge badge--neutral"><?= e(str_replace('_', ' ', (string) $log['action'])) ?></span>
+                <span class="badge badge--neutral"><?= e(sv_t(str_replace('_', ' ', (string) $log['action']))) ?></span>
               </td>
               <td><?= e((string) $log['description']) ?></td>
               <td>
@@ -322,7 +322,7 @@ require __DIR__ . '/../includes/header.php';
       </table>
     </div>
 
-    <?= pagination_links($pageInfo, 'audit entries') ?>
+    <?= pagination_links($pageInfo, sv_t('audit entries')) ?>
   <?php endif; ?>
 </section>
 

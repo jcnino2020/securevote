@@ -904,18 +904,18 @@ function sv_final_result_summary(array $tally): array
         ));
 
         if ((int) $entry['total_selections'] === 0 || $leaders === []) {
-            $outcome = 'No winner';
-            $detail = 'No votes were recorded for this position.';
+            $outcome = sv_t('No winner');
+            $detail = sv_t('No votes were recorded for this position.');
         } elseif (count($leaders) > $seats) {
-            $outcome = 'Tie at the cutoff';
+            $outcome = sv_t('Tie at the cutoff');
             $cutoffVotes = (int) $entry['rows'][$seats - 1]['vote_count'];
             $tiedNames = array_map(
                 static fn (array $row): string => $row['first_name'] . ' ' . $row['last_name'],
                 array_values(array_filter($leaders, static fn (array $row): bool => (int) $row['vote_count'] === $cutoffVotes))
             );
-            $detail = implode(' and ', $tiedNames) . ' are tied for a seat. Review the tally before declaring that seat.';
+            $detail = sprintf(sv_t('%s are tied for a seat. Review the tally before declaring that seat.'), implode(sv_t(' and '), $tiedNames));
         } else {
-            $outcome = $seats === 1 ? 'Winner' : 'Elected';
+            $outcome = $seats === 1 ? sv_t('Winner') : sv_t('Elected');
             $detail = implode(', ', array_map(
                 static fn (array $row): string => $row['first_name'] . ' ' . $row['last_name'],
                 $leaders
@@ -939,16 +939,16 @@ function sv_result_badge_label(array $entry, array $row, bool $isFinal): string
         return '';
     }
     if (!$isFinal) {
-        return 'Leading';
+        return sv_t('Leading');
     }
 
     $seats = max(1, (int) $entry['position']['max_selections']);
     if (count($entry['leading']) > $seats) {
         $cutoffVotes = (int) $entry['rows'][$seats - 1]['vote_count'];
         if ((int) $row['vote_count'] === $cutoffVotes) {
-            return 'Tied';
+            return sv_t('Tied');
         }
     }
 
-    return $seats === 1 ? 'Winner' : 'Elected';
+    return $seats === 1 ? sv_t('Winner') : sv_t('Elected');
 }

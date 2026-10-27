@@ -25,11 +25,11 @@ $badgeClass = match ($code) {
 };
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="<?= e(sv_language()) ?>">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title><?= e($title) ?> &middot; <?= e(APP_NAME) ?></title>
+<title><?= e(sv_t($title)) ?> &middot; <?= e(APP_NAME) ?></title>
 <link rel="icon" href="<?= e(asset('images/favicon.svg')) ?>" type="image/svg+xml">
 <link rel="icon" href="<?= e(asset('images/favicon-32.png')) ?>" type="image/png" sizes="32x32">
 <link rel="shortcut icon" href="<?= e(url('favicon.ico')) ?>" type="image/x-icon">
@@ -55,10 +55,10 @@ $badgeClass = match ($code) {
       </div>
 
       <h1 class="auth-card__title" id="error-title" style="margin-bottom: var(--sp-2); font-size: 1.6rem;">
-        <?= e($title) ?>
+        <?= e(sv_t($title)) ?>
       </h1>
       <p class="auth-card__text" style="margin-bottom: var(--sp-6); font-size: 0.95rem; line-height: 1.6;">
-        <?= e($message) ?>
+        <?= e(sv_t($message)) ?>
       </p>
 
       <div style="display: flex; flex-wrap: wrap; gap: var(--sp-3); justify-content: center; width: 100%; margin-bottom: var(--sp-4);">
@@ -66,13 +66,13 @@ $badgeClass = match ($code) {
           <a class="btn <?= $index === 0 ? 'btn--primary' : 'btn--secondary' ?>"
              href="<?= e((string) $link['href']) ?>">
             <?= $index === 0 ? sv_icon('arrow-left', 16, 'btn__icon') : '' ?>
-            <span><?= e((string) $link['label']) ?></span>
+            <span><?= e(sv_t((string) $link['label'])) ?></span>
           </a>
         <?php endforeach; ?>
         <?php if ($links === []): ?>
           <a class="btn btn--primary" href="<?= e(url('index.php')) ?>">
             <?= sv_icon('arrow-left', 16, 'btn__icon') ?>
-            <span>Return to Home</span>
+            <span><?= e(sv_t('Return to Home')) ?></span>
           </a>
         <?php endif; ?>
       </div>
@@ -81,7 +81,7 @@ $badgeClass = match ($code) {
 
       <p class="error-assurance">
         <?= sv_icon('shield-check', 22) ?>
-        <span>Confidentiality Protected &middot; No sensitive internal paths or stack traces disclosed.</span>
+        <span><?= e(sv_t('Confidentiality Protected')) ?> &middot; <?= e(sv_t('No sensitive internal paths or stack traces disclosed.')) ?></span>
       </p>
     </main>
   </div>

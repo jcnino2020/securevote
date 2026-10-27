@@ -73,11 +73,11 @@ function sv_election_readiness(PDO $pdo, array $election): array
     $end = to_datetime($election['end_datetime']);
     $schedule = $start && $end && $end > $start && $end->getTimestamp() > time();
     return [
-        ['ok' => $schedule, 'label' => 'Voting schedule', 'detail' => $schedule ? fmt_range($election['start_datetime'], $election['end_datetime']) : 'Set a valid voting window with an end time in the future.', 'href' => 'admin/elections.php?action=edit&id=' . $id],
-        ['ok' => $positions !== [] && $empty === [], 'label' => 'Positions and candidates', 'detail' => $positions === [] ? 'Add at least one position.' : ($empty ? 'No active candidates: ' . implode(', ', $empty) : count($positions) . ' positions each have active candidates.'), 'href' => 'admin/positions.php?election_id=' . $id],
-        ['ok' => $active > 0 && $assigned === $active, 'label' => 'Voter assignment', 'detail' => "$assigned of $active active voters assigned. Opening through Open now automatically enrols all active voters; scheduled elections need assignments in advance.", 'href' => 'admin/voters.php'],
-        ['ok' => $missing === 0, 'label' => 'Candidate information', 'detail' => $missing ? "$missing active candidates need a biography or platform." : 'All active candidates have a biography and platform.', 'href' => 'admin/candidates.php?election_id=' . $id],
-        ['ok' => $short === [], 'label' => 'Selection limits', 'detail' => $short ? 'Fewer candidates than allowed selections: ' . implode(', ', $short) . '. Review whether this is intentional.' : 'Selection limits fit the active candidate counts.', 'href' => 'admin/positions.php?election_id=' . $id],
+        ['ok' => $schedule, 'label' => sv_t('Voting schedule'), 'detail' => $schedule ? fmt_range($election['start_datetime'], $election['end_datetime']) : sv_t('Set a valid voting window with an end time in the future.'), 'href' => 'admin/elections.php?action=edit&id=' . $id],
+        ['ok' => $positions !== [] && $empty === [], 'label' => sv_t('Positions and candidates'), 'detail' => $positions === [] ? sv_t('Add at least one position.') : ($empty ? sprintf(sv_t('No active candidates: %s'), implode(', ', $empty)) : sprintf(sv_t('%d positions each have active candidates.'), count($positions))), 'href' => 'admin/positions.php?election_id=' . $id],
+        ['ok' => $active > 0 && $assigned === $active, 'label' => sv_t('Voter assignment'), 'detail' => sprintf(sv_t('%d of %d active voters assigned. Opening through Open now automatically enrols all active voters; scheduled elections need assignments in advance.'), $assigned, $active), 'href' => 'admin/voters.php'],
+        ['ok' => $missing === 0, 'label' => sv_t('Candidate information'), 'detail' => $missing ? sprintf(sv_t('%d active candidates need a biography or platform.'), $missing) : sv_t('All active candidates have a biography and platform.'), 'href' => 'admin/candidates.php?election_id=' . $id],
+        ['ok' => $short === [], 'label' => sv_t('Selection limits'), 'detail' => $short ? sprintf(sv_t('Fewer candidates than allowed selections: %s. Review whether this is intentional.'), implode(', ', $short)) : sv_t('Selection limits fit the active candidate counts.'), 'href' => 'admin/positions.php?election_id=' . $id],
     ];
 }
 
@@ -99,7 +99,7 @@ function sv_practice_ballot(): array
 function sv_feature_errors(array $errors): void
 {
     if ($errors === []) return;
-    echo '<div class="alert alert--danger" role="alert"><div><strong>Please check the following:</strong><ul>';
-    foreach ($errors as $error) echo '<li>' . e($error) . '</li>';
+    echo '<div class="alert alert--danger" role="alert"><div><strong>' . e(sv_t('Please check the following:')) . '</strong><ul>';
+    foreach ($errors as $error) echo '<li>' . e(sv_t($error)) . '</li>';
     echo '</ul></div></div>';
 }
