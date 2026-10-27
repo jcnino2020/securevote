@@ -145,7 +145,7 @@ function sv_t(string $text, ...$args): string
         "Show password confirmation" => "Ipakita ang kumpirmasyon ng password",
         "At least 8 characters with 1 letter & 1 number." => "Hindi bababa sa 8 character na may 1 titik at 1 numero.",
         "Password requirements" => "Mga kailangan sa password",
-        "8 to 200 characters" => "8 hanggang 200 character",
+        "Minimum of 8 characters" => "Hindi bababa sa 8 character",
         "At least one letter" => "Hindi bababa sa isang titik",
         "At least one number" => "Hindi bababa sa isang numero",
         "Passwords match" => "Magkatugma ang mga password",

@@ -294,7 +294,7 @@ require __DIR__ . '/../includes/header.php';
             </p>
           <?php endif; ?>
           <ul class="password-checks" id="password-rules" aria-label="<?= e(sv_t('Password requirements')) ?>">
-            <li data-password-rule="length" data-state="pending"><span class="password-checks__icon" aria-hidden="true">○</span><?= e(sv_t('8 to 200 characters')) ?></li>
+            <li data-password-rule="length" data-state="pending"><span class="password-checks__icon" aria-hidden="true">○</span><?= e(sv_t('Minimum of 8 characters')) ?></li>
             <li data-password-rule="letter" data-state="pending"><span class="password-checks__icon" aria-hidden="true">○</span><?= e(sv_t('At least one letter')) ?></li>
             <li data-password-rule="number" data-state="pending"><span class="password-checks__icon" aria-hidden="true">○</span><?= e(sv_t('At least one number')) ?></li>
           </ul>
