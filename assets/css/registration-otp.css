@@ -1,0 +1,45 @@
+/* The email verification step inherits SecureVote's existing auth shell. */
+.page-verify-registration .auth-card { max-width: 520px; }
+.registration-otp__mark {
+  display: grid;
+  place-items: center;
+  width: 50px;
+  height: 50px;
+  margin: 12px 0 18px;
+  border-radius: 13px;
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.registration-otp__email { color: var(--text); overflow-wrap: anywhere; }
+.registration-otp__form { margin-top: 25px; }
+.registration-otp__code {
+  width: 100%;
+  height: 68px;
+  padding: 9px 12px;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .33em;
+  text-align: center;
+  caret-color: var(--primary);
+}
+.registration-otp__code::placeholder { color: var(--text-muted); opacity: .55; }
+.registration-otp__form > .btn { margin-top: 20px; }
+.registration-otp__resend {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 27px;
+  padding-top: 21px;
+  border-top: 1px solid var(--border);
+}
+.registration-otp__resend p { max-width: 22ch; margin: 0; color: var(--text-secondary); font-size: .875rem; line-height: 1.45; }
+.registration-otp__resend form { margin: 0; }
+.registration-otp__resend .btn { white-space: nowrap; }
+.registration-otp__change { display: inline-block; margin-top: 22px; color: var(--primary); font-size: .875rem; font-weight: 700; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+@media (max-width: 520px) {
+  .registration-otp__resend { align-items: flex-start; flex-direction: column; }
+  .registration-otp__resend p { max-width: none; }
+  .registration-otp__resend .btn { min-height: 44px; }
+}

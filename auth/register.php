@@ -84,47 +84,29 @@ if (is_post()) {
 
     if ($errors === []) {
         $hash = password_hash($password, PASSWORD_DEFAULT);
-        $voterCode = sv_generate_voter_code();
-
-        // Ensure voter_code uniqueness
-        for ($i = 1; $i <= 20; $i++) {
-            $check = $pdo->prepare('SELECT id FROM users WHERE voter_code = ? LIMIT 1');
-            $check->execute([$voterCode]);
-            if (!$check->fetch()) {
-                break;
+        if (sv_registration_otp_enabled()) {
+            if (!sv_registration_mail_ready()) {
+                $errors['general'] = sv_t('Email verification is temporarily unavailable. Please try again later.');
+            } elseif (!sv_feature_allow('registration-otp', 8, 3600)
+                || !sv_feature_allow('registration-otp-email:' . hash('sha256', $form['email']), 3, 3600)) {
+                $errors['general'] = sv_t('Too many verification emails requested. Please try again in an hour.');
+            } elseif (!sv_registration_otp_begin($form, $hash)) {
+                $errors['general'] = sv_t('We could not send the verification code. Please try again.');
+            } else {
+                redirect('auth/verify-registration.php');
             }
-            $voterCode = sv_generate_voter_code();
-        }
-
-        $insert = $pdo->prepare(
-            "INSERT INTO users (username, email, voter_code, password_hash, first_name, last_name, role, status, created_at)
-             VALUES (:username, :email, :voter_code, :hash, :first_name, :last_name, 'voter', 'active', NOW())"
-        );
-        $insert->execute([
-            ':username'   => $form['username'],
-            ':email'      => $form['email'],
-            ':voter_code' => $voterCode,
-            ':hash'       => $hash,
-            ':first_name' => $form['first_name'],
-            ':last_name'  => $form['last_name'],
-        ]);
-
-        $newUserId = (int) $pdo->lastInsertId();
-
-        audit_log('voter_registered', 'New voter account self-registered: "' . $form['username'] . '" (Voter Code: ' . $voterCode . ').', $newUserId);
-
-        // Fetch user data and log in
-        $userStmt = $pdo->prepare('SELECT * FROM users WHERE id = ? LIMIT 1');
-        $userStmt->execute([$newUserId]);
-        $newUser = $userStmt->fetch();
-
-        if ($newUser) {
-            login_user($newUser);
-            flash_success(sprintf(sv_t('Welcome to SecureVote, %s! Your account is ready. An election administrator will assign the elections you can vote in. Your personal Voter Code is: %s'), $form['first_name'], $voterCode));
-            redirect('voter/dashboard.php');
         } else {
-            flash_success(sv_t('Registration successful! Please sign in to your new voter account.'));
-            redirect('auth/login.php');
+            $created = sv_create_registered_voter($form, $hash);
+            if (!$created['ok']) {
+                $errors['general'] = sv_t($created['error']);
+            } elseif ($created['user']) {
+                login_user($created['user']);
+                flash_success(sprintf(sv_t('Welcome to SecureVote, %s! Your account is ready. An election administrator will assign the elections you can vote in. Your personal Voter Code is: %s'), $form['first_name'], $created['voter_code']));
+                redirect('voter/dashboard.php');
+            } else {
+                flash_success(sv_t('Registration successful! Please sign in to your new voter account.'));
+                redirect('auth/login.php');
+            }
         }
     }
 }
@@ -139,8 +121,8 @@ require __DIR__ . '/../includes/header.php';
   <a class="brand auth-story__brand" href="<?= e(url('index.php')) ?>"><?= sv_logo_mark(34) ?><span class="brand__word">Secure<span>Vote</span></span></a>
   <div class="auth-story__content">
     <h2 id="auth-story-title"><?= e(sv_t("Be part of what comes next.")) ?></h2>
-    <p><?= e(sv_t("Create your account, then an election administrator will assign the elections you can vote in.")) ?></p>
-    <div class="auth-story__steps"><span><?= e(sv_t("Explore elections")) ?></span><span><?= e(sv_t("Choose candidates")) ?></span><span><?= e(sv_t("Keep your receipt")) ?></span></div>
+    <p><?= e(sv_registration_otp_enabled() ? sv_t('Create your account and verify your email before opening your dashboard.') : sv_t("Create your account, then an election administrator will assign the elections you can vote in.")) ?></p>
+    <div class="auth-story__steps"><?php if (sv_registration_otp_enabled()): ?><span><?= e(sv_t('Create account')) ?></span><span><?= e(sv_t('Verify email')) ?></span><span><?= e(sv_t('View dashboard')) ?></span><?php else: ?><span><?= e(sv_t("Explore elections")) ?></span><span><?= e(sv_t("Choose candidates")) ?></span><span><?= e(sv_t("Keep your receipt")) ?></span><?php endif; ?></div>
   </div>
   <div class="auth-story__mark" aria-hidden="true"><?= sv_icon('vote', 86) ?></div>
 </section>
@@ -154,14 +136,14 @@ require __DIR__ . '/../includes/header.php';
       </a>
       <h1 class="auth-card__title"><?= e(sv_t("Join SecureVote")) ?></h1>
       <p class="auth-card__text">
-        <?= e(sv_t("Create an account with Google or email. An administrator assigns your election access.")) ?>
+        <?= e(sv_registration_otp_enabled() ? sv_t('Use Google or email to create an account. Email registration needs a verification code.') : sv_t("Create an account with Google or email. An administrator assigns your election access.")) ?>
       </p>
     </div>
 
     <?php if ($errors !== []): ?>
       <div class="alert alert--danger" role="alert">
         <span class="alert__icon" aria-hidden="true"><?= sv_icon('x-circle', 18) ?></span>
-        <div class="alert__text"><?= e(sv_t("Please check the highlighted fields below to continue.")) ?></div>
+        <div class="alert__text"><?= e($errors['general'] ?? sv_t("Please check the highlighted fields below to continue.")) ?></div>
       </div>
       <div class="divider" role="presentation"></div>
     <?php endif; ?>
@@ -356,9 +338,9 @@ require __DIR__ . '/../includes/header.php';
 
       <div class="form-actions">
         <button class="btn btn--primary btn--lg btn--block" type="submit" data-submit-once
-                data-submitting-label="<?= e(sv_t("Creating account…")) ?>">
-          <?= sv_icon('user-plus', 18, 'btn__icon') ?>
-          <span><?= e(sv_t("Create Voter Account")) ?></span>
+                data-submitting-label="<?= e(sv_registration_otp_enabled() ? sv_t('Sending code…') : sv_t("Creating account…")) ?>">
+          <?= sv_icon(sv_registration_otp_enabled() ? 'mail' : 'user-plus', 18, 'btn__icon') ?>
+          <span><?= e(sv_registration_otp_enabled() ? sv_t('Send verification code') : sv_t("Create Voter Account")) ?></span>
         </button>
       </div>
     </form>

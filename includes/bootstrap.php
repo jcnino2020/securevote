@@ -25,6 +25,7 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/icons.php';
 require_once __DIR__ . '/traffic.php';
 require_once __DIR__ . '/next-features.php';
+require_once __DIR__ . '/registration-otp.php';
 
 // Any uncaught exception or fatal error becomes a calm, branded page and
 // a line in storage/logs/php-error.log, never a stack trace on screen.

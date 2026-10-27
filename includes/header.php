@@ -177,12 +177,14 @@ $flashHtml = ob_get_clean();
 <?php if ($bodyClass === 'page-admin-traffic'): ?><link rel="stylesheet" href="<?= e(asset('css/traffic.css')) ?>"><?php endif; ?>
 <link rel="stylesheet" href="<?= e(asset('css/next-features.css')) ?>">
 <link rel="stylesheet" href="<?= e(asset('css/responsive.css')) ?>">
+<?php if ($bodyClass === 'page-verify-registration'): ?><link rel="stylesheet" href="<?= e(asset('css/registration-otp.css')) ?>"><?php endif; ?>
 <script src="<?= e(asset('js/accessibility.js')) ?>"></script>
 <script src="<?= e(asset('js/theme.js')) ?>"></script>
 <script src="<?= e(asset('js/app.js')) ?>" defer></script>
 <script src="<?= e(asset('js/navigation.js')) ?>" defer></script>
 <script src="<?= e(asset('js/engagement.js')) ?>" defer></script>
 <script src="<?= e(asset('js/traffic.js')) ?>" defer></script>
+<?php if ($bodyClass === 'page-verify-registration'): ?><script src="<?= e(asset('js/registration-otp.js')) ?>" defer></script><?php endif; ?>
 </head>
 <body class="<?= e($shellClass . ($bodyClass !== '' ? ' ' . $bodyClass : '')) ?>">
 <div id="traffic-config" data-endpoint="<?= e(post_url('includes/traffic-event.php')) ?>" data-token="<?= e(csrf_token()) ?>" hidden></div>
@@ -320,7 +322,7 @@ if ($hasSidebar && !$pageOwnsHeading): ?>
 <?php endif; ?>
 <?= $flashHtml ?>
 <?php else: ?>
-<?php if (!in_array($resourceScript, ['login.php', 'register.php'], true)): ?>
+<?php if (!in_array($resourceScript, ['login.php', 'register.php', 'verify-registration.php'], true)): ?>
 <header class="auth-breadcrumb-bar"><?= sv_breadcrumbs($breadcrumb) ?></header>
 <?php endif; ?>
 <main class="auth-layout" id="main-content" tabindex="-1"><?php require __DIR__ . '/display-settings.php'; ?>

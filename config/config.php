@@ -33,6 +33,14 @@ $svSettings = is_file($svPrivateConfig) ? require $svPrivateConfig : [];
 if (!is_array($svSettings)) {
     throw new RuntimeException('Invalid private configuration.');
 }
+// Mail credentials can live in a separate private file so deployment never
+// rewrites the database or OAuth settings in securevote.private.php.
+$svMailConfig = getenv('SV_MAIL_CONFIG_FILE') ?: dirname(__DIR__, 3) . '/securevote.mail.php';
+if (is_file($svMailConfig)) {
+    $svMailSettings = require $svMailConfig;
+    if (!is_array($svMailSettings)) throw new RuntimeException('Invalid private mail configuration.');
+    $svSettings = array_replace($svSettings, $svMailSettings);
+}
 function sv_config(string $name, string $default = ''): string
 {
     global $svSettings;
