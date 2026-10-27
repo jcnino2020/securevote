@@ -74,14 +74,21 @@ require __DIR__ . '/../includes/header.php';
     }
     .receipt-paper__brand {
       display: flex;
-      align-items: baseline;
+      align-items: center;
       justify-content: space-between;
       gap: 20px;
       color: #1c285e;
-      font-size: 12pt;
-      font-weight: 800;
     }
-    .receipt-paper__brand span:last-child {
+    .receipt-paper__identity { display: flex; align-items: center; gap: 9px; }
+    .receipt-paper__mark { width: 29px; height: 29px; color: #1c285e; flex: none; }
+    .receipt-paper__wordmark {
+      color: #1c285e;
+      font-size: 17pt;
+      font-weight: 800;
+      letter-spacing: -.035em;
+    }
+    .receipt-paper__wordmark span { color: #3647b7; }
+    .receipt-paper__brand-label {
       color: #59678b;
       font-size: 8pt;
       font-weight: 700;
@@ -265,8 +272,11 @@ require __DIR__ . '/../includes/header.php';
 <section class="receipt-paper" aria-label="<?= e(sv_t('Printable voting receipt')) ?>">
   <header class="receipt-paper__header">
     <div class="receipt-paper__brand">
-      <span>SecureVote</span>
-      <span><?= e(sv_t('Voting receipt')) ?></span>
+      <div class="receipt-paper__identity">
+        <?= sv_logo_mark(29, 'receipt-paper__mark') ?>
+        <span class="receipt-paper__wordmark">Secure<span>Vote</span></span>
+      </div>
+      <span class="receipt-paper__brand-label"><?= e(sv_t('Voting receipt')) ?></span>
     </div>
     <h1><?= e(sv_t('Ballot recorded')) ?></h1>
     <p class="receipt-paper__intro"><?= e(sv_t('Confirmation of your submitted ballot')) ?></p>

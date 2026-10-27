@@ -31,7 +31,10 @@ final class SvResultsPdf
         $this->rect(0, 0, self::W, self::H, '#ffffff');
         $this->rect(0, 0, self::W, 91, '#1c285e');
         $this->rect(0, 91, self::W, 4, '#aeb9ff');
-        $this->text('SECUREVOTE  /  ELECTION REPORT', 46, 27, 9, '#bfc9ff', true);
+        $this->logo(46, 10, 0.76);
+        $this->text('Secure', 76, 31, 15, '#ffffff', true);
+        $this->text('Vote', 127, 31, 15, '#bfc9ff', true);
+        $this->text('ELECTION REPORT', 208, 29, 8.5, '#bfc9ff', true);
         $this->text($section, 46, 65, 23, '#ffffff', true);
         $this->rect(458, 25, 91, 25, '#34447e');
         $this->text(strtoupper($status), 468, 42, 9, '#ffffff', true);
@@ -40,6 +43,21 @@ final class SvResultsPdf
     public function rect(float $x, float $top, float $w, float $h, string $color): void
     {
         $this->stream .= $this->color($color, 'rg') . sprintf("%.2F %.2F %.2F %.2F re f\n", $x, self::H - $top - $h, $w, $h);
+    }
+
+    /** Vector version of the shield-and-check mark used by the site logo. */
+    public function logo(float $x, float $top, float $scale): void
+    {
+        $this->stream .= "q\n" . sprintf(
+            "%.3F 0 0 %.3F %.2F %.2F cm\n",
+            $scale, -$scale, $x, self::H - $top
+        );
+        $this->stream .= $this->color('#bfc9ff', 'rg')
+            . "16 2.75 m 5.5 6.5 l 5.5 15.6 l "
+            . "5.5 22.2 9.9 27.5 16 29.25 c "
+            . "22.1 27.5 26.5 22.2 26.5 15.6 c 26.5 6.5 l h f\n";
+        $this->stream .= $this->color('#1c285e', 'RG')
+            . "2.6 w 1 J 1 j 11.4 16.2 m 14.6 19.4 l 20.6 12.8 l S\nQ\n";
     }
 
     public function line(float $x1, float $top1, float $x2, float $top2, string $color = '#e1e5f0', float $width = 1): void
