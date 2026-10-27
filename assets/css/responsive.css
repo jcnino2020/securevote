@@ -18,6 +18,9 @@ fieldset { min-inline-size: 0; }
 :where(input[type=checkbox], input[type=radio]) { accent-color: var(--primary); }
 .label { flex-wrap: wrap; gap: 4px 8px; }
 .btn { white-space: normal; text-align: center; }
+.election-action-buttons { min-width: max-content; }
+.election-action-buttons .btn { flex: none; white-space: nowrap; }
+.election-action-buttons .btn span { white-space: nowrap; }
 .btn-password-toggle { min-width: var(--control-size); min-height: var(--control-size); }
 .app-footer__links { flex-wrap: wrap; }
 

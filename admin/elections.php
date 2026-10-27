@@ -761,7 +761,7 @@ $elections = $listStmt->fetchAll();
                 <span class="table__cell-sub"><?= e((string) $turnout) ?>% &middot; <?= e(sv_t('Results after voting')) ?></span>
               </td>
               <td class="table__actions-col">
-                <div class="table__actions">
+                <div class="table__actions election-action-buttons">
                   <a class="btn btn--secondary btn--sm"
                      href="<?= e(url('admin/elections.php?action=edit&id=' . (int) $election['id'])) ?>">
                     <?= sv_icon('edit', 14, 'btn__icon') ?><span><?= e(sv_t('Edit')) ?></span>
