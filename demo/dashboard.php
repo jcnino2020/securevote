@@ -2,11 +2,19 @@
 declare(strict_types=1);
 require __DIR__ . '/app.php';
 $user = demo_require_user();
-if (time() - (int) ($_SESSION['demo_login_at'] ?? 0) > 7200) {
-    unset($_SESSION['demo_user_id'], $_SESSION['demo_login_at']);
-    demo_redirect('login.php');
-}
+$pdo = demo_db();
+$elections = demo_elections_for_user($pdo, (int) $user['id']);
+$votedCount = count(array_filter($elections, static fn(array $election): bool => $election['ballot_id'] !== null));
 demo_header('Dashboard', 'dashboard');
 ?>
-<div class="dashboard"><div class="dashboard-intro"><div><span class="eyebrow">YOUR ACCOUNT</span><h1>Hi, <?= demo_e($user['first_name']) ?>.</h1><p>You are signed in. Your personal account details are shown below.</p></div><span class="active-badge">● &nbsp; Active account</span></div><div class="dashboard-grid"><section class="dashboard-card profile-card"><div class="card-icon" aria-hidden="true">◈</div><div><span class="eyebrow">ACCOUNT PROFILE</span><h2><?= demo_e($user['first_name'] . ' ' . $user['last_name']) ?></h2><p>@<?= demo_e($user['username']) ?></p></div><dl><div><dt>Email</dt><dd><?= demo_e($user['email']) ?></dd></div><div><dt>Joined</dt><dd><?= demo_e(date('M j, Y · g:i A', strtotime($user['created_at']))) ?></dd></div><div><dt>Session</dt><dd>Authenticated</dd></div></dl></section><section class="dashboard-card status-card"><span class="eyebrow">ACCOUNT STATUS</span><h2>Ready to go</h2><p>Your account details are available whenever you sign in.</p><div class="status-line"><span>Account created</span><strong>Complete ✓</strong></div><div class="status-line"><span>Password verified</span><strong>Complete ✓</strong></div><div class="status-line"><span>Current session</span><strong>Active ✓</strong></div></section></div><section class="next-card"><div><span class="eyebrow">YOUR NEXT STEP</span><h2>You're all set.</h2><p>You can sign out and return to your dashboard anytime with your username or email and password.</p></div></section></div>
+<div class="dashboard">
+  <div class="dashboard-intro"><div><span class="eyebrow">YOUR VOTING SPACE</span><h1>Hi, <?= demo_e($user['first_name']) ?>.</h1><p>Explore the sample elections below, review the candidates, and submit one ballot in each election.</p></div><span class="active-badge">● &nbsp; Active account</span></div>
+  <div class="dashboard-summary" aria-label="Voting summary"><div><strong><?= count($elections) - $votedCount ?></strong><span>Ready to vote</span></div><div><strong><?= $votedCount ?></strong><span>Ballots submitted</span></div><div><strong><?= count($elections) ?></strong><span>Sample elections</span></div></div>
+  <section class="elections-section" id="elections" aria-labelledby="elections-title"><div class="section-heading"><span class="eyebrow">AVAILABLE NOW</span><h2 id="elections-title">Sample elections</h2><p>Fictional candidates and tallies are used here. These ballots do not affect official SecureVote elections.</p></div><div class="elections-grid">
+    <?php foreach ($elections as $election): ?>
+      <article class="election-card"><div class="election-card-top"><span class="sample-badge">SAMPLE ELECTION</span><span class="<?= $election['ballot_id'] ? 'status-voted' : 'status-open' ?>"><?= $election['ballot_id'] ? 'Ballot submitted' : 'Voting open' ?></span></div><span class="election-category"><?= demo_e($election['category']) ?></span><h3><?= demo_e($election['title']) ?></h3><p><?= demo_e($election['description']) ?></p><div class="election-facts"><span><?= (int) $election['position_count'] ?> positions</span><span><?= (int) $election['candidate_count'] ?> candidates</span><span><?= (int) $election['baseline_ballots'] ?> sample baseline ballots</span></div><div class="election-card-actions"><?php if ($election['ballot_id']): ?><a class="btn btn-primary" href="results.php?election=<?= (int) $election['id'] ?>">View results →</a><span class="receipt-mini">Receipt <?= demo_e($election['receipt']) ?></span><?php else: ?><a class="btn btn-primary" href="ballot.php?election=<?= (int) $election['id'] ?>">Open ballot →</a><a class="text-link" href="ballot.php?election=<?= (int) $election['id'] ?>">Meet candidates</a><?php endif; ?></div></article>
+    <?php endforeach; ?>
+  </div></section>
+  <section class="account-panel" aria-labelledby="account-title"><div><span class="eyebrow">YOUR ACCOUNT</span><h2 id="account-title"><?= demo_e($user['first_name'] . ' ' . $user['last_name']) ?></h2><p>@<?= demo_e($user['username']) ?> · <?= demo_e($user['email']) ?></p></div><span class="active-badge">Authenticated session</span></section>
+</div>
 <?php demo_footer(); ?>

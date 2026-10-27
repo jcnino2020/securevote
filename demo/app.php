@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 date_default_timezone_set('Asia/Manila');
+require_once __DIR__ . '/election-data.php';
 ini_set('display_errors', '0');
 ini_set('session.use_strict_mode', '1');
 ini_set('session.use_only_cookies', '1');
@@ -42,6 +43,7 @@ function demo_db(): PDO {
         $pdo->exec('CREATE TABLE IF NOT EXISTS demo_users (id INTEGER PRIMARY KEY AUTOINCREMENT, first_name TEXT NOT NULL, last_name TEXT NOT NULL, username TEXT NOT NULL UNIQUE COLLATE NOCASE, email TEXT NOT NULL UNIQUE COLLATE NOCASE, password_hash TEXT NOT NULL, created_at TEXT NOT NULL)');
         $pdo->exec('CREATE TABLE IF NOT EXISTS demo_login_attempts (id INTEGER PRIMARY KEY AUTOINCREMENT, identifier_hash TEXT NOT NULL, attempted_at INTEGER NOT NULL)');
         $pdo->exec('CREATE INDEX IF NOT EXISTS demo_login_attempts_lookup ON demo_login_attempts (identifier_hash, attempted_at)');
+        demo_seed_elections($pdo);
         return $pdo;
     } catch (Throwable $error) {
         error_log('SecureVote demo database unavailable: ' . $error->getMessage());
@@ -63,6 +65,10 @@ function demo_user(): ?array {
 function demo_require_user(): array {
     $user = demo_user();
     if (!$user) demo_redirect('login.php');
+    if (time() - (int) ($_SESSION['demo_login_at'] ?? 0) > 7200) {
+        unset($_SESSION['demo_user_id'], $_SESSION['demo_login_at']);
+        demo_redirect('login.php');
+    }
     return $user;
 }
 
@@ -73,13 +79,13 @@ function demo_logo(): string {
 function demo_header(string $title, string $active = ''): void {
     $user = demo_user();
     ?><!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#1a2750"><title><?= demo_e($title) ?> · SecureVote</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="site.css"></head><body>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#1a2750"><title><?= demo_e($title) ?> · SecureVote</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="site.css"><link rel="stylesheet" href="elections.css"></head><body>
 <a class="skip" href="#main">Skip to content</a>
-<header class="site-header"><a class="brand" href="./"><?= demo_logo() ?><span>Secure<span class="brand-accent">Vote</span></span></a><span class="demo-pill">ACCOUNT ACCESS</span><nav aria-label="Main navigation"><a class="<?= $active === 'home' ? 'is-active' : '' ?>" href="./">Home</a><?php if ($user): ?><a class="<?= $active === 'dashboard' ? 'is-active' : '' ?>" href="dashboard.php">Dashboard</a><form method="post" action="logout.php"><input type="hidden" name="csrf" value="<?= demo_e(demo_csrf()) ?>"><button type="submit">Sign out</button></form><?php else: ?><a class="<?= $active === 'login' ? 'is-active' : '' ?>" href="login.php">Sign in</a><a class="header-cta <?= $active === 'register' ? 'is-active' : '' ?>" href="register.php">Register</a><?php endif; ?></nav></header>
+<header class="site-header"><a class="brand" href="./"><?= demo_logo() ?><span>Secure<span class="brand-accent">Vote</span></span></a><nav aria-label="Main navigation"><a class="<?= $active === 'home' ? 'is-active' : '' ?>" href="./">Home</a><?php if ($user): ?><a class="<?= $active === 'dashboard' ? 'is-active' : '' ?>" href="dashboard.php">Dashboard</a><a class="<?= $active === 'results' ? 'is-active' : '' ?>" href="results.php">Results</a><form method="post" action="logout.php"><input type="hidden" name="csrf" value="<?= demo_e(demo_csrf()) ?>"><button type="submit">Sign out</button></form><?php else: ?><a class="<?= $active === 'login' ? 'is-active' : '' ?>" href="login.php">Sign in</a><a class="header-cta <?= $active === 'register' ? 'is-active' : '' ?>" href="register.php">Register</a><?php endif; ?></nav></header>
 <main id="main">
 <?php
 }
 
 function demo_footer(): void {
-    ?></main><footer class="site-footer"><span>SecureVote · Academic civic voting platform</span><span>Account access only · Election voting is managed separately</span></footer></body></html><?php
+    ?></main><footer class="site-footer"><span>SecureVote · Academic civic voting platform</span><span>Sample elections and ballots are separate from official voting</span></footer></body></html><?php
 }

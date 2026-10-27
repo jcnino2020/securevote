@@ -37,3 +37,7 @@ Start at **https://darkblue-hummingbird-464264.hostingersite.com/securevote/demo
 `demo/index.php` -> `demo/register.php` -> `demo/dashboard.php` -> `demo/logout.php` -> `demo/login.php` -> `demo/dashboard.php`. The demo account database is a separate SQLite file outside the public web directory.
 
 The main SecureVote site has additional voter-code and Google sign-in routes. Those are outside this focused demo.
+
+## Optional sample election walkthrough
+
+After the authentication portion, the `/demo/` dashboard now lists three fictional elections with multiple positions and candidates. Select **Open ballot**, choose one candidate in every position, review the selections, and submit once. The results page then shows a receipt and detailed aggregate totals. Its starting totals come from clearly labeled fictional baseline ballots; each submitted sample ballot updates the totals. These accounts, ballots, and results use the separate `/demo/` database and never change official SecureVote election data.
